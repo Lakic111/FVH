@@ -1,0 +1,1150 @@
+<!doctype html><html lang="sr"><head><meta charset="utf-8"><title>Skripta za odbranu - verifikacija NCC akceleratora</title><style>
+  @page { size: A4; margin: 20mm 18mm 18mm 18mm; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 11.5pt;
+    line-height: 1.45;
+    color: #000;
+    margin: 0;
+    text-align: justify;
+    hyphens: auto;
+  }
+
+  p { margin: 0 0 0.55em 0; text-indent: 1.2em; }
+  p.noind, li p { text-indent: 0; }
+
+  h1 {
+    font-size: 15pt; font-weight: bold; margin: 0 0 0.9em 0;
+    page-break-before: always; page-break-after: avoid;
+  }
+  h1.first { page-break-before: avoid; }
+  h2 { font-size: 12.5pt; margin: 1.3em 0 0.5em 0; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 1.1em 0 0.4em 0; page-break-after: avoid; }
+
+  /* ---------- naslovna ---------- */
+  .cover { page-break-after: always; text-align: center; padding-top: 45mm; }
+  .cover .fac { font-size: 12pt; letter-spacing: .02em; }
+  .cover .subj { font-size: 13pt; margin-top: 26mm; font-variant: small-caps; }
+  .cover .title {
+    font-size: 21pt; font-weight: bold; margin: 8mm 14mm 0 14mm; line-height: 1.3;
+  }
+  .cover .sub { font-size: 13pt; margin-top: 6mm; }
+  .cover .rule { border-top: 1.4pt solid #000; width: 70%; margin: 9mm auto; }
+  .cover .meta { font-size: 12pt; margin-top: 20mm; line-height: 1.9; }
+  .cover .foot { margin-top: 34mm; font-size: 11pt; }
+
+  /* ---------- sadrzaj ---------- */
+  .toc { page-break-after: always; }
+  .toc h1 { text-align: center; page-break-before: avoid; }
+  .toc ul { list-style: none; margin: 0; padding: 0; }
+  .toc li { margin: 0.18em 0; text-align: left; }
+  .toc li.l1 { font-weight: bold; margin-top: 0.7em; }
+  .toc li.l2 { padding-left: 1.6em; font-size: 11pt; }
+  .toc li.l3 { padding-left: 3.2em; font-size: 10.5pt; }
+
+  /* ---------- tabele ---------- */
+  table {
+    border-collapse: collapse; width: 100%; margin: 0.7em 0 0.25em 0;
+    font-size: 10pt; page-break-inside: avoid;
+  }
+  caption { caption-side: bottom; font-size: 9.5pt; font-style: italic;
+            padding-top: 0.4em; text-align: center; }
+  caption b { font-style: normal; }
+  th, td { padding: 3.5px 7px; text-align: left; vertical-align: top; }
+  thead th { border-top: 1.1pt solid #000; border-bottom: 0.7pt solid #000;
+             font-weight: bold; text-align: center; }
+  tbody tr:last-child td { border-bottom: 1.1pt solid #000; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  td.c, th.c { text-align: center; }
+  tbody tr.sep td { border-top: 0.4pt solid #999; }
+
+  /* ---------- kod / formule ---------- */
+  code, .mono { font-family: Consolas, "Courier New", monospace; font-size: 9.6pt; }
+  pre {
+    font-family: Consolas, "Courier New", monospace; font-size: 9.2pt;
+    line-height: 1.32; background: #f6f6f4; border: 0.5pt solid #ccc;
+    padding: 7px 9px; margin: 0.6em 0; overflow-x: auto;
+    page-break-inside: avoid; text-align: left; white-space: pre;
+  }
+  .formula {
+    text-align: center; margin: 0.9em 0; font-size: 12pt; font-style: italic;
+    page-break-inside: avoid;
+  }
+  .formula .frac { display: inline-block; vertical-align: middle; text-align: center; }
+  .formula .frac > .num { display: block; padding: 0 .5em 2px .5em; border-bottom: 1pt solid #000; }
+  .formula .frac > .den { display: block; padding: 2px .5em 0 .5em; }
+  /* kvadratni koren koji se rasteže preko celog potkorenog izraza */
+  .sqrt { display: inline-flex; align-items: stretch; }
+  .sqrt > svg { width: .62em; height: auto; align-self: stretch; margin-right: 1px; overflow: visible; }
+  .sqrt > .radicand { border-top: 1.15pt solid #000; padding: 2px 3px 0 2px; }
+
+  /* ---------- figure ---------- */
+  figure { margin: 1em 0 0.4em 0; text-align: center; page-break-inside: avoid; }
+  figcaption { font-size: 9.5pt; font-style: italic; margin-top: 0.45em; text-align: center; }
+  figcaption b { font-style: normal; }
+  svg { max-width: 100%; height: auto; }
+  /* Visoke slike: ograniči visinu tako da slika i potpis stanu na istu stranu. */
+  figure.tall { page-break-before: always; }
+  figure.tall svg { max-height: 236mm; width: auto; }
+
+  .note {
+    border-left: 2.5pt solid #555; background: #f4f4f2;
+    padding: 6px 11px; margin: 0.8em 0; font-size: 10.3pt;
+    page-break-inside: avoid;
+  }
+  .note p { text-indent: 0; margin: 0 0 .35em 0; }
+  .note p:last-child { margin-bottom: 0; }
+
+  ul.plain, ol.plain { margin: 0.4em 0 0.7em 0; padding-left: 1.5em; }
+  ul.plain li, ol.plain li { margin-bottom: 0.28em; }
+
+  .kv { font-variant-numeric: tabular-nums; }
+  .ok  { font-weight: bold; }
+</style></head><body><div class="cover">
+  <div class="subj">Funkcionalna verifikacija hardvera</div>
+
+  <div class="rule"></div>
+  <div class="title">Skripta za odbranu<br>Verifikaciono okruženje za NCC akcelerator</div>
+  <div class="rule"></div>
+
+  <div class="meta">
+    Grupa: <b>y25-g10</b><br>
+    SystemVerilog / UVM &middot; Vivado XSim i Cadence Xcelium
+  </div>
+</div>
+
+<div class="toc">
+<h1 class="first">Sadržaj</h1>
+<ul>
+  <li class="l1">1. Šta je trebalo uraditi</li>
+  <li class="l2">1.1. Projekat koji se verifikuje</li>
+  <li class="l2">1.2. Zašto se uopšte gradi zasebno okruženje</li>
+
+  <li class="l1">2. Rečnik: šta je šta u UVM okruženju</li>
+  <li class="l2">2.1. Interfejs i virtuelni interfejs</li>
+  <li class="l2">2.2. Sekvencijalna stavka</li>
+  <li class="l2">2.3. Sekvenca i sekvencer</li>
+  <li class="l2">2.4. Drajver</li>
+  <li class="l2">2.5. Monitor</li>
+  <li class="l2">2.6. Agent</li>
+  <li class="l2">2.7. Okruženje i test</li>
+  <li class="l2">2.8. Analitički port</li>
+  <li class="l2">2.9. Scoreboard i referentni model</li>
+  <li class="l2">2.10. Pokrivenost</li>
+  <li class="l2">2.11. Tvrdnje (SVA)</li>
+  <li class="l2">2.12. Kako sve to sarađuje</li>
+
+  <li class="l1">3. Arhitektura izgrađenog okruženja</li>
+
+  <li class="l1">4. Korak 2 — Verifikacioni plan</li>
+  <li class="l1">5. Korak 3 — Osnovno okruženje</li>
+  <li class="l1">6. Korak 4 — Scoreboard i tvrdnje</li>
+  <li class="l1">7. Korak 5 — Pokrivenost</li>
+  <li class="l1">8. Korak 6 — Regresija</li>
+  <li class="l1">9. Korak 7 — Dva simulatora</li>
+
+  <li class="l1">10. Šta je verifikacija stvarno pronašla</li>
+  <li class="l1">11. Pregled izvornih fajlova</li>
+  <li class="l2">11.1. Zajedničke konstante</li>
+  <li class="l2">11.2. Interfejsi</li>
+  <li class="l2">11.3. Agent za kontrolne registre</li>
+  <li class="l2">11.4. Agent za memoriju</li>
+  <li class="l2">11.5. Referentni model</li>
+  <li class="l2">11.6. Provera, merenje i scenariji</li>
+  <li class="l2">11.7. Vrh testbenca</li>
+  <li class="l2">11.8. Testovi</li>
+  <li class="l2">11.9. Spiskovi izvornih fajlova i skripte</li>
+
+  <li class="l1">12. Rezultati u brojkama</li>
+  <li class="l1">13. Očekivana pitanja i odgovori</li>
+</ul>
+</div>
+
+<h1>1. Šta je trebalo uraditi</h1>
+
+<h2>1.1. Projekat koji se verifikuje</h2>
+
+<p class="noind">Predmet verifikacije je IP jezgro <code>ncc_accel</code> — hardverski
+akcelerator normalizovane unakrsne korelacije, napisan u VHDL-u i odbranjen na
+predmetu Projektovanje složenih digitalnih sistema. Jezgro traži zadati šablon u
+segmentu slike i za svaku poziciju prozora vraća meru poklapanja u formatu Q1.31,
+gde vrednost <code>0x80000000</code> znači savršeno poklapanje.</p>
+
+<p>Jezgro se sa spoljnim svetom sporazumeva preko dve AXI magistrale:</p>
+
+<table>
+  <caption><b>Tabela 1.</b> Interfejsi projekta</caption>
+  <thead>
+    <tr><th>Interfejs</th><th class="c">Tip</th><th class="c">Širina adrese</th><th>Namena</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>S00</td><td class="c">AXI4-Lite</td><td class="c">6 bita</td><td>kontrolni registri: dimenzije, pokretanje, status</td></tr>
+    <tr><td>S01</td><td class="c">AXI4-Full</td><td class="c">17 bita</td><td>memorijski prostor od 128 KB: slika, šablon, rezultati</td></tr>
+  </tbody>
+</table>
+
+<p>Zadatak nije bio projektovati jezgro — ono već postoji i radi na ploči. Zadatak je
+bio izgraditi <b>verifikaciono okruženje</b> oko njega, u SystemVerilogu i po UVM
+metodologiji, koje samo proverava da li se jezgro ponaša kako treba.</p>
+
+<h2>1.2. Zašto se uopšte gradi zasebno okruženje</h2>
+
+<p class="noind">Jezgro je već imalo testbenčeve napisane u VHDL-u. Oni rade, ali imaju
+tri ograničenja koja UVM okruženje uklanja.</p>
+
+<ul class="plain">
+  <li><p class="noind"><b>Pobuda je zapisana rukom.</b> Svaki scenario mora neko da
+  smisli i otkuca. Ono što niko nije zamislio, nikada nije ni provereno.</p></li>
+  <li><p class="noind"><b>Provera je pomešana sa pobudom.</b> Testbenč koji sam
+  postavlja vrednosti i sam ih proverava lako postane test koji poredi sopstvene
+  pretpostavke sa samim sobom.</p></li>
+  <li><p class="noind"><b>Ne zna se šta je pokriveno.</b> Bez merenja se ne može
+  odgovoriti na pitanje „da li smo probali dovoljno“ ničim osim osećajem.</p></li>
+</ul>
+
+<p>UVM okruženje odgovara na sva tri: pobuda se generiše nasumično uz ograničenja,
+provera je odvojena od pobude i sluša samo magistralu, a pokrivenost se meri i
+izveštava brojem.</p>
+
+<h1>2. Rečnik: šta je šta u UVM okruženju</h1>
+
+<p class="noind">Ovo poglavlje objašnjava pojmove redom kojim se transakcija kreće
+kroz okruženje. Svaki pojam je prvo objašnjen uopšteno, pa zatim rečenicom o tome
+kako izgleda u ovom konkretnom projektu.</p>
+
+<h2>2.1. Interfejs i virtuelni interfejs</h2>
+
+<p class="noind"><b>Interfejs</b> je snop žica sa imenom. Umesto da se svaki signal
+AXI magistrale provlači kroz desetine portova, oni se grupišu u jednu celinu koja se
+prenosi kao jedan objekat.</p>
+
+<p>Uz interfejs ide <b>clocking blok</b> — pravilo koje kaže kada se signali
+uzorkuju, a kada postavljaju. On uklanja trku između testbenča i projekta: bez njega
+je lako pročitati vrednost tačno u trenutku kada se menja, pa dobiti čas jednu čas
+drugu.</p>
+
+<p><b>Virtuelni interfejs</b> je pokazivač na taj snop. Klase u UVM-u nisu deo
+hijerarhije modula i ne mogu se „zakačiti“ na žice; zato dobijaju virtuelni interfejs
+kroz konfiguracionu bazu, pa preko njega voze ili čitaju signale.</p>
+
+<div class="note">
+<p><b>U ovom projektu:</b> <code>axi_lite_if</code> za S00 i <code>axi_full_if</code>
+za S01. Svaki ima <b>dva</b> clocking bloka — jedan za drajver, drugi za monitor.
+Razlog je u odeljku 2.5.</p>
+</div>
+
+<h2>2.2. Sekvencijalna stavka</h2>
+
+<p class="noind"><b>Sekvencijalna stavka</b> je jedna transakcija opisana pojmovima
+protokola, a ne pojedinačnim žicama. Umesto „postavi <code>AWVALID</code>, sačekaj
+<code>AWREADY</code>, postavi <code>WDATA</code>…“, stavka kaže samo: <i>upiši
+vrednost 90 na adresu 0x00</i>.</p>
+
+<p>Polja stavke mogu biti označena kao <code>rand</code>, pa ih simulator sam popuni
+nasumičnim vrednostima. <b>Ograničenja</b> (<code>constraint</code>) kazuju koje su
+vrednosti dopuštene — bez njih bi nasumičnost proizvodila besmislice.</p>
+
+<div class="note">
+<p><b>U ovom projektu:</b> <code>ncc_reg_item</code> za registre i
+<code>ncc_mem_item</code> za memoriju. Pored adrese i podatka, obe nose polje
+<code>order</code> sa vrednostima <code>AW_FIRST</code>, <code>W_FIRST</code> i
+<code>SIMUL</code> — kojim redom master postavlja adresni kanal i kanal podataka.
+To polje je centralna nit celog projekta i objašnjeno je u poglavlju 10.</p>
+</div>
+
+<h2>2.3. Sekvenca i sekvencer</h2>
+
+<p class="noind"><b>Sekvenca</b> je scenario: niz stavki u smislenom redosledu.
+„Upiši dimenzije, pa pokreni, pa čekaj kraj, pa pročitaj rezultat“ je sekvenca.
+Sekvence se mogu ugnježdavati i ponovo upotrebljavati.</p>
+
+<p><b>Sekvencer</b> je saobraćajac. On prima stavke od sekvenci i predaje ih drajveru
+jednu po jednu, vodeći računa o redosledu i prioritetima kada više sekvenci radi
+istovremeno.</p>
+
+<p><b>Virtuelna sekvenca</b> je sekvenca koja ne pripada nijednoj magistrali nego
+upravlja s više njih odjednom. Ona ne šalje stavke svom sekvenceru, nego ih razdeljuje
+sekvencerima pojedinačnih agenata.</p>
+
+<div class="note">
+<p><b>U ovom projektu:</b> <code>ncc_smoke_seq</code> je virtuelna sekvenca — mora da
+usaglasi S01 (upis slike i šablona) i S00 (dimenzije, pokretanje, status), jer se ceo
+posao ne može obaviti preko jedne magistrale.</p>
+</div>
+
+<h2>2.4. Drajver</h2>
+
+<p class="noind"><b>Drajver</b> prevodi stavku u signale. On je jedini deo okruženja
+koji sme da vozi magistralu, i jedini koji zna kako protokol tačno izgleda u vremenu:
+koji signal ide prvi, koliko dugo se drži, kada se povlači.</p>
+
+<p>Pravilo koje iz toga sledi: <b>jedan signal, jedan gospodar</b>. Ako i testbenč i
+drajver postavljaju isti signal, dobija se ponašanje koje zavisi od redosleda
+izvršavanja — greška koju je vrlo teško naći.</p>
+
+<div class="note">
+<p><b>U ovom projektu:</b> drajver vodi kanale AW, W i B kao <b>nezavisne niti</b>
+(<code>fork…join</code>). Polje <code>order</code> pomera samo trenutak kada nit
+kreće, ne i redosled kojim se završavaju. Zašto to mora tako — poglavlje 10.</p>
+</div>
+
+<h2>2.5. Monitor</h2>
+
+<p class="noind"><b>Monitor</b> je pasivan posmatrač. On ništa ne vozi; samo gleda
+signale i od njih rekonstruiše transakcije — obrnut posao od drajvera. Ono što
+sastavi objavljuje ostatku okruženja.</p>
+
+<p>Ključno je da monitor bude <b>nezavisan od drajvera</b>. Ako bi uzimao podatke od
+pobude umesto sa magistrale, okruženje bi poredilo svoje pretpostavke sa samim sobom i
+prolazilo bi čak i kada projekat ne radi ništa. Zato monitor u ovom projektu ima
+sopstveni clocking blok i ne dodiruje ništa što drajver koristi.</p>
+
+<p>Monitor mora rekonstruisati transakciju i onda kada delovi stignu neuobičajenim
+redosledom. Na AXI magistrali adresa i podatak putuju odvojenim kanalima i mogu stići
+bilo kojim redom, pa monitor ne sme pretpostaviti nijedan.</p>
+
+<div class="note">
+<p><b>U ovom projektu:</b> monitor drži zaseban red čekanja za adresni kanal i za
+kanal podataka, a transakciju sastavlja tek na odgovoru (kanal B) — u tom trenutku su
+po pravilima protokola oba dela sigurno viđena, ma kojim redom da su stigla. Uz to
+<b>meri</b> koji je kanal postavljen prvi, i tu meru objavljuje zajedno sa
+transakcijom. Time monitor može da demantuje drajver, što je i smisao nezavisnog
+posmatrača.</p>
+</div>
+
+<h2>2.6. Agent</h2>
+
+<p class="noind"><b>Agent</b> je pakovanje: sekvencer, drajver i monitor za jedan
+protokol, na jednom mestu. Okruženje tako ne mora da zna unutrašnju građu — dobije
+agenta i njegov izlaz.</p>
+
+<p>Agent može biti <b>aktivan</b> (ima sekvencer i drajver, vozi magistralu) ili
+<b>pasivan</b> (samo monitor, gleda saobraćaj koji vozi neko drugi). Ista klasa služi
+u oba slučaja, što je važno kada se isto okruženje kasnije upotrebi na nivou sistema
+gde magistralu vozi procesor.</p>
+
+<div class="note">
+<p><b>U ovom projektu:</b> <code>ncc_axil_agent</code> i <code>ncc_axif_agent</code>,
+oba podržavaju i pasivan režim. Konfiguracija agenta nosi i baznu adresu, da bi isti
+agent mogao pokriti obe instance jezgra u sistemu sa dva akceleratora.</p>
+</div>
+<h2>2.7. Okruženje i test</h2>
+
+<p class="noind"><b>Okruženje</b> (<code>env</code>) okuplja sve agente, komponentu
+za proveru i kolektor pokrivenosti u jednu celinu koja se može ponovo upotrebiti.
+Ono je ono što se „gradi jednom, koristi svuda“.</p>
+
+<p><b>Test</b> je najviši sloj. On odlučuje koje okruženje se gradi, kako se
+podešava, i koja sekvenca se pušta. Testovi se biraju pri pokretanju simulacije, bez
+ponovnog prevođenja — u ovom projektu preko <code>+UVM_TESTNAME</code>.</p>
+
+<p>Odatle i praktična posledica: <b>manji testovi se ne brišu kada stigne veći</b>.
+Kada veliki test padne, prvo pitanje je da li je problem u magistrali ili u jezgru, a
+na to odgovaraju upravo mali testovi.</p>
+
+<h2>2.8. Analitički port</h2>
+
+<p class="noind"><b>Analitički port</b> (<code>uvm_analysis_port</code>) je način na
+koji monitor objavljuje ono što je video. Radi po principu „jedan govori, više njih
+sluša“: monitor ne zna ko ga sluša niti koliko ih ima, a slušaoci se dodaju i uklanjaju
+bez ijedne izmene u monitoru.</p>
+
+<p>Zahvaljujući tome scoreboard i kolektor pokrivenosti mogu da rade nezavisno jedan
+od drugog, iako gledaju isti saobraćaj.</p>
+
+<h2>2.9. Scoreboard i referentni model</h2>
+
+<p class="noind"><b>Scoreboard</b> je komponenta koja odgovara na pitanje „da li je
+ono što je projekat uradio tačno“. Prima transakcije od monitora, računa šta je
+očekivano, i poredi.</p>
+
+<p><b>Referentni model</b> je nezavisan opis onoga što bi projekat trebalo da uradi.
+Napisan je na višem nivou apstrakcije — bez taktova i bez signala, samo matematika i
+memorija.</p>
+
+<p>Zamka koju treba izbeći zove se <i>povezivanje pobude na proveru</i>: ako
+scoreboard dobija podatke od sekvence umesto od monitora, on ne proverava projekat
+nego samo ponavlja ono što je pobuda rekla. Zato scoreboard u ovom projektu sluša
+<b>isključivo</b> monitore i svoju sliku memorije gradi od onoga što je viđeno na
+magistrali.</p>
+
+<div class="note">
+<p><b>U ovom projektu:</b> referentni model je izveden <b>iz izvornog VHDL koda</b>,
+a ne iz udžbeničke formule. Bit-tačnost zavisi od zaokruživanja pri celobrojnom
+deljenju, odsecanja srednjih vrednosti na osam bita, širina akumulatora i grane
+„varijansa je nula → rezultat je nula“. Ničega od toga u formuli nema.</p>
+</div>
+
+<h2>2.10. Pokrivenost</h2>
+
+<p class="noind"><b>Funkcionalna pokrivenost</b> meri koliko je od zamišljenih
+situacija stvarno isprobano. Piše se kao spisak <b>tačaka</b> (šta se posmatra) i
+<b>bins-ova</b> (koje vrednosti su zanimljive), a <b>ukrštanje</b> (<code>cross</code>)
+proverava da li su se dve pojave desile zajedno, ne samo svaka ponaosob.</p>
+
+<p>Razlika u odnosu na pokrivenost koda: pokrivenost koda kaže da je neka linija
+izvršena, funkcionalna kaže da je neka <i>situacija</i> isprobana. Prva se dobija
+besplatno, druga se mora smisliti.</p>
+
+<p>Pravilo je isto kao kod scoreboard-a: uzorkuje se <b>iz monitora</b>, nikada iz
+drajvera. Merenje iz drajvera meri svojstva pobude i daje lažno visoke brojeve.</p>
+
+<h2>2.11. Tvrdnje (SVA)</h2>
+
+<p class="noind"><b>Tvrdnja</b> je pravilo koje mora važiti u svakom trenutku, zapisano
+tako da ga simulator sam proverava. Za razliku od testa, tvrdnja ne treba da bude
+pozvana — ona stalno gleda.</p>
+
+<p>Tvrdnje se pišu <b>u interfejsu</b>, ne u testu, pa važe u svakom testu — i u onima
+koji o njima ne znaju ništa. Greška se prijavljuje u trenutku nastanka, a ne tek kada
+se posledica negde ispolji.</p>
+
+<div class="note">
+<p><b>U ovom projektu:</b> petnaest tvrdnji. Trinaest su opšta pravila protokola
+(<code>VALID</code> se ne povlači pre <code>READY</code>, podatak se ne menja u
+međuvremenu, odgovor stiže tek posle poslednjeg beat-a). Dve su svojstvo baš ovog
+projekta i objašnjene su u poglavlju 10.</p>
+</div>
+
+<h2>2.12. Kako sve to sarađuje</h2>
+
+<p class="noind">Jedan prolaz kroz okruženje, redom:</p>
+
+<table>
+  <caption><b>Tabela 2.</b> Put jedne transakcije kroz okruženje</caption>
+  <thead>
+    <tr><th class="c">Br.</th><th>Ko</th><th>Šta radi</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="c">1</td><td>Test</td><td>gradi okruženje i pušta sekvencu</td></tr>
+    <tr><td class="c">2</td><td>Sekvenca</td><td>pravi stavku i randomizuje je uz ograničenja</td></tr>
+    <tr><td class="c">3</td><td>Sekvencer</td><td>predaje stavku drajveru</td></tr>
+    <tr><td class="c">4</td><td>Drajver</td><td>prevodi stavku u signale i vozi magistralu</td></tr>
+    <tr><td class="c">5</td><td>Projekat</td><td>reaguje</td></tr>
+    <tr><td class="c">6</td><td>Tvrdnje</td><td>usput proveravaju da protokol nije prekršen</td></tr>
+    <tr><td class="c">7</td><td>Monitor</td><td>gleda iste signale i sastavlja transakciju</td></tr>
+    <tr><td class="c">8</td><td>Analitički port</td><td>objavljuje je svima koji slušaju</td></tr>
+    <tr><td class="c">9</td><td>Scoreboard</td><td>poredi sa predikcijom referentnog modela</td></tr>
+    <tr><td class="c">10</td><td>Kolektor</td><td>beleži šta je od zamišljenog isprobano</td></tr>
+  </tbody>
+</table>
+
+<p>Bitno je da koraci 4 i 7 ne komuniciraju međusobno. Drajver ne zna za monitor,
+monitor ne zna za drajver, a scoreboard zna samo za monitor. Ta odvojenost je jedini
+razlog zbog kojeg okruženje uopšte može da otkrije grešku, umesto da je ponovi.</p>
+
+<h1>3. Arhitektura izgrađenog okruženja</h1>
+
+<figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 574" width="720" height="574"
+     font-family="'Times New Roman', Times, serif">
+  <defs>
+    <marker id="str" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#000"/>
+    </marker>
+    <marker id="tlm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <g stroke="#000" fill="none" stroke-width="1">
+    <rect x="20"  y="40"  width="680" height="248" fill="#fff"/>
+    <rect x="36"  y="68"  width="648" height="204" fill="#fbfbfa"/>
+    <rect x="52"  y="98"  width="306" height="96"  fill="#f2f2ef"/>
+    <rect x="362" y="98"  width="306" height="96"  fill="#f2f2ef"/>
+    <rect x="64"  y="118" width="282" height="26"  fill="#fff"/>
+    <rect x="64"  y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="212" y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="374" y="118" width="282" height="26"  fill="#fff"/>
+    <rect x="374" y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="522" y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="95"  y="210" width="225" height="48"  fill="#fff"/>
+    <rect x="405" y="210" width="225" height="48"  fill="#fff"/>
+    <rect x="52"  y="320" width="306" height="40"  fill="#eaeae6"/>
+    <rect x="362" y="320" width="306" height="40"  fill="#eaeae6"/>
+    <rect x="20"  y="396" width="680" height="140" fill="#fff"/>
+    <rect x="52"  y="424" width="306" height="34"  fill="#f2f2ef"/>
+    <rect x="362" y="424" width="306" height="34"  fill="#f2f2ef"/>
+    <rect x="52"  y="478" width="306" height="40"  fill="#f2f2ef"/>
+    <rect x="362" y="478" width="306" height="40"  fill="#f2f2ef"/>
+  </g>
+
+  <g font-size="12" fill="#000">
+    <text x="30"  y="58"  font-weight="bold">ncc_test</text>
+    <text x="46"  y="86"  font-weight="bold">ncc_env</text>
+    <text x="100" y="414" font-weight="bold">ncc_accel &#8212; DUT (VHDL, nepromenjen)</text>
+  </g>
+
+  <g font-size="11" fill="#000">
+    <text x="58"  y="112" font-style="italic">axil_agent (S00)</text>
+    <text x="368" y="112" font-style="italic">axif_agent (S01)</text>
+  </g>
+
+  <g font-size="11" fill="#000" text-anchor="middle">
+    <text x="205" y="136">sequencer</text>
+    <text x="131" y="170">driver</text>
+    <text x="279" y="170">monitor</text>
+    <text x="515" y="136">sequencer</text>
+    <text x="441" y="170">driver</text>
+    <text x="589" y="170">monitor</text>
+
+    <text x="208" y="230">scoreboard</text>
+    <text x="208" y="246" font-size="9.5" font-style="italic">referentni model NCC&#178;</text>
+    <text x="518" y="230">coverage collector</text>
+    <text x="518" y="246" font-size="9.5" font-style="italic">subscriber na oba monitora</text>
+
+    <text x="205" y="337">axi_lite_if</text>
+    <text x="205" y="352" font-size="9.5" font-style="italic">clocking block, modport</text>
+    <text x="515" y="337">axi_full_if</text>
+    <text x="515" y="352" font-size="9.5" font-style="italic">clocking block, modport</text>
+
+    <text x="205" y="446">AXI4-Lite slave (S00)</text>
+    <text x="515" y="446">AXI4-Full slave (S01)</text>
+    <text x="205" y="497">ncc_core</text>
+    <text x="205" y="511" font-size="9.5" font-style="italic">FSM + seq_divider</text>
+    <text x="515" y="497">mem_subsystem</text>
+    <text x="515" y="511" font-size="9.5" font-style="italic">slika / &#353;ablon / rezultat</text>
+  </g>
+
+  <g stroke="#000" stroke-width="1.1" fill="none" marker-end="url(#str)">
+    <path d="M 80 178 L 80 320"/>
+    <path d="M 80 360 L 80 424"/>
+    <path d="M 330 424 L 330 360"/>
+    <path d="M 330 320 L 330 178"/>
+    <path d="M 390 178 L 390 320"/>
+    <path d="M 390 360 L 390 424"/>
+    <path d="M 640 424 L 640 360"/>
+    <path d="M 640 320 L 640 178"/>
+  </g>
+
+  <g stroke="#555" stroke-width="1" stroke-dasharray="4 3" fill="none" marker-end="url(#tlm)">
+    <path d="M 250 178 L 250 210"/>
+    <path d="M 290 178 L 290 196 L 470 196 L 470 210"/>
+    <path d="M 560 178 L 560 210"/>
+    <path d="M 600 178 L 600 204 L 170 204 L 170 210"/>
+  </g>
+
+  <g stroke="#000" stroke-width="0.8" stroke-dasharray="3 3" fill="none">
+    <path d="M 205 458 L 205 478"/>
+    <path d="M 515 458 L 515 478"/>
+  </g>
+
+  <g font-size="10" fill="#000">
+    <line x1="150" y1="556" x2="182" y2="556" stroke="#000" stroke-width="1.1" marker-end="url(#str)"/>
+    <text x="188" y="560">signali, pin nivo</text>
+    <line x1="380" y1="556" x2="412" y2="556" stroke="#555" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#tlm)"/>
+    <text x="418" y="560">uvm_analysis_port, transakcije</text>
+  </g>
+</svg>
+<figcaption><b>Slika 1.</b> Hijerarhija verifikacionog okruženja. Drajveri pobuđuju
+projekat kroz virtuelne interfejse, dok monitori isti saobraćaj pasivno rekonstruišu i
+prosleđuju komponenti za proveru i kolektoru pokrivenosti transakcionim putem.</figcaption>
+</figure>
+
+<p>Dva agenta, jer projekat ima dve magistrale i one rade istovremeno: podaci se pune
+preko S01 dok se upravljanje odvija preko S00. Scoreboard i kolektor kače se na izlaze
+<b>agenata</b>, dakle na monitore, i nemaju nijednu vezu ka drajverima.</p>
+
+<h1>4. Korak 2 — Verifikacioni plan</h1>
+
+<p class="noind">Prvi korak nije bio kod nego dokument: šta se tačno verifikuje, čime,
+i po kom merilu se zna da je gotovo.</p>
+
+<p>Plan nije pisan iz sećanja niti iz ranijih beleški, nego <b>čitanjem izvornog
+koda</b>. To se odmah isplatilo — tri stvari iz starih beleški pokazale su se
+netačnim:</p>
+
+<ul class="plain">
+  <li><p class="noind">Adresa <code>0x40</code>, navedena kao početak mape rezultata,
+  <b>ne postoji</b>. Magistrala S00 je šestobitna, pa je najveća adresa
+  <code>0x3F</code>. Rezultati se čitaju sa S01.</p></li>
+  <li><p class="noind">Registri <code>0x10</code> i <code>0x14</code> postoje, ali ih
+  projekat ne vodi ni na jedan port jezgra — praktično su neupotrebljeni.</p></li>
+  <li><p class="noind">Jezgro proverava dimenzije <b>tvrdnjama sa nivoom ozbiljnosti
+  <code>failure</code></b>. Kršenje ne obara jedan test nego <b>celu simulaciju</b>.
+  To je odmah postalo obavezujuće pravilo za ograničenja randomizacije.</p></li>
+</ul>
+
+<p>Rezultat je dokument sa matricom od petnaest testova, planom pokrivenosti sa
+imenovanim bins-ovima, blok dijagramom i tabelom rizika. Predat je kao prilog uz PSDS
+dokumentaciju.</p>
+
+<h1>5. Korak 3 — Osnovno okruženje</h1>
+
+<p class="noind">Najveći deo posla, građen u pet koraka, gde se svaki zatvarao nečim
+što se <b>pokreće</b> — ne fajlom koji se prevodi.</p>
+
+<table>
+  <caption><b>Tabela 3.</b> Redosled izgradnje okruženja</caption>
+  <thead>
+    <tr><th>Šta je napravljeno</th><th>Čime je dokazano da radi</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Interfejsi, paket sa adresama, vrh testbenča</td><td>simulacija se pokreće i uredno završava; oba virtuelna interfejsa stižu kroz konfiguracionu bazu</td></tr>
+    <tr><td>Stavka i drajver za S00</td><td>sedam provera upis-pa-čitanje nad četiri registra, u sva tri redosleda</td></tr>
+    <tr><td>Monitor i agent za S00</td><td>monitor rekonstruisao svih 14 transakcija i <i>izmerio</i> redosled sa magistrale</td></tr>
+    <tr><td>Agent za S01 sa paketnim prenosom</td><td>šest blokova, dužine 1, 2, 3 i 16 beat-ova, upisano jednako pročitanom</td></tr>
+    <tr><td>Okruženje, virtuelni sekvencer, smoke test</td><td>ceo put kroz jezgro: slika i šablon → dimenzije → pokretanje → čekanje → rezultat</td></tr>
+  </tbody>
+</table>
+
+<p>Za svaku proveru je posebno potvrđeno i da <b>ume da padne</b>. Provera koja nikada
+ne pada nije provera nego ukras. Postupak je bio da se namerno pokvari put kroz
+projekat — na primer, da drajver upiše vrednost sa jednim izmenjenim bitom — i da se
+vidi da sve provere prijave grešku. Zatim se kvar uklanja.</p>
+
+<div class="note">
+<p><b>Zamka koju vredi spomenuti.</b> Prvi smoke test je <i>prolazio</i>, a bio je
+bezvredan. Slika je bila linearni gradijent, pa je svaki prozor bio jednak šablonu
+uvećanom za konstantu — a mera poklapanja je na to neosetljiva. Rezultat je bio
+savršeno poklapanje na svih devet pozicija: matematički tačno, ali takav skup ne
+razlikuje ispravan projekat od onog koji uvek vraća istu vrednost. Podaci su zamenjeni
+tako da postoji tačno jedan vrh, pa je provera postala smislena.</p>
+</div>
+<h1>6. Korak 4 — Scoreboard i tvrdnje</h1>
+
+<p class="noind">Do ovog koraka su provere bile ručne i lokalne. Sada okruženje dobija
+nezavisno mišljenje o tome šta bi rezultat trebalo da bude.</p>
+
+<p><b>Referentni model</b> je napisan u čistom SystemVerilogu, bez poziva ka jeziku C.
+Razlog je prenosivost: poziv spoljne funkcije traži poseban korak prevođenja koji bi se
+morao ponoviti na drugom simulatoru, a to je tačno ono što se u koraku 7 želi izbeći.</p>
+
+<p>Model je izveden iz izvornog koda jezgra, red po red, jer je bit-tačnost zavisila od
+sitnica kojih u formuli nema: zaokruživanje pri celobrojnom deljenju, odsecanje
+srednjih vrednosti na osam bita, širine akumulatora od 27 i 26 bita, odsecanje
+proizvoda na 52 bita, i posebna grana kada je varijansa nula.</p>
+
+<p><b>Scoreboard</b> radi ovako: upisi u memorijske regione pune njegovu sliku
+memorije, upisi u registre pamte podešavanja, upis u kontrolni registar pokreće
+računanje predikcije, a čitanja regiona rezultata se porede sa tom predikcijom. Sve to
+isključivo preko monitora.</p>
+
+<div class="note">
+<p><b>Referentni model je pao, i scoreboard ga je uhvatio.</b> Prva verzija je dala
+neslaganje na svih devet pozicija. Greška je bila u modelu, ne u projektu: sabiranje
+kvadrata razlika bilo je napisano tako da je kontekst dodele učinio množenje
+neoznačenim, pa je razlika od &minus;71 ušla kao 441.</p>
+<p>Nađeno je zato što je postojalo <b>nezavisno sidro</b>: na jednoj poziciji je šablon
+bio doslovno jednak prozoru, pa rezultat <i>mora</i> biti tačna jedinica. Projekat je
+to davao, model nije — i time je odmah bilo jasno na kojoj je strani greška.</p>
+</div>
+
+<p>Uz scoreboard idu i <b>tvrdnje</b>, smeštene u interfejse. Da tvrdnje nisu prazne
+potvrđeno je kvarenjem drajvera: kada je namerno povučen signal pre nego što je stigla
+potvrda, tvrdnja je opalila i pokretanje je prijavljeno kao neuspeh.</p>
+
+<p>Tu je otkriveno i nešto o samom lancu alata: <b>neuspeh tvrdnje se ne broji kao
+UVM greška.</b> Simulator ga ispisuje zasebno. Da skripta za pokretanje nije tražila i
+taj oblik, tvrdnje bi opaljivale a test bi i dalje prolazio.</p>
+
+<h1>7. Korak 5 — Pokrivenost</h1>
+
+<p class="noind">Kolektor pokrivenosti je zasebna komponenta, vezana na iste monitore
+kao scoreboard, ali potpuno nezavisna od njega — merenje i provera ne smeju zavisiti
+jedno od drugog.</p>
+
+<table>
+  <caption><b>Tabela 4.</b> Šta se meri</caption>
+  <thead>
+    <tr><th>Grupa</th><th>Šta posmatra</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Dimenzije</td><td>širina i visina slike i šablona: najmanja, tipične, najveća; ukrštanje slike i šablona</td></tr>
+    <tr><td>Upravljanje</td><td>pokretanje, zauzetost, kraj rada; <b>ukrštanje pokretanja i zauzetosti</b></td></tr>
+    <tr><td>Magistrala</td><td>redosled kanala, region, dužina paketnog prenosa, maska upisa; <b>ukrštanje redosleda i regiona</b></td></tr>
+  </tbody>
+</table>
+
+<p>Dva ukrštanja su bila glavni cilj. Prvo hvata pokretanje jezgra dok ono već radi;
+drugo dokazuje da je ispravljena greška u protokolu proverena u <i>svakom</i> regionu,
+a ne samo na jednom mestu.</p>
+
+<p>Nedostižne kombinacije su izričito izuzete. Jezgro zahteva da šablon ne bude veći od
+slike, pa te kombinacije nikada ne mogu nastati — da nisu izuzete, ciljna pokrivenost
+ne bi se mogla dostići ni sa savršenom pobudom, a broj bi zauvek ostao ispod sto.</p>
+
+<div class="note">
+<p><b>Trik koji je celu stvar učinio izvodljivom.</b> Bins-ovi za najveće dimenzije
+traže velike <i>širine</i>, ali ne i velike <i>površine</i>. Skup od 90&times;1 sa
+šablonom 30&times;1 je potpuno dopušten, gađa oba krajnja bins-a, a računa 61 prozor
+umesto 3721. Zahvaljujući tome test pokrivenosti traje sekunde, a ne minute.</p>
+</div>
+
+<p>Rezultat je <b>sto odsto</b> na sve tri grupe, na svakoj tački i svakom ukrštanju,
+spojeno preko više pokretanja. Pokrivenost jednog testa ne znači ništa — meri se
+ukupna, preko cele liste.</p>
+
+<h1>8. Korak 6 — Regresija</h1>
+
+<p class="noind">Regresija je jedna komanda koja pušta sve testove i sažima ishod.
+Podeljena je u tri liste:</p>
+
+<table>
+  <caption><b>Tabela 5.</b> Sastav regresije</caption>
+  <thead>
+    <tr><th>Lista</th><th class="c">Broj pokretanja</th><th>Namena</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Brza</td><td class="c">5</td><td>pušta se posle svake izmene; mora proći za nekoliko sekundi</td></tr>
+    <tr><td>Spora</td><td class="c">2</td><td>testovi za pokrivenost, rade pun proračun</td></tr>
+    <tr><td>Slučajna</td><td class="c">20</td><td>isti test sa dvadeset različitih početnih vrednosti generatora</td></tr>
+  </tbody>
+</table>
+
+<p>Elaboracija se radi <b>jednom</b>, pa svi testovi rade nad istim snimkom. Merenjem:
+pokretanje bez ponovne elaboracije traje nekoliko sekundi umesto tridesetak. Za
+dvadeset sedam pokretanja to je razlika između par minuta i pola sata.</p>
+
+<div class="note">
+<p><b>Prva puna regresija je pala na šest od dvadeset seed-ova</b> — i greška je bila
+prava. Slika se slala kao <i>jedan</i> paketni prenos, a protokol dozvoljava najviše
+256 beat-ova po prenosu. Podela je bila savršeno čista: svih šest palih imalo je više
+od 256 piksela, svi prošli manje.</p>
+<p>To je najbolji argument za više seed-ova. Do tada je taj test pokretan samo sa
+jednim seed-om, koji je slučajno dao mali skup — i prolazio je. Jedan seed bi tu grešku
+krio koliko god dugo.</p>
+</div>
+
+<h1>9. Korak 7 — Dva simulatora</h1>
+
+<p class="noind">Isto okruženje je pušteno na Vivado XSim-u i na Cadence Xcelium-u.
+Lista testova, njihov redosled i način provere su <b>isti</b> — grana se samo koji par
+skripti se poziva. Da se regresija razlikuje po simulatoru, ne bi dokazivala
+prenosivost nego samo da postoje dve različite regresije.</p>
+
+<p>Prenosivost je proverena, ne pretpostavljena: nijedna putanja u spiskovima izvornih
+datoteka nije apsolutna, a jedini sistemski pozivi u celom testbenču su standardni.</p>
+
+<table>
+  <caption><b>Tabela 6.</b> Ishod na oba simulatora</caption>
+  <thead>
+    <tr><th></th><th class="c">Vivado XSim</th><th class="c">Cadence Xcelium 19.03</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Testova prošlo</td><td class="c">27 od 27</td><td class="c">27 od 27</td></tr>
+    <tr><td>Trajanje</td><td class="c">341 s</td><td class="c">68 s</td></tr>
+    <tr><td>UVM biblioteka</td><td class="c">1.2</td><td class="c">CDNS-1.1d</td></tr>
+  </tbody>
+</table>
+
+<p>Ceo SystemVerilog kod se preveo na Xcelium-u bez ijedne greške iz prvog pokušaja.
+Ono što nije prošlo bio je <b>projekat</b>, i o tome govori sledeće poglavlje.</p>
+
+<h1>10. Šta je verifikacija stvarno pronašla</h1>
+
+<p class="noind">Ovo je najvažniji deo odbrane. Okruženje nije napravljeno da bi
+potvrdilo ono što se već znalo, nego da bi pokazalo ono što se nije znalo.</p>
+
+<h2>10.1. Redosled adresnog kanala i kanala podataka</h2>
+
+<p class="noind">Projekat je ranije imao grešku: upisni put je visio kada podatak stigne
+pre adrese. Greška je ispravljena tako što slave sada prihvata podatak <b>tek pošto</b>
+prihvati adresu — dva signala spremnosti se nikada ne dižu u istom taktu.</p>
+
+<p>To ima dve posledice za okruženje, i obe su otkrivene merenjem, ne čitanjem:</p>
+
+<ul class="plain">
+  <li><p class="noind"><b>Drajver koji čeka oba signala odjednom visi zauvek.</b>
+  Prva proba mešovitog jezika je upravo tako i pala, i prekinuo ju je tek nadzorni
+  brojač. Zato drajver vodi kanale kao nezavisne niti.</p></li>
+  <li><p class="noind"><b>Monitor ne sme meriti redosled po rukovanju.</b> Pošto
+  potvrda na kanalu podataka <i>uvek</i> dolazi posle potvrde na adresnom kanalu,
+  merenje po rukovanju prijavljuje da je adresa uvek bila prva — i scenario koji je
+  meta celog projekta postaje nevidljiv. Izmereno: sedam puta „adresa prva“, nijednom
+  „podatak prvi“. Ispravno je meriti trenutak <b>postavljanja</b> signala, i tada se
+  dobija tačan raspored.</p></li>
+</ul>
+
+<p>Ispravka je zatim pretočena u tvrdnju koja stalno gleda: dva signala spremnosti se
+ne smeju dići u istom taktu. Ako se to ikada desi, stara greška se vratila i simulacija
+to prijavljuje istog trenutka.</p>
+
+<h2>10.2. Pokretanje dok jezgro radi nije zaštićeno</h2>
+
+<p class="noind">Uslov za pokretanje ne proverava da li je jezgro zauzeto. Upis u
+kontrolni registar tokom rada zato istovremeno stvara impuls koji jezgro zanemaruje
+(jer nije u stanju mirovanja) i <b>briše zastavicu o završetku</b>. Ponašanje je
+stvarno, dosad neprovereno, i pokriveno je zasebnim testom i sopstvenim bins-om.</p>
+
+<h2>10.3. Četiri svojstva memorijskog prostora</h2>
+
+<table>
+  <caption><b>Tabela 7.</b> Ponašanja izvedena iz koda, nijedno ranije provereno</caption>
+  <thead>
+    <tr><th>Svojstvo</th><th>Zapažanje</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Region rezultata je samo za čitanje</td><td>upis se tiho zanemaruje, a odgovor na magistrali je i dalje uredan</td></tr>
+    <tr><td>Region šablona se preklapa</td><td>memorija je plića od adresnog prostora, pa se adrese na razmaku od 1024 reči poklapaju</td></tr>
+    <tr><td>Gornja 24 bita pri čitanju su nule</td><td>za sliku i šablon, jer se osmobitni podatak dopunjuje nulama</td></tr>
+    <tr><td>Nemapirani region vraća nule</td><td>a ne grešku na magistrali</td></tr>
+  </tbody>
+</table>
+
+<p>Uz to je potvrđeno da projekat poštuje masku upisa: upis sa spuštenim najnižim bitom
+maske ne menja memoriju. Kada je to uneto u referentni model, otkrila se rupa u samom
+okruženju — monitor za tu magistralu masku uopšte nije prikupljao, pa je slika memorije
+ostajala prazna. Model koji čita polje koje monitor ne puni je tiha rupa.</p>
+
+<h2>10.4. Tri mesta na kojima se projekat oslanja na blagost jednog alata</h2>
+
+<p class="noind">Ovo se moglo videti <b>samo</b> puštanjem na drugom simulatoru.</p>
+
+<table>
+  <caption><b>Tabela 8.</b> Razlike između simulatora</caption>
+  <thead>
+    <tr><th>Šta je odbijeno</th><th>Uzrok</th><th>Rešenje</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Agregat u registru statusa</td><td>širina dolazi iz generika, pa opseg nije statički poznat</td><td>opcija prevodioca</td></tr>
+    <tr><td>Grananje po vrednosti adrese</td><td>isti razlog, podtip nije statički poznat</td><td>jedan red u deklaraciji</td></tr>
+    <tr><td>Prekoračenje opsega u nultom trenutku</td><td>celobrojni signali bez početne vrednosti dobijaju najmanji mogući broj</td><td>podešavanje simulatora</td></tr>
+  </tbody>
+</table>
+
+<p>Sve tri potiču iz standardnog AXI šablona i nijedna ne utiče na rad na ploči. Dve su
+rešene podešavanjem alata. Treća je tražila izmenu jednog reda u kopiji koja se
+verifikuje; da je ta izmena bez uticaja na ponašanje <b>izmereno</b> je, a ne
+pretpostavljeno — puna regresija pre i posle dala je bajt-identičan ispis u svih
+27 logova, uz istu pokrivenost.</p>
+
+<div class="note">
+<p>Ako se na odbrani postavi samo jedno pitanje o koraku 7, odgovor je ovo poglavlje:
+dvostruka simulacija nije formalnost nego je otkrila tri stvarna oslanjanja na
+ponašanje jednog alata, i nijedno se ne vidi bez nje.</p>
+</div>
+<h1>11. Pregled izvornih fajlova</h1>
+
+<p class="noind">Okruženje je podeljeno tako da svaki fajl ima jednu odgovornost i da
+se može čitati odozdo naviše: prvo zajedničke konstante, pa opis žica, pa po jedan
+paket za svaku magistralu, pa referentni model, pa okruženje koje ih spaja, i na kraju
+testovi.</p>
+
+<table>
+  <caption><b>Tabela 9.</b> Sadržaj foldera sa izvornim kodom</caption>
+  <thead>
+    <tr><th>Fajl</th><th class="c">Linija</th><th>Uloga</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ncc_verif_pkg.sv</code></td><td class="c">80</td><td>zajedničke konstante i tipovi</td></tr>
+    <tr><td><code>axi_lite_if.sv</code></td><td class="c">127</td><td>žice i tvrdnje magistrale S00</td></tr>
+    <tr><td><code>axi_full_if.sv</code></td><td class="c">150</td><td>žice i tvrdnje magistrale S01</td></tr>
+    <tr><td><code>ncc_axil_pkg.sv</code></td><td class="c">492</td><td>ceo agent za S00</td></tr>
+    <tr><td><code>ncc_axif_pkg.sv</code></td><td class="c">540</td><td>ceo agent za S01</td></tr>
+    <tr><td><code>ncc_ref_pkg.sv</code></td><td class="c">101</td><td>referentni model</td></tr>
+    <tr><td><code>ncc_env_pkg.sv</code></td><td class="c">965</td><td>provera, merenje, okruženje, scenariji</td></tr>
+    <tr><td><code>tb_top.sv</code></td><td class="c">131</td><td>vrh: takt, reset, instanca projekta</td></tr>
+    <tr><td><code>tests/ncc_test_pkg.sv</code></td><td class="c">347</td><td>svi testovi</td></tr>
+    <tr><td><code>tb_mixed_probe.sv</code></td><td class="c">149</td><td>zapis prve probe, van upotrebe</td></tr>
+  </tbody>
+</table>
+
+<h2>11.1. ncc_verif_pkg.sv — zajedničke konstante</h2>
+
+<p class="noind">Jedino mesto na kome stoje adrese registara, pomeraji memorijskih
+regiona, dubine memorija i granice dopuštenih dimenzija. Sve je izvedeno čitanjem
+izvornog koda jezgra, pa nijedan „magičan broj“ ne sme da se pojavi kasnije u
+testovima.</p>
+
+<p>Ovde su i dva nabrojiva tipa koja se koriste svuda: <code>region_e</code> (slika,
+šablon, rezultat, nemapirano) i <code>aw_w_order_e</code> (adresa prva, podatak prvi,
+istovremeno).</p>
+
+<p>Paket se namerno <b>ne</b> zove <code>ncc_pkg</code>, iako bi to bilo prirodnije:
+projekat već ima VHDL paket tog imena, a u mešovitoj simulaciji oba završavaju u istoj
+biblioteci i imena bi se sudarila.</p>
+
+<h2>11.2. axi_lite_if.sv i axi_full_if.sv — interfejsi</h2>
+
+<p class="noind">Svaki opisuje žice jedne magistrale i uz njih <b>dva clocking bloka</b>:
+jedan kojim drajver vozi signale, drugi kojim ih monitor samo uzorkuje. Razdvojeni su
+da monitor ne bi gledao pobudu umesto magistrale.</p>
+
+<p>U istim fajlovima stoje i <b>tvrdnje</b>, ukupno petnaest. Nalaze se ovde, a ne u
+testu, pa važe u svakom pokretanju — i u onima koja o njima ne znaju ništa:</p>
+
+<ul class="plain">
+  <li><p class="noind">signal potvrde se ne povlači pre nego što stigne odgovor, a
+  podatak i adresa se u međuvremenu ne menjaju — na svim kanalima;</p></li>
+  <li><p class="noind">odgovor na upis ne sme stići pre poslednjeg beat-a paketnog
+  prenosa;</p></li>
+  <li><p class="noind">dva signala spremnosti se nikada ne dižu u istom taktu — to je
+  ispravka stare greške pretočena u pravilo koje simulator stalno proverava.</p></li>
+</ul>
+
+<p>Razlika između dva fajla je samo u tome što S01 ima i kanale za paketni prenos
+(dužina, veličina, poslednji beat, identifikator).</p>
+
+<h2>11.3. ncc_axil_pkg.sv — agent za kontrolne registre</h2>
+
+<p class="noind">Sve što je potrebno da bi se vozila magistrala S00, u jednom paketu.
+Sadrži šest celina:</p>
+
+<table>
+  <caption><b>Tabela 10.</b> Sadržaj paketa za S00</caption>
+  <thead>
+    <tr><th>Klasa</th><th>Šta radi</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ncc_reg_item</code></td><td>jedna registarska transakcija: adresa, podatak, smer, redosled kanala, razmak. Ograničenja biraju samo dopuštene adrese, zabranjuju upis u registar koji je samo za čitanje i težinski biraju redosled kanala</td></tr>
+    <tr><td><code>ncc_axil_sequencer</code></td><td>saobraćajac; obična specijalizacija standardne klase</td></tr>
+    <tr><td><code>ncc_axil_driver</code></td><td>prevodi stavku u signale. Kanale vodi kao tri nezavisne niti</td></tr>
+    <tr><td><code>ncc_axil_monitor</code></td><td>pasivno rekonstruiše transakcije i meri redosled kanala</td></tr>
+    <tr><td><code>ncc_axil_agent_config</code></td><td>podešavanja: aktivan ili pasivan režim, bazna adresa</td></tr>
+    <tr><td><code>ncc_axil_agent</code></td><td>pakuje prethodno u jednu komponentu sa jednim izlazom</td></tr>
+  </tbody>
+</table>
+
+<p>Na kraju paketa su dve sekvence: osnovna, sa pomoćnim zadacima „upiši“ i „pročitaj“,
+i izvedena, koja izvodi sedam provera upis-pa-čitanje nad četiri registra u sva tri
+redosleda kanala.</p>
+
+<div class="note">
+<p><b>Najvažnijih deset redova u paketu</b> su u drajveru. Kanali se pokreću unutar
+<code>fork…join</code>, a polje <code>order</code> određuje samo koliko taktova nit
+čeka pre nego što krene. Sekvencijalno čekanje na oba signala spremnosti bi visilo
+zauvek, jer se oni nikada ne dižu istovremeno.</p>
+</div>
+
+<h2>11.4. ncc_axif_pkg.sv — agent za memoriju</h2>
+
+<p class="noind">Isti raspored kao prethodni paket, uz paketni prenos. Stavka
+<code>ncc_mem_item</code> nosi region, adresu reči, dužinu prenosa, niz podataka i
+masku upisa.</p>
+
+<p>Ograničenja u ovoj stavci su zanimljiviji deo, jer opisuju pravila protokola:</p>
+
+<ul class="plain">
+  <li><p class="noind">najviše 256 beat-ova po jednom prenosu;</p></li>
+  <li><p class="noind">prenos ne sme preći granicu od 4 KB;</p></li>
+  <li><p class="noind">prenos ne sme izaći iz adresnog prostora regiona — što nije isto
+  što i dubina memorije, pa je aliasiranje i dalje moguće testirati.</p></li>
+</ul>
+
+<p>Drajver ima petlju po beat-ovima i postavlja oznaku poslednjeg beat-a. Monitor
+skuplja beat-ove do te oznake, a redosled kanala meri po <b>prvom</b> beat-u — kasniji
+ne govore ništa o odnosu prema adresnom kanalu.</p>
+
+<h2>11.5. ncc_ref_pkg.sv — referentni model</h2>
+
+<p class="noind">Najkraći fajl, a najosetljiviji. Jedna funkcija koja iz slike, šablona
+i dimenzija računa celu mapu rezultata.</p>
+
+<p>Napisan je prema izvornom kodu jezgra, a ne prema formuli, jer bit-tačnost zavisi
+od sitnica kojih u formuli nema: zaokruživanje pri celobrojnom deljenju srednjih
+vrednosti, odsecanje na osam bita, širine akumulatora od 27 i 26 bita, odsecanje
+proizvoda na 52 bita, posebna grana kada je varijansa nula, i konačno deljenje u
+83-bitnoj aritmetici.</p>
+
+<p>Čist SystemVerilog, bez poziva ka jeziku C — da bi model prešao na drugi simulator
+bez dodatnog koraka prevođenja.</p>
+
+<h2>11.6. ncc_env_pkg.sv — provera, merenje i scenariji</h2>
+
+<p class="noind">Najveći fajl, jer okuplja sve što nije vezano za jednu magistralu.</p>
+
+<p><b>Scoreboard</b> ima dva ulaza, po jedan za svaki monitor. Upisi u memorijske
+regione pune njegovu sliku memorije, upisi u registre pamte podešavanja, upis u
+kontrolni registar pokreće računanje predikcije, a čitanja regiona rezultata se porede.
+Modeluje i ponašanja koja se lako previde: masku upisa, aliasiranje šablona i to da je
+region rezultata samo za čitanje. Na kraju ima proveru koja prijavljuje grešku ako
+scoreboard nije izvršio nijedno poređenje — jer provera koja ništa nije uporedila nije
+dokaz ispravnosti nego rupa.</p>
+
+<p><b>Kolektor pokrivenosti</b> je zasebna komponenta na istim ulazima. Tri grupe:
+dimenzije, upravljanje i magistrala, sa tri ukrštanja.</p>
+
+<p><b>Okruženje</b> gradi oba agenta, scoreboard, kolektor i virtuelni sekvencer, pa
+ih povezuje. Scoreboard i kolektor kače se na izlaze agenata, nikada na drajvere.</p>
+
+<p>Na kraju fajla su četiri scenarija:</p>
+
+<table>
+  <caption><b>Tabela 11.</b> Scenariji u okruženju</caption>
+  <thead>
+    <tr><th>Sekvenca</th><th>Šta izvodi</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ncc_smoke_seq</code></td><td>ceo put: slika i šablon preko S01, dimenzije preko S00, pokretanje, čekanje uz nadzorni brojač, čitanje rezultata</td></tr>
+    <tr><td><code>ncc_cov_seq</code></td><td>gađa bins-ove: dužine prenosa, maske upisa, svi regioni u sva tri redosleda, pokretanje dok jezgro radi</td></tr>
+    <tr><td><code>ncc_dim_sweep_seq</code></td><td>prolazi kroz svih devetnaest dostižnih kombinacija bins-ova dimenzija</td></tr>
+    <tr><td><code>ncc_random_seq</code></td><td>nasumičan skup uz ograničenja koja jemče ugovor sa jezgrom; menja se sa svakim seed-om</td></tr>
+  </tbody>
+</table>
+
+<h2>11.7. tb_top.sv — vrh testbenča</h2>
+
+<p class="noind">Ovde se spajaju dva sveta. Modul pravi takt od 100 MHz i reset,
+instancira oba interfejsa, instancira projekat u VHDL-u i povezuje njegove portove na
+žice interfejsa. Zatim kroz konfiguracionu bazu prosleđuje virtuelne interfejse naniže
+i pokreće test.</p>
+
+<p>Ono što ovde <b>ne</b> stoji jednako je važno: nijedan signal magistrale se ne vozi
+odavde. Time svaki signal ima tačno jednog gospodara — drajvera.</p>
+
+<p>Na kraju je nadzorni brojač koji obara simulaciju ako se ne završi na vreme. Bez
+njega bi stara greška obesila regresiju umesto da je oborila, a test koji visi ne daje
+nikakvu informaciju.</p>
+
+<h2>11.8. tests/ncc_test_pkg.sv — testovi</h2>
+
+<p class="noind">Sedam testova poređanih od najmanjeg ka najvećem. To nije stvar ukusa
+nego postupak za traženje uzroka: kada veliki test padne, prvo pitanje je da li je
+problem u magistrali ili u jezgru, a na to odgovaraju upravo mali.</p>
+
+<table>
+  <caption><b>Tabela 12.</b> Testovi i šta svaki dokazuje</caption>
+  <thead>
+    <tr><th>Test</th><th>Šta dokazuje</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ncc_vif_test</code></td><td>virtuelni interfejsi stižu, reset se otpušta, projekat miruje</td></tr>
+    <tr><td><code>ncc_axil_smoke_test</code></td><td>registri se upisuju i čitaju, u sva tri redosleda kanala</td></tr>
+    <tr><td><code>ncc_axil_agent_test</code></td><td>monitor vidi tačno ono što je drajver poslao, uključujući izmereni redosled</td></tr>
+    <tr><td><code>ncc_axif_smoke_test</code></td><td>paketni prenos radi za dužine 1, 2, 3 i 16 beat-ova</td></tr>
+    <tr><td><code>ncc_smoke_test</code></td><td>ceo put kroz jezgro, uz proveru scoreboard-a</td></tr>
+    <tr><td><code>ncc_cov_test</code></td><td>gađa bins-ove pokrivenosti</td></tr>
+    <tr><td><code>ncc_dim_sweep_test</code></td><td>prolazi kroz sve kombinacije dimenzija</td></tr>
+    <tr><td><code>ncc_random_test</code></td><td>nasumična pobuda; pušta se sa dvadeset seed-ova</td></tr>
+  </tbody>
+</table>
+
+<p>Fajl <code>tb_mixed_probe.sv</code> ostaje u folderu ali nije u spisku za
+prevođenje. To je bila prva proba, koja je dokazala da se VHDL i SystemVerilog uopšte
+mogu elaborirati zajedno; zadržan je kao zapis o tome kako je otkriveno da se dva
+signala spremnosti nikada ne dižu istovremeno.</p>
+
+<h2>11.9. Spiskovi izvornih fajlova i skripte</h2>
+
+<p class="noind"><code>rtl.f</code> i <code>tb.f</code> su obični tekstualni spiskovi —
+koje fajlove prevesti i kojim redom. Redosled nije proizvoljan: paket mora biti preveden
+pre onoga ko ga koristi, a komponenta pre onoga ko je instancira.</p>
+
+<p>Zahvaljujući njima postoji <b>jedno mesto</b> koje zna šta projekat sadrži. Sve
+skripte čitaju iste spiskove, pa dodavanje fajla znači izmenu na jednom mestu umesto na
+četiri. Putanje su relativne, da se ceo folder prenese na drugu mašinu bez izmena.</p>
+
+<table>
+  <caption><b>Tabela 13.</b> Skripte</caption>
+  <thead>
+    <tr><th>Skripta</th><th>Šta radi</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>build.sh</code></td><td>analiza i elaboracija, jednom za celu regresiju</td></tr>
+    <tr><td><code>run_one.sh</code></td><td>jedan test nad već izgrađenim snimkom</td></tr>
+    <tr><td><code>regress.sh</code></td><td>cela lista, tabela ishoda, pa pokrivenost</td></tr>
+    <tr><td><code>coverage.sh</code></td><td>spaja baze iz svih pokretanja i pravi izveštaj</td></tr>
+    <tr><td><code>build_xrun.sh</code>, <code>run_one_xrun.sh</code></td><td>isto to, za drugi simulator</td></tr>
+    <tr><td><code>spakuj.sh</code></td><td>priprema folder za prenos na drugu mašinu</td></tr>
+  </tbody>
+</table>
+
+<p>Podela na „izgradi“ i „pokreni“ nije kozmetička: elaboracija traje desetak puta duže
+od pokretanja, pa se za dvadeset sedam pokretanja radi jednom umesto dvadeset sedam
+puta.</p>
+
+<h1>12. Rezultati u brojkama</h1>
+
+<table>
+  <caption><b>Tabela 14.</b> Sažetak po koracima</caption>
+  <thead>
+    <tr><th class="c">Korak</th><th>Šta je isporučeno</th><th>Dokaz</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="c">2</td><td>verifikacioni plan sa matricom od 15 testova</td><td>prilog uz dokumentaciju, 12 strana</td></tr>
+    <tr><td class="c">3</td><td>okruženje: 2 agenta, virtuelni sekvencer, 7 testova</td><td>smoke test prolazi ceo put kroz jezgro</td></tr>
+    <tr><td class="c">4</td><td>referentni model i scoreboard, 15 tvrdnji</td><td>bit-tačno poklapanje cele mape rezultata</td></tr>
+    <tr><td class="c">5</td><td>tri grupe pokrivenosti sa ukrštanjima</td><td>100 % na svaku tačku i svako ukrštanje</td></tr>
+    <tr><td class="c">6</td><td>regresija jednom komandom, 27 pokretanja</td><td>27 prošlo, 0 palo</td></tr>
+    <tr><td class="c">7</td><td>ista regresija na dva simulatora</td><td>27 prošlo na oba, identičan ishod</td></tr>
+  </tbody>
+</table>
+
+<table>
+  <caption><b>Tabela 15.</b> Obim okruženja</caption>
+  <thead>
+    <tr><th>Stavka</th><th class="c">Vrednost</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Izvorni fajlovi okruženja</td><td class="c">10 (SystemVerilog)</td></tr>
+    <tr><td>Skripte za pokretanje</td><td class="c">7</td></tr>
+    <tr><td>Testovi</td><td class="c">7</td></tr>
+    <tr><td>Pokretanja u punoj regresiji</td><td class="c">27</td></tr>
+    <tr><td>Tvrdnje u interfejsima</td><td class="c">15</td></tr>
+    <tr><td>Funkcionalna pokrivenost</td><td class="c">100 %</td></tr>
+    <tr><td>Trajanje regresije</td><td class="c">341 s (XSim) / 68 s (Xcelium)</td></tr>
+  </tbody>
+</table>
+
+<h2>12.1. Kako se sve pokreće</h2>
+
+<pre>./sim/regress.sh                  cela regresija na XSim-u
+./sim/regress.sh brza             samo brza lista, za rad u toku dana
+SIM=xrun ./sim/regress.sh         ista regresija na Xcelium-u
+SEEDS=5 ./sim/regress.sh          manje seed-ova
+
+./sim/coverage.sh                 spaja baze i pravi izvestaj o pokrivenosti
+./sim/run_xsim.sh tb_top ncc_smoke_test 1     jedan test, za debug</pre>
+
+<h1>13. Očekivana pitanja i odgovori</h1>
+
+<p class="noind"><b>Zašto monitor, kad drajver već zna šta je poslao?</b></p>
+<p>Zato što bi tada okruženje poredilo pobudu sa samom sobom. Provera koja se oslanja
+na ono što je pobuda rekla prolazi i kada projekat ne radi ništa. Monitor gleda
+magistralu i može da demantuje drajver — u ovom projektu se to i desilo, kod merenja
+redosleda kanala.</p>
+
+<p class="noind"><b>Zašto je referentni model pisan u SystemVerilogu, a ne pozvan
+model u C-u?</b></p>
+<p>Zbog koraka 7. Poziv spoljne funkcije traži poseban korak prevođenja koji bi se
+morao ponoviti i podesiti na drugom simulatoru. Model u čistom SystemVerilogu prelazi
+na drugu mašinu bez ijedne izmene.</p>
+
+<p class="noind"><b>Kako znate da scoreboard stvarno radi, a ne da samo ćuti?</b></p>
+<p>Na tri načina. Prvo, ima završnu proveru koja prijavlja grešku ako nije izvršio
+nijedno poređenje. Drugo, kada je referentni model imao grešku, prijavio je neslaganje
+na svih devet pozicija. Treće, namerno kvarenje puta kroz projekat obara sve provere.</p>
+
+<p class="noind"><b>Zašto ograničenja randomizacije, zar to ne smanjuje pokrivenost?</b></p>
+<p>Suprotno. Jezgro proverava dimenzije tvrdnjama koje pri kršenju obaraju <b>celu
+simulaciju</b>, ne pojedinačni test. Bez ograničenja bi jedna neispravna vrednost
+uništila i pokrivenost svih ostalih testova iz tog pokretanja.</p>
+
+<p class="noind"><b>Zašto dvadeset seed-ova, a ne jedan?</b></p>
+<p>Jer je prva puna regresija pala na šest od dvadeset. Do tada je test pokretan sa
+jednim seed-om koji je slučajno davao mali skup podataka i uvek prolazio. Greška je
+bila stvarna: prekoračenje najveće dozvoljene dužine paketnog prenosa.</p>
+
+<p class="noind"><b>Šta znači sto odsto pokrivenosti — da je sve provereno?</b></p>
+<p>Ne. Znači da je isprobano sve što je <i>zamišljeno</i> u planu pokrivenosti. To je
+merilo koliko je plan ispunjen, ne dokaz da plan obuhvata sve moguće. Nedostižne
+kombinacije su izričito izuzete, da broj ne bi bio lažan.</p>
+
+<p class="noind"><b>Zašto dva simulatora, kad jedan već prolazi?</b></p>
+<p>Zato što je drugi otkrio tri mesta na kojima se projekat oslanja na blagost prvog.
+Nijedno se ne vidi na jednom alatu. To je konkretan odgovor, a ne formalno ispunjavanje
+uslova.</p>
+
+<p class="noind"><b>Gde je bila stara greška i kako je okruženje čuva?</b></p>
+<p>Upisni put je visio kada podatak stigne pre adrese. Okruženje je čuva na tri načina
+istovremeno: usmerenim testom koji taj scenario izvodi, ukrštanjem pokrivenosti koje
+dokazuje da je izveden u svakom regionu, i tvrdnjom koja stalno gleda i prijavljuje ako
+se dva signala spremnosti ikada dignu u istom taktu.</p>
+
+<p class="noind"><b>Šta biste uradili sa još vremena?</b></p>
+<p>Verifikaciju na nivou sistema, sa dve instance jezgra i interkonekcijom. Okruženje je
+za to već pripremljeno — konfiguracija agenta nosi baznu adresu, a agenti podržavaju
+pasivan režim, pa mogu da posmatraju saobraćaj koji vozi procesor.</p>
+
+<div class="note">
+<p><b>Jedna rečenica ako treba sažeti ceo projekat:</b> izgrađeno je okruženje koje
+samo generiše pobudu, samo proverava rezultat u odnosu na nezavisan model, samo meri
+šta je isprobalo, pokreće se jednom komandom i daje identičan ishod na dva različita
+simulatora — i koje je usput pronašlo pet stvari o projektu koje se ranije nisu
+znale.</p>
+</div>
+</body></html>

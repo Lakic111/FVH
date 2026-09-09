@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 574" width="720" height="574"
+     font-family="'Times New Roman', Times, serif">
+  <defs>
+    <marker id="str" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#000"/>
+    </marker>
+    <marker id="tlm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <g stroke="#000" fill="none" stroke-width="1">
+    <rect x="20"  y="40"  width="680" height="248" fill="#fff"/>
+    <rect x="36"  y="68"  width="648" height="204" fill="#fbfbfa"/>
+    <rect x="52"  y="98"  width="306" height="96"  fill="#f2f2ef"/>
+    <rect x="362" y="98"  width="306" height="96"  fill="#f2f2ef"/>
+    <rect x="64"  y="118" width="282" height="26"  fill="#fff"/>
+    <rect x="64"  y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="212" y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="374" y="118" width="282" height="26"  fill="#fff"/>
+    <rect x="374" y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="522" y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="95"  y="210" width="225" height="48"  fill="#fff"/>
+    <rect x="405" y="210" width="225" height="48"  fill="#fff"/>
+    <rect x="52"  y="320" width="306" height="40"  fill="#eaeae6"/>
+    <rect x="362" y="320" width="306" height="40"  fill="#eaeae6"/>
+    <rect x="20"  y="396" width="680" height="140" fill="#fff"/>
+    <rect x="52"  y="424" width="306" height="34"  fill="#f2f2ef"/>
+    <rect x="362" y="424" width="306" height="34"  fill="#f2f2ef"/>
+    <rect x="52"  y="478" width="306" height="40"  fill="#f2f2ef"/>
+    <rect x="362" y="478" width="306" height="40"  fill="#f2f2ef"/>
+  </g>
+
+  <g font-size="12" fill="#000">
+    <text x="30"  y="58"  font-weight="bold">ncc_test</text>
+    <text x="46"  y="86"  font-weight="bold">ncc_env</text>
+    <text x="100" y="414" font-weight="bold">ncc_accel &#8212; DUT (VHDL, nepromenjen)</text>
+  </g>
+
+  <g font-size="11" fill="#000">
+    <text x="58"  y="112" font-style="italic">axil_agent (S00)</text>
+    <text x="368" y="112" font-style="italic">axif_agent (S01)</text>
+  </g>
+
+  <g font-size="11" fill="#000" text-anchor="middle">
+    <text x="205" y="136">sequencer</text>
+    <text x="131" y="170">driver</text>
+    <text x="279" y="170">monitor</text>
+    <text x="515" y="136">sequencer</text>
+    <text x="441" y="170">driver</text>
+    <text x="589" y="170">monitor</text>
+
+    <text x="208" y="230">scoreboard</text>
+    <text x="208" y="246" font-size="9.5" font-style="italic">referentni model NCC&#178;</text>
+    <text x="518" y="230">coverage collector</text>
+    <text x="518" y="246" font-size="9.5" font-style="italic">subscriber na oba monitora</text>
+
+    <text x="205" y="337">axi_lite_if</text>
+    <text x="205" y="352" font-size="9.5" font-style="italic">clocking block, modport</text>
+    <text x="515" y="337">axi_full_if</text>
+    <text x="515" y="352" font-size="9.5" font-style="italic">clocking block, modport</text>
+
+    <text x="205" y="446">AXI4-Lite slave (S00)</text>
+    <text x="515" y="446">AXI4-Full slave (S01)</text>
+    <text x="205" y="497">ncc_core</text>
+    <text x="205" y="511" font-size="9.5" font-style="italic">FSM + seq_divider</text>
+    <text x="515" y="497">mem_subsystem</text>
+    <text x="515" y="511" font-size="9.5" font-style="italic">slika / &#353;ablon / rezultat</text>
+  </g>
+
+  <g stroke="#000" stroke-width="1.1" fill="none" marker-end="url(#str)">
+    <path d="M 80 178 L 80 320"/>
+    <path d="M 80 360 L 80 424"/>
+    <path d="M 330 424 L 330 360"/>
+    <path d="M 330 320 L 330 178"/>
+    <path d="M 390 178 L 390 320"/>
+    <path d="M 390 360 L 390 424"/>
+    <path d="M 640 424 L 640 360"/>
+    <path d="M 640 320 L 640 178"/>
+  </g>
+
+  <g stroke="#555" stroke-width="1" stroke-dasharray="4 3" fill="none" marker-end="url(#tlm)">
+    <path d="M 250 178 L 250 210"/>
+    <path d="M 290 178 L 290 196 L 470 196 L 470 210"/>
+    <path d="M 560 178 L 560 210"/>
+    <path d="M 600 178 L 600 204 L 170 204 L 170 210"/>
+  </g>
+
+  <g stroke="#000" stroke-width="0.8" stroke-dasharray="3 3" fill="none">
+    <path d="M 205 458 L 205 478"/>
+    <path d="M 515 458 L 515 478"/>
+  </g>
+
+  <g font-size="10" fill="#000">
+    <line x1="150" y1="556" x2="182" y2="556" stroke="#000" stroke-width="1.1" marker-end="url(#str)"/>
+    <text x="188" y="560">signali, pin nivo</text>
+    <line x1="380" y1="556" x2="412" y2="556" stroke="#555" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#tlm)"/>
+    <text x="418" y="560">uvm_analysis_port, transakcije</text>
+  </g>
+</svg>

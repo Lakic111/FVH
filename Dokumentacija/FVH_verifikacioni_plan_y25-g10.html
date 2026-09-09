@@ -1,0 +1,488 @@
+<!doctype html><html lang="sr"><head><meta charset="utf-8"><title>Verifikacioni plan - NCC akcelerator</title><style>
+  @page { size: A4; margin: 20mm 18mm 18mm 18mm; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 11.5pt;
+    line-height: 1.45;
+    color: #000;
+    margin: 0;
+    text-align: justify;
+    hyphens: auto;
+  }
+
+  p { margin: 0 0 0.55em 0; text-indent: 1.2em; }
+  p.noind, li p { text-indent: 0; }
+
+  h1 {
+    font-size: 15pt; font-weight: bold; margin: 0 0 0.9em 0;
+    page-break-before: always; page-break-after: avoid;
+  }
+  h1.first { page-break-before: avoid; }
+  h2 { font-size: 12.5pt; margin: 1.3em 0 0.5em 0; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 1.1em 0 0.4em 0; page-break-after: avoid; }
+
+  /* ---------- naslovna ---------- */
+  .cover { page-break-after: always; text-align: center; padding-top: 45mm; }
+  .cover .fac { font-size: 12pt; letter-spacing: .02em; }
+  .cover .subj { font-size: 13pt; margin-top: 26mm; font-variant: small-caps; }
+  .cover .title {
+    font-size: 21pt; font-weight: bold; margin: 8mm 14mm 0 14mm; line-height: 1.3;
+  }
+  .cover .sub { font-size: 13pt; margin-top: 6mm; }
+  .cover .rule { border-top: 1.4pt solid #000; width: 70%; margin: 9mm auto; }
+  .cover .meta { font-size: 12pt; margin-top: 20mm; line-height: 1.9; }
+  .cover .foot { margin-top: 34mm; font-size: 11pt; }
+
+  /* ---------- sadrzaj ---------- */
+  .toc { page-break-after: always; }
+  .toc h1 { text-align: center; page-break-before: avoid; }
+  .toc ul { list-style: none; margin: 0; padding: 0; }
+  .toc li { margin: 0.18em 0; text-align: left; }
+  .toc li.l1 { font-weight: bold; margin-top: 0.7em; }
+  .toc li.l2 { padding-left: 1.6em; font-size: 11pt; }
+  .toc li.l3 { padding-left: 3.2em; font-size: 10.5pt; }
+
+  /* ---------- tabele ---------- */
+  table {
+    border-collapse: collapse; width: 100%; margin: 0.7em 0 0.25em 0;
+    font-size: 10pt; page-break-inside: avoid;
+  }
+  caption { caption-side: bottom; font-size: 9.5pt; font-style: italic;
+            padding-top: 0.4em; text-align: center; }
+  caption b { font-style: normal; }
+  th, td { padding: 3.5px 7px; text-align: left; vertical-align: top; }
+  thead th { border-top: 1.1pt solid #000; border-bottom: 0.7pt solid #000;
+             font-weight: bold; text-align: center; }
+  tbody tr:last-child td { border-bottom: 1.1pt solid #000; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  td.c, th.c { text-align: center; }
+  tbody tr.sep td { border-top: 0.4pt solid #999; }
+
+  /* ---------- kod / formule ---------- */
+  code, .mono { font-family: Consolas, "Courier New", monospace; font-size: 9.6pt; }
+  pre {
+    font-family: Consolas, "Courier New", monospace; font-size: 9.2pt;
+    line-height: 1.32; background: #f6f6f4; border: 0.5pt solid #ccc;
+    padding: 7px 9px; margin: 0.6em 0; overflow-x: auto;
+    page-break-inside: avoid; text-align: left; white-space: pre;
+  }
+  .formula {
+    text-align: center; margin: 0.9em 0; font-size: 12pt; font-style: italic;
+    page-break-inside: avoid;
+  }
+  .formula .frac { display: inline-block; vertical-align: middle; text-align: center; }
+  .formula .frac > .num { display: block; padding: 0 .5em 2px .5em; border-bottom: 1pt solid #000; }
+  .formula .frac > .den { display: block; padding: 2px .5em 0 .5em; }
+  /* kvadratni koren koji se rasteže preko celog potkorenog izraza */
+  .sqrt { display: inline-flex; align-items: stretch; }
+  .sqrt > svg { width: .62em; height: auto; align-self: stretch; margin-right: 1px; overflow: visible; }
+  .sqrt > .radicand { border-top: 1.15pt solid #000; padding: 2px 3px 0 2px; }
+
+  /* ---------- figure ---------- */
+  figure { margin: 1em 0 0.4em 0; text-align: center; page-break-inside: avoid; }
+  figcaption { font-size: 9.5pt; font-style: italic; margin-top: 0.45em; text-align: center; }
+  figcaption b { font-style: normal; }
+  svg { max-width: 100%; height: auto; }
+  /* Visoke slike: ograniči visinu tako da slika i potpis stanu na istu stranu. */
+  figure.tall { page-break-before: always; }
+  figure.tall svg { max-height: 236mm; width: auto; }
+
+  .note {
+    border-left: 2.5pt solid #555; background: #f4f4f2;
+    padding: 6px 11px; margin: 0.8em 0; font-size: 10.3pt;
+    page-break-inside: avoid;
+  }
+  .note p { text-indent: 0; margin: 0 0 .35em 0; }
+  .note p:last-child { margin-bottom: 0; }
+
+  ul.plain, ol.plain { margin: 0.4em 0 0.7em 0; padding-left: 1.5em; }
+  ul.plain li, ol.plain li { margin-bottom: 0.28em; }
+
+  .kv { font-variant-numeric: tabular-nums; }
+  .ok  { font-weight: bold; }
+</style></head><body><div class="cover">
+  <div class="subj">Funkcionalna verifikacija hardvera</div>
+
+  <div class="rule"></div>
+  <div class="title">Verifikacioni plan i struktura verifikacionog okruženja za NCC akcelerator</div>
+  <div class="rule"></div>
+
+  <div class="meta">
+    Grupa: <b>y25-g10</b><br>
+    Prilog uz dokumentaciju predmeta Projektovanje složenih digitalnih sistema
+  </div>
+</div>
+
+<h1 class="first">1. Uvod i nivoi verifikacije</h1>
+
+<p class="noind">Predmet verifikacije je IP jezgro <code>ncc_accel</code> — hardverski
+akcelerator normalizovane unakrsne korelacije, projektovan i implementiran u okviru
+predmeta Projektovanje složenih digitalnih sistema. Jezgro je opisano u VHDL-u i
+verifikovano na nivou RTL-a golden podacima; ovaj dokument opisuje izgradnju
+verifikacionog okruženja u SystemVerilog/UVM metodologiji nad istim, nepromenjenim
+projektom.</p>
+
+<p>Računsko jezgro <code>ncc_core</code> već je provereno na nivou RTL-a
+(golden skup 4&times;4/2&times;2 i realni segment 90&times;90, bit-tačno), pa se
+težište ovde pomera na <b>IP nivo</b> — na <code>ncc_accel</code> sa dva magistralna
+interfejsa: AXI4-Lite (S00, kontrolni registri) i AXI4-Full (S01, memorijski prostor).
+Integracioni nivo (<code>ncc_system</code>: dve instance jezgra i AXI interconnect)
+razmatra se tek po stabilizaciji okruženja na IP nivou.</p>
+
+<h1>2. Granice dopuštenog stimulusa</h1>
+
+<p class="noind">Dok je u stanju <code>S_IDLE</code>, modul <code>ncc_core</code> na
+uzlaznu ivicu signala <code>start</code> proverava četiri uslova nad dimenzijama.
+Provere su napisane kao VHDL tvrdnje sa nivoom ozbiljnosti <code>failure</code>. Ta
+četiri uslova mora da poštuje svaki softver koji upravlja jezgrom, pa i verifikaciono
+okruženje.</p>
+
+<table>
+  <caption><b>Tabela 1.</b> Uslovi nad dimenzijama koje jezgro proverava pri pokretanju</caption>
+  <thead>
+    <tr><th class="c">Oznaka</th><th>Uslov</th><th>Poruka pri kršenju</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="c">U1</td><td class="kv">1 &le; img_w &le; 90 &nbsp;i&nbsp; 1 &le; img_h &le; 90</td><td><code>img_w/img_h van opsega 1..90</code></td></tr>
+    <tr><td class="c">U2</td><td class="kv">1 &le; tmp_w &le; 30 &nbsp;i&nbsp; 1 &le; tmp_h &le; 30</td><td><code>tmp_w/tmp_h van opsega 1..30</code></td></tr>
+    <tr><td class="c">U3</td><td class="kv">tmp_w &middot; tmp_h &le; 900</td><td><code>tmp_w*tmp_h &gt; MAX_TMP_PIX</code></td></tr>
+    <tr><td class="c">U4</td><td class="kv">tmp_w &le; img_w &nbsp;i&nbsp; tmp_h &le; img_h</td><td><code>sablon veci od slike</code></td></tr>
+  </tbody>
+</table>
+
+<p>Za verifikaciju to nije formalnost. Nivo ozbiljnosti
+<code>failure</code> obara <b>celu simulaciju</b>, a ne pojedinačni test. Iz toga slede
+tri pravila:</p>
+
+<ul class="plain">
+  <li><p class="noind">Ograničenja randomizacije u klasi sekvencijalne stavke moraju
+  garantovati U1–U4. Slučajno generisana dimenzija van opsega ne daje neuspeh testa
+  nego rušenje regresije, čime se gubi i pokrivenost svih ostalih testova iz tog
+  pokretanja.</p></li>
+  <li><p class="noind">Ponašanje pri <i>nelegalnim</i> dimenzijama namerno se ne
+  proverava. Tvrdnje žive samo u simulaciji — sinteza ih izbacuje, pa bi u hardveru
+  prevelika dimenzija prošla kao tiho odsecanje bita. Proverava se, dakle, da li se
+  ugovor poštuje, a ne šta se dešava kada se prekrši.</p></li>
+  <li><p class="noind">Registri su 32-bitni, a jezgro čita samo donjih osam bita.
+  Gornja 24 bita mogu se upisati i pročitati nazad, ali na rad jezgra ne utiču. Takav
+  upis je sasvim legalan i zgodan za proveru „upisano jednako pročitanom“, nezavisno
+  od toga šta jezgro računa.</p></li>
+</ul>
+
+<p>Signal <code>img_w</code> je tipa <code>unsigned(7 downto 0)</code>, pa sa
+magistrale prima bilo koju vrednost od 0 do 255. Vrednosti od 91 do 255 fizički se mogu
+upisati u registar, ali ih jezgro odbija tvrdnjom U1. Granicu, dakle, ne postavlja
+širina registra nego ugovor.</p>
+
+<h1>3. Kontrolni registri (AXI4-Lite, S00)</h1>
+
+<p class="noind">Adresna magistrala interfejsa S00 široka je šest bita
+(<code>C_S00_AXI_ADDR_WIDTH = 6</code>), uz <code>ADDR_LSB = 2</code> i
+<code>OPT_MEM_ADDR_BITS = 3</code>, što daje šesnaest registara u opsegu
+0x00–0x3C.</p>
+
+<table>
+  <caption><b>Tabela 2.</b> Registri interfejsa S00 koje jezgro stvarno koristi</caption>
+  <thead>
+    <tr><th class="c">Adresa</th><th class="c">Registar</th><th>Naziv</th><th>Ponašanje</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="c kv">0x00</td><td class="c"><code>slv_reg0</code></td><td>REG_IMG_W</td><td>bitovi 7:0 vode na <code>img_w</code></td></tr>
+    <tr><td class="c kv">0x04</td><td class="c"><code>slv_reg1</code></td><td>REG_IMG_H</td><td>bitovi 7:0 vode na <code>img_h</code></td></tr>
+    <tr><td class="c kv">0x08</td><td class="c"><code>slv_reg2</code></td><td>REG_TMP_W</td><td>bitovi 7:0 vode na <code>tmp_w</code></td></tr>
+    <tr><td class="c kv">0x0C</td><td class="c"><code>slv_reg3</code></td><td>REG_TMP_H</td><td>bitovi 7:0 vode na <code>tmp_h</code></td></tr>
+    <tr><td class="c kv">0x30</td><td class="c"><code>slv_reg12</code></td><td>REG_CTRL</td><td>upis sa <code>WDATA(0)='1'</code> daje impuls <code>start</code> i briše <code>done_sticky</code></td></tr>
+    <tr><td class="c kv">0x34</td><td class="c"><code>slv_reg13</code></td><td>REG_STATUS</td><td>bit 0 = <code>done_sticky</code>, bit 1 = <code>busy</code>; samo za čitanje</td></tr>
+  </tbody>
+</table>
+
+<p>Pokretanje jezgra tokom rada nije ni na koji način zaštićeno. Uslov za generisanje
+impulsa <code>start</code> glasi <code>wr_beat='1' and mem_logic="1100" and WDATA(0)='1'</code>,
+bez provere signala <code>busy</code>. Upis u REG_CTRL dok jezgro radi zato istovremeno
+generiše impuls koji <code>ncc_core</code> zanemaruje (jer nije u stanju
+<code>S_IDLE</code>) i <b>briše zastavicu</b> <code>done_sticky</code>. Reč je o
+stvarnom, dosad neproverenom ponašanju i o prioritetnoj meti plana (test T7 u
+tabeli 4).</p>
+
+<h1>4. Memorijski prostor (AXI4-Full, S01)</h1>
+
+<p class="noind">Adresna magistrala interfejsa S01 široka je sedamnaest bita, što daje
+prostor od 128 KB. Modul <code>mem_subsystem</code> dekodira region iz bitova 16:15, a
+adresu reči iz bitova 14:2 — dakle jedan piksel po 32-bitnoj reči.</p>
+
+<table>
+  <caption><b>Tabela 3.</b> Regioni memorijskog prostora S01</caption>
+  <thead>
+    <tr><th>Region</th><th class="c">Bitovi 16:15</th><th class="c">Pomeraj</th><th>Memorija</th><th class="c">U upotrebi</th><th>Pristup</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Slika</td><td class="c kv">00</td><td class="c kv">+0x00000</td><td class="kv">8192 &times; 8</td><td class="c kv">8100</td><td>čitanje i upis</td></tr>
+    <tr><td>Šablon</td><td class="c kv">01</td><td class="c kv">+0x08000</td><td class="kv">1024 &times; 8</td><td class="c kv">900</td><td>čitanje i upis</td></tr>
+    <tr><td>Rezultat</td><td class="c kv">10</td><td class="c kv">+0x10000</td><td class="kv">8192 &times; 32</td><td class="c kv">8100</td><td>samo čitanje</td></tr>
+    <tr><td>Nemapirano</td><td class="c kv">11</td><td class="c kv">+0x18000</td><td>—</td><td class="c">—</td><td>čita nule</td></tr>
+  </tbody>
+</table>
+
+<p>Iz ovakvog dekodiranja slede četiri ponašanja, od kojih nijedno dosad nije bilo
+predmet provere. Sva četiri su nezavisna od NCC proračuna, pa mogu da se testiraju u
+brzoj listi regresije:</p>
+
+<ul class="plain">
+  <li><p class="noind"><b>P1 — region rezultata je samo za čitanje.</b> Memorija
+  rezultata ima upisni signal porta A trajno na nuli, pa se upis iz regiona 10
+  zanemaruje, dok odgovor na magistrali ostaje <code>OKAY</code>. Test mora dokazati da
+  se sadržaj pritom ne menja.</p></li>
+  <li><p class="noind"><b>P2 — region šablona aliasira.</b> Memorija šablona koristi
+  samo donjih deset bita adrese reči, dok je adresa reči široka trinaest bita. Adrese
+  koje se unutar regiona 01 razlikuju za 1024 reči gađaju istu fizičku lokaciju. To
+  jeste očekivano ponašanje, ali mora biti zapisano kao takvo.</p></li>
+  <li><p class="noind"><b>P3 — gornja 24 bita pri čitanju su nule</b> za regione slike
+  i šablona, jer se osmobitni podatak dopunjuje nulama. Region rezultata vraća punih
+  32 bita.</p></li>
+  <li><p class="noind"><b>P4 — nemapirani region vraća nule</b>, a ne odgovor
+  <code>DECERR</code>.</p></li>
+</ul>
+
+<p>Čitanje ima latenciju od jednog takta, jer se oznaka regiona registruje radi
+poravnanja sa jednotaktnim čitanjem memorije. Monitor interfejsa S01 mora to uzeti u
+obzir pri rekonstrukciji transakcije.</p>
+
+<h1>5. Struktura verifikacionog okruženja</h1>
+
+<p class="noind">Okruženje prati uobičajenu UVM hijerarhiju. Test na vrhu gradi
+okruženje, a okruženje sadrži dva agenta — po jedan za svaki magistralni interfejs —
+zajedno sa komponentom za proveru rezultata i kolektorom pokrivenosti. Oba agenta
+imaju istu unutrašnju građu, pa se razlikuju samo po protokolu koji opslužuju.</p>
+
+<figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 574" width="720" height="574"
+     font-family="'Times New Roman', Times, serif">
+  <defs>
+    <marker id="str" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#000"/>
+    </marker>
+    <marker id="tlm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <g stroke="#000" fill="none" stroke-width="1">
+    <rect x="20"  y="40"  width="680" height="248" fill="#fff"/>
+    <rect x="36"  y="68"  width="648" height="204" fill="#fbfbfa"/>
+    <rect x="52"  y="98"  width="306" height="96"  fill="#f2f2ef"/>
+    <rect x="362" y="98"  width="306" height="96"  fill="#f2f2ef"/>
+    <rect x="64"  y="118" width="282" height="26"  fill="#fff"/>
+    <rect x="64"  y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="212" y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="374" y="118" width="282" height="26"  fill="#fff"/>
+    <rect x="374" y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="522" y="152" width="134" height="26"  fill="#fff"/>
+    <rect x="95"  y="210" width="225" height="48"  fill="#fff"/>
+    <rect x="405" y="210" width="225" height="48"  fill="#fff"/>
+    <rect x="52"  y="320" width="306" height="40"  fill="#eaeae6"/>
+    <rect x="362" y="320" width="306" height="40"  fill="#eaeae6"/>
+    <rect x="20"  y="396" width="680" height="140" fill="#fff"/>
+    <rect x="52"  y="424" width="306" height="34"  fill="#f2f2ef"/>
+    <rect x="362" y="424" width="306" height="34"  fill="#f2f2ef"/>
+    <rect x="52"  y="478" width="306" height="40"  fill="#f2f2ef"/>
+    <rect x="362" y="478" width="306" height="40"  fill="#f2f2ef"/>
+  </g>
+
+  <g font-size="12" fill="#000">
+    <text x="30"  y="58"  font-weight="bold">ncc_test</text>
+    <text x="46"  y="86"  font-weight="bold">ncc_env</text>
+    <text x="100" y="414" font-weight="bold">ncc_accel &#8212; DUT (VHDL, nepromenjen)</text>
+  </g>
+
+  <g font-size="11" fill="#000">
+    <text x="58"  y="112" font-style="italic">axil_agent (S00)</text>
+    <text x="368" y="112" font-style="italic">axif_agent (S01)</text>
+  </g>
+
+  <g font-size="11" fill="#000" text-anchor="middle">
+    <text x="205" y="136">sequencer</text>
+    <text x="131" y="170">driver</text>
+    <text x="279" y="170">monitor</text>
+    <text x="515" y="136">sequencer</text>
+    <text x="441" y="170">driver</text>
+    <text x="589" y="170">monitor</text>
+
+    <text x="208" y="230">scoreboard</text>
+    <text x="208" y="246" font-size="9.5" font-style="italic">referentni model NCC&#178;</text>
+    <text x="518" y="230">coverage collector</text>
+    <text x="518" y="246" font-size="9.5" font-style="italic">subscriber na oba monitora</text>
+
+    <text x="205" y="337">axi_lite_if</text>
+    <text x="205" y="352" font-size="9.5" font-style="italic">clocking block, modport</text>
+    <text x="515" y="337">axi_full_if</text>
+    <text x="515" y="352" font-size="9.5" font-style="italic">clocking block, modport</text>
+
+    <text x="205" y="446">AXI4-Lite slave (S00)</text>
+    <text x="515" y="446">AXI4-Full slave (S01)</text>
+    <text x="205" y="497">ncc_core</text>
+    <text x="205" y="511" font-size="9.5" font-style="italic">FSM + seq_divider</text>
+    <text x="515" y="497">mem_subsystem</text>
+    <text x="515" y="511" font-size="9.5" font-style="italic">slika / &#353;ablon / rezultat</text>
+  </g>
+
+  <g stroke="#000" stroke-width="1.1" fill="none" marker-end="url(#str)">
+    <path d="M 80 178 L 80 320"/>
+    <path d="M 80 360 L 80 424"/>
+    <path d="M 330 424 L 330 360"/>
+    <path d="M 330 320 L 330 178"/>
+    <path d="M 390 178 L 390 320"/>
+    <path d="M 390 360 L 390 424"/>
+    <path d="M 640 424 L 640 360"/>
+    <path d="M 640 320 L 640 178"/>
+  </g>
+
+  <g stroke="#555" stroke-width="1" stroke-dasharray="4 3" fill="none" marker-end="url(#tlm)">
+    <path d="M 250 178 L 250 210"/>
+    <path d="M 290 178 L 290 196 L 470 196 L 470 210"/>
+    <path d="M 560 178 L 560 210"/>
+    <path d="M 600 178 L 600 204 L 170 204 L 170 210"/>
+  </g>
+
+  <g stroke="#000" stroke-width="0.8" stroke-dasharray="3 3" fill="none">
+    <path d="M 205 458 L 205 478"/>
+    <path d="M 515 458 L 515 478"/>
+  </g>
+
+  <g font-size="10" fill="#000">
+    <line x1="150" y1="556" x2="182" y2="556" stroke="#000" stroke-width="1.1" marker-end="url(#str)"/>
+    <text x="188" y="560">signali, pin nivo</text>
+    <line x1="380" y1="556" x2="412" y2="556" stroke="#555" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#tlm)"/>
+    <text x="418" y="560">uvm_analysis_port, transakcije</text>
+  </g>
+</svg>
+<figcaption><b>Slika 1.</b> Hijerarhija verifikacionog okruženja. Drajveri pobuđuju
+DUT kroz virtuelne interfejse, dok monitori isti saobraćaj pasivno rekonstruišu i
+prosleđuju komponenti za proveru i kolektoru pokrivenosti transakcionim putem.</figcaption>
+</figure>
+
+<p>Ključna osobina ovakve podele jeste da komponenta za proveru ne prima ništa
+neposredno od pobude. Sve što zna stiže preko monitora, pa se isto okruženje može
+upotrebiti i nad dvema instancama jezgra u integrisanom sistemu, bez izmena.</p>
+
+<h1>6. Zahtev na drajver izveden iz izvornog koda</h1>
+
+<p class="noind">Upisni automat interfejsa S00 strogo je dvofazan. U stanju
+<code>Waddr</code> spreman je samo adresni kanal (<code>AWREADY='1'</code>,
+<code>WREADY='0'</code>), a tek po prihvatanju adrese, u stanju <code>Wdata</code>,
+spreman je kanal podataka (<code>AWREADY='0'</code>, <code>WREADY='1'</code>). Ta dva
+signala nikada se ne postavljaju u istom taktu.</p>
+
+<p>Takav raspored nije slučajan — njime je ispravljena ranije otkrivena protokolska
+greška, zbog koje je slave prihvatao podatak pre nego što je primio adresu. Odatle sledi
+obavezan zahtev na drajver: kanali AW, W i B moraju se voditi kao tri nezavisne niti, uz
+zadržavanje signala <code>WVALID</code> sve dok ne stigne <code>WREADY</code>. Čeka li
+drajver na oba signala odjednom, blokira se zauvek; to se i praktično videlo pri prvoj
+probi mešovitog jezika, kada je test prekinuo tek nadzorni brojač. Podrška za redosled u
+kome podatak prethodi adresi zato nije stvar stila nego uslov da taj scenario uopšte
+prođe.</p>
+
+<h1>7. Matrica testova</h1>
+
+<p class="noind">Oznaka <b>D</b> označava usmereni test, a <b>R</b> test sa ograničenom
+slučajnom pobudom.</p>
+
+<table>
+  <caption><b>Tabela 4.</b> Matrica funkcija za verifikaciju</caption>
+  <thead>
+    <tr><th class="c">Br.</th><th>Funkcija</th><th class="c">Tip</th><th>Konkretna pobuda</th><th>Cilj pokrivenosti</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="c">T1</td><td>Upis i čitanje registara S00</td><td class="c">D+R</td><td>svih šest korišćenih registara; slučajna vrednost</td><td>svaka adresa, oba smera</td></tr>
+    <tr><td class="c">T2</td><td>Neupotrebljeni registri</td><td class="c">R</td><td><code>slv_reg4–11</code>, <code>14</code>, <code>15</code></td><td>bin „scratch“</td></tr>
+    <tr><td class="c">T3</td><td>Redosled AW/W na S00</td><td class="c">D+R</td><td>tri scenarija; raspodela 2 : 2 : 1</td><td>ukrštanje redosled &times; region</td></tr>
+    <tr><td class="c">T4</td><td>Redosled AW/W na S01</td><td class="c">D+R</td><td>ista tri scenarija</td><td>ukrštanje redosled &times; region</td></tr>
+    <tr><td class="c">T5</td><td>Paketni prenos na S01</td><td class="c">D+R</td><td>dužine 1, 2, 3, 16 i 256; <code>WSTRB</code> 0xF, 0x1, 0x3, 0x9</td><td>bins po dužini paketa</td></tr>
+    <tr><td class="c">T6</td><td>Sled start – busy – done</td><td class="c">D</td><td>90&times;90 / 25&times;15, čitanje statusa u tri trenutka</td><td>ukrštanje start &times; busy</td></tr>
+    <tr><td class="c">T7</td><td><b>Pokretanje tokom rada</b></td><td class="c">D</td><td>upis u REG_CTRL dok je <code>busy='1'</code></td><td>bin (start=1, busy=1)</td></tr>
+    <tr><td class="c">T8</td><td>Rezultat, veliki golden skup</td><td class="c">D</td><td>90&times;90 / 25&times;15; vrh 0x80000000 na (32, 14)</td><td>—</td></tr>
+    <tr><td class="c">T9</td><td>Rezultat, mali golden skup</td><td class="c">D</td><td>4&times;4 / 2&times;2, svih devet pozicija</td><td>—</td></tr>
+    <tr><td class="c">T10</td><td>Rezultat, slučajne dimenzije</td><td class="c">R</td><td>slika 8–90, šablon 2–30, uz U3 i U4</td><td>bins dimenzija</td></tr>
+    <tr><td class="c">T11</td><td>Šablon jednak slici</td><td class="c">D</td><td>30&times;30 / 30&times;30, mapa rezultata 1&times;1</td><td>bin najmanje mape</td></tr>
+    <tr><td class="c">T12</td><td>Najveći dopušteni šablon</td><td class="c">D</td><td>90&times;90 / 30&times;30, tačno 900 piksela</td><td>bin najvećeg šablona</td></tr>
+    <tr><td class="c">T13</td><td>Region rezultata je samo za čitanje (P1)</td><td class="c">D</td><td>upis na +0x10000, pa čitanje</td><td>bin upisa u region 10</td></tr>
+    <tr><td class="c">T14</td><td>Aliasiranje šablona (P2)</td><td class="c">D</td><td>upis na +0x08000 i +0x09000</td><td>bin aliasa</td></tr>
+    <tr><td class="c">T15</td><td>Nemapirani region (P4)</td><td class="c">D</td><td>čitanje sa +0x18000</td><td>bin regiona 11</td></tr>
+  </tbody>
+</table>
+
+<p>Regresija pokreće svaki slučajni test sa dvadeset različitih početnih vrednosti
+generatora; usmereni testovi idu sa jednom, jer im slučajnost ne menja pobudu. Testovi
+T8 i T10 izvode pun proračun i traju minutima po pokretanju — oko 2,4 miliona taktova —
+pa se drže u zasebnoj, sporoj listi. Brza lista, koja obuhvata preostale testove, mora
+da se izvrši u sekundama, jer se jedino tako može pokretati posle svake izmene.</p>
+
+<h1>8. Plan pokrivenosti</h1>
+
+<p class="noind">Pokrivenost se uzorkuje isključivo iz monitora, nikada iz drajvera.
+Uzorkovanje iz drajvera merilo bi svojstva pobude, a ne ponašanje projekta, i davalo bi
+lažno visoke brojeve.</p>
+
+<pre>covergroup cg_dimenzije
+  img_w : bins {1, [2:44], 45, [46:89], 90}
+  img_h : isti raspored
+  tmp_w : bins {1, [2:14], 15, [16:29], 30}
+  tmp_h : isti raspored
+  cross img_w x tmp_w   uz ignore_bins (tmp_w &gt; img_w)   -- U4 ih cini nedostiznim
+
+covergroup cg_kontrola
+  start : bins {0, 1}      busy : bins {0, 1}      done : bins {0, 1}
+  cross start x busy       -- bin (1,1) je test T7
+  cross start x done       -- pokretanje brise zastavicu done_sticky
+
+covergroup cg_axi
+  redosled  : bins {AW_FIRST, W_FIRST, SIMUL}
+  region    : bins {S00, S01_slika, S01_sablon, S01_rezultat, S01_nemapirano}
+  cross redosled x region  -- petnaest kombinacija, sredisnji cilj plana
+  burst_len : bins {1, 2, [3:15], [16:255], 256}
+  wstrb     : bins {0xF, 0x1, 0x3, 0x9}</pre>
+
+<p>Cilj je potpuna pokrivenost ukrštanja redosleda i regiona, jer upravo to ukrštanje
+pogađa ispravljenu protokolsku grešku; ukupna pokrivenost treba da bude najmanje 90 %.
+Uz svaki nepokriven bin mora stajati razlog — nepokrivenost bez objašnjenja čita se kao
+propust, a ne kao odluka.</p>
+
+<h1>9. Strategija pobude i provere</h1>
+
+<p class="noind">Pobuda se gradi u dva sloja. Usmereni testovi preslikavaju scenarije
+iz postojećih VHDL testbenčeva i čine osnovu regresije; slučajna pobuda sa težinskom
+raspodelom redosleda AW i W obezbeđuje da se ispravljena greška proverava redovno, a ne
+slučajno. Ograničenja moraju kodirati uslove U1–U4 iz poglavlja 2.</p>
+
+<p>Provera radi u realnom vremenu, a ne na kraju testa. Komponenta za proveru prati
+prelaz zastavice <code>done_sticky</code> preko monitora interfejsa S00 i odmah poredi
+sadržaj regiona rezultata sa predikcijom referentnog modela. Takav raspored znatno
+skraćuje traženje uzroka greške u odnosu na proveru na kraju simulacije, jer se
+neslaganje prijavljuje u trenutku nastanka. Uz to idu protokolske tvrdnje nad
+rukovanjem na magistrali i provere P1–P4 iz poglavlja 4, koje ne zavise od proračuna i
+zato pripadaju brzoj listi.</p>
+
+<p>Referentni model ne prepisuje NCC algoritam po treći put. Očekivane vrednosti
+uzimaju se iz postojećih golden podataka, odnosno iz proverenog modela u jeziku C.</p>
+
+<h1>10. Alati i tok simulacije</h1>
+
+<p class="noind">Okruženje se piše u SystemVerilogu uz UVM verzije 1.2, koja dolazi uz
+razvojno okruženje Vivado. Pošto je projekat opisan u VHDL-u, a okruženje u
+SystemVerilogu, oba simulatora moraju da elaboriraju dva jezika zajedno.</p>
+
+<ul class="plain">
+  <li><p class="noind">Vivado XSim 2025.2, tokom analize, elaboracije i
+  simulacije.</p></li>
+  <li><p class="noind">Cadence Xcelium, jednim pozivom alata <code>xrun</code>, na
+  udaljenoj mašini.</p></li>
+</ul>
+
+<p>Oba simulatora koriste iste spiskove izvornih datoteka, sa relativnim putanjama, da
+bi se okruženje prenelo na drugu mašinu bez ijedne izmene. Testbenč ne sme sadržati
+pozive svojstvene jednom proizvođaču.</p>
+
+
+</body></html>

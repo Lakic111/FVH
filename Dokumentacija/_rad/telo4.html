@@ -1,0 +1,100 @@
+<h1>11. Rezultati u brojkama</h1>
+
+<table>
+  <caption><b>Tabela 9.</b> Sažetak po koracima</caption>
+  <thead>
+    <tr><th class="c">Korak</th><th>Šta je isporučeno</th><th>Dokaz</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="c">2</td><td>verifikacioni plan sa matricom od 15 testova</td><td>prilog uz dokumentaciju, 12 strana</td></tr>
+    <tr><td class="c">3</td><td>okruženje: 2 agenta, virtuelni sekvencer, 7 testova</td><td>smoke test prolazi ceo put kroz jezgro</td></tr>
+    <tr><td class="c">4</td><td>referentni model i scoreboard, 15 tvrdnji</td><td>bit-tačno poklapanje cele mape rezultata</td></tr>
+    <tr><td class="c">5</td><td>tri grupe pokrivenosti sa ukrštanjima</td><td>100 % na svaku tačku i svako ukrštanje</td></tr>
+    <tr><td class="c">6</td><td>regresija jednom komandom, 27 pokretanja</td><td>27 prošlo, 0 palo</td></tr>
+    <tr><td class="c">7</td><td>ista regresija na dva simulatora</td><td>27 prošlo na oba, identičan ishod</td></tr>
+  </tbody>
+</table>
+
+<table>
+  <caption><b>Tabela 10.</b> Obim okruženja</caption>
+  <thead>
+    <tr><th>Stavka</th><th class="c">Vrednost</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Izvorni fajlovi okruženja</td><td class="c">10 (SystemVerilog)</td></tr>
+    <tr><td>Skripte za pokretanje</td><td class="c">7</td></tr>
+    <tr><td>Testovi</td><td class="c">7</td></tr>
+    <tr><td>Pokretanja u punoj regresiji</td><td class="c">27</td></tr>
+    <tr><td>Tvrdnje u interfejsima</td><td class="c">15</td></tr>
+    <tr><td>Funkcionalna pokrivenost</td><td class="c">100 %</td></tr>
+    <tr><td>Trajanje regresije</td><td class="c">341 s (XSim) / 68 s (Xcelium)</td></tr>
+  </tbody>
+</table>
+
+<h2>11.1. Kako se sve pokreće</h2>
+
+<pre>./sim/regress.sh                  cela regresija na XSim-u
+./sim/regress.sh brza             samo brza lista, za rad u toku dana
+SIM=xrun ./sim/regress.sh         ista regresija na Xcelium-u
+SEEDS=5 ./sim/regress.sh          manje seed-ova
+
+./sim/coverage.sh                 spaja baze i pravi izvestaj o pokrivenosti
+./sim/run_xsim.sh tb_top ncc_smoke_test 1     jedan test, za debug</pre>
+
+<h1>12. Očekivana pitanja i odgovori</h1>
+
+<p class="noind"><b>Zašto monitor, kad drajver već zna šta je poslao?</b></p>
+<p>Zato što bi tada okruženje poredilo pobudu sa samom sobom. Provera koja se oslanja
+na ono što je pobuda rekla prolazi i kada projekat ne radi ništa. Monitor gleda
+magistralu i može da demantuje drajver — u ovom projektu se to i desilo, kod merenja
+redosleda kanala.</p>
+
+<p class="noind"><b>Zašto je referentni model pisan u SystemVerilogu, a ne pozvan
+model u C-u?</b></p>
+<p>Zbog koraka 7. Poziv spoljne funkcije traži poseban korak prevođenja koji bi se
+morao ponoviti i podesiti na drugom simulatoru. Model u čistom SystemVerilogu prelazi
+na drugu mašinu bez ijedne izmene.</p>
+
+<p class="noind"><b>Kako znate da scoreboard stvarno radi, a ne da samo ćuti?</b></p>
+<p>Na tri načina. Prvo, ima završnu proveru koja prijavlja grešku ako nije izvršio
+nijedno poređenje. Drugo, kada je referentni model imao grešku, prijavio je neslaganje
+na svih devet pozicija. Treće, namerno kvarenje puta kroz projekat obara sve provere.</p>
+
+<p class="noind"><b>Zašto ograničenja randomizacije, zar to ne smanjuje pokrivenost?</b></p>
+<p>Suprotno. Jezgro proverava dimenzije tvrdnjama koje pri kršenju obaraju <b>celu
+simulaciju</b>, ne pojedinačni test. Bez ograničenja bi jedna neispravna vrednost
+uništila i pokrivenost svih ostalih testova iz tog pokretanja.</p>
+
+<p class="noind"><b>Zašto dvadeset seed-ova, a ne jedan?</b></p>
+<p>Jer je prva puna regresija pala na šest od dvadeset. Do tada je test pokretan sa
+jednim seed-om koji je slučajno davao mali skup podataka i uvek prolazio. Greška je
+bila stvarna: prekoračenje najveće dozvoljene dužine paketnog prenosa.</p>
+
+<p class="noind"><b>Šta znači sto odsto pokrivenosti — da je sve provereno?</b></p>
+<p>Ne. Znači da je isprobano sve što je <i>zamišljeno</i> u planu pokrivenosti. To je
+merilo koliko je plan ispunjen, ne dokaz da plan obuhvata sve moguće. Nedostižne
+kombinacije su izričito izuzete, da broj ne bi bio lažan.</p>
+
+<p class="noind"><b>Zašto dva simulatora, kad jedan već prolazi?</b></p>
+<p>Zato što je drugi otkrio tri mesta na kojima se projekat oslanja na blagost prvog.
+Nijedno se ne vidi na jednom alatu. To je konkretan odgovor, a ne formalno ispunjavanje
+uslova.</p>
+
+<p class="noind"><b>Gde je bila stara greška i kako je okruženje čuva?</b></p>
+<p>Upisni put je visio kada podatak stigne pre adrese. Okruženje je čuva na tri načina
+istovremeno: usmerenim testom koji taj scenario izvodi, ukrštanjem pokrivenosti koje
+dokazuje da je izveden u svakom regionu, i tvrdnjom koja stalno gleda i prijavljuje ako
+se dva signala spremnosti ikada dignu u istom taktu.</p>
+
+<p class="noind"><b>Šta biste uradili sa još vremena?</b></p>
+<p>Verifikaciju na nivou sistema, sa dve instance jezgra i interkonekcijom. Okruženje je
+za to već pripremljeno — konfiguracija agenta nosi baznu adresu, a agenti podržavaju
+pasivan režim, pa mogu da posmatraju saobraćaj koji vozi procesor.</p>
+
+<div class="note">
+<p><b>Jedna rečenica ako treba sažeti ceo projekat:</b> izgrađeno je okruženje koje
+samo generiše pobudu, samo proverava rezultat u odnosu na nezavisan model, samo meri
+šta je isprobalo, pokreće se jednom komandom i daje identičan ishod na dva različita
+simulatora — i koje je usput pronašlo pet stvari o projektu koje se ranije nisu
+znale.</p>
+</div>

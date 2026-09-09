@@ -1,0 +1,213 @@
+<h1>6. Korak 4 — Scoreboard i tvrdnje</h1>
+
+<p class="noind">Do ovog koraka su provere bile ručne i lokalne. Sada okruženje dobija
+nezavisno mišljenje o tome šta bi rezultat trebalo da bude.</p>
+
+<p><b>Referentni model</b> je napisan u čistom SystemVerilogu, bez poziva ka jeziku C.
+Razlog je prenosivost: poziv spoljne funkcije traži poseban korak prevođenja koji bi se
+morao ponoviti na drugom simulatoru, a to je tačno ono što se u koraku 7 želi izbeći.</p>
+
+<p>Model je izveden iz izvornog koda jezgra, red po red, jer je bit-tačnost zavisila od
+sitnica kojih u formuli nema: zaokruživanje pri celobrojnom deljenju, odsecanje
+srednjih vrednosti na osam bita, širine akumulatora od 27 i 26 bita, odsecanje
+proizvoda na 52 bita, i posebna grana kada je varijansa nula.</p>
+
+<p><b>Scoreboard</b> radi ovako: upisi u memorijske regione pune njegovu sliku
+memorije, upisi u registre pamte podešavanja, upis u kontrolni registar pokreće
+računanje predikcije, a čitanja regiona rezultata se porede sa tom predikcijom. Sve to
+isključivo preko monitora.</p>
+
+<div class="note">
+<p><b>Referentni model je pao, i scoreboard ga je uhvatio.</b> Prva verzija je dala
+neslaganje na svih devet pozicija. Greška je bila u modelu, ne u projektu: sabiranje
+kvadrata razlika bilo je napisano tako da je kontekst dodele učinio množenje
+neoznačenim, pa je razlika od &minus;71 ušla kao 441.</p>
+<p>Nađeno je zato što je postojalo <b>nezavisno sidro</b>: na jednoj poziciji je šablon
+bio doslovno jednak prozoru, pa rezultat <i>mora</i> biti tačna jedinica. Projekat je
+to davao, model nije — i time je odmah bilo jasno na kojoj je strani greška.</p>
+</div>
+
+<p>Uz scoreboard idu i <b>tvrdnje</b>, smeštene u interfejse. Da tvrdnje nisu prazne
+potvrđeno je kvarenjem drajvera: kada je namerno povučen signal pre nego što je stigla
+potvrda, tvrdnja je opalila i pokretanje je prijavljeno kao neuspeh.</p>
+
+<p>Tu je otkriveno i nešto o samom lancu alata: <b>neuspeh tvrdnje se ne broji kao
+UVM greška.</b> Simulator ga ispisuje zasebno. Da skripta za pokretanje nije tražila i
+taj oblik, tvrdnje bi opaljivale a test bi i dalje prolazio.</p>
+
+<h1>7. Korak 5 — Pokrivenost</h1>
+
+<p class="noind">Kolektor pokrivenosti je zasebna komponenta, vezana na iste monitore
+kao scoreboard, ali potpuno nezavisna od njega — merenje i provera ne smeju zavisiti
+jedno od drugog.</p>
+
+<table>
+  <caption><b>Tabela 4.</b> Šta se meri</caption>
+  <thead>
+    <tr><th>Grupa</th><th>Šta posmatra</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Dimenzije</td><td>širina i visina slike i šablona: najmanja, tipične, najveća; ukrštanje slike i šablona</td></tr>
+    <tr><td>Upravljanje</td><td>pokretanje, zauzetost, kraj rada; <b>ukrštanje pokretanja i zauzetosti</b></td></tr>
+    <tr><td>Magistrala</td><td>redosled kanala, region, dužina paketnog prenosa, maska upisa; <b>ukrštanje redosleda i regiona</b></td></tr>
+  </tbody>
+</table>
+
+<p>Dva ukrštanja su bila glavni cilj. Prvo hvata pokretanje jezgra dok ono već radi;
+drugo dokazuje da je ispravljena greška u protokolu proverena u <i>svakom</i> regionu,
+a ne samo na jednom mestu.</p>
+
+<p>Nedostižne kombinacije su izričito izuzete. Jezgro zahteva da šablon ne bude veći od
+slike, pa te kombinacije nikada ne mogu nastati — da nisu izuzete, ciljna pokrivenost
+ne bi se mogla dostići ni sa savršenom pobudom, a broj bi zauvek ostao ispod sto.</p>
+
+<div class="note">
+<p><b>Trik koji je celu stvar učinio izvodljivom.</b> Bins-ovi za najveće dimenzije
+traže velike <i>širine</i>, ali ne i velike <i>površine</i>. Skup od 90&times;1 sa
+šablonom 30&times;1 je potpuno dopušten, gađa oba krajnja bins-a, a računa 61 prozor
+umesto 3721. Zahvaljujući tome test pokrivenosti traje sekunde, a ne minute.</p>
+</div>
+
+<p>Rezultat je <b>sto odsto</b> na sve tri grupe, na svakoj tački i svakom ukrštanju,
+spojeno preko više pokretanja. Pokrivenost jednog testa ne znači ništa — meri se
+ukupna, preko cele liste.</p>
+
+<h1>8. Korak 6 — Regresija</h1>
+
+<p class="noind">Regresija je jedna komanda koja pušta sve testove i sažima ishod.
+Podeljena je u tri liste:</p>
+
+<table>
+  <caption><b>Tabela 5.</b> Sastav regresije</caption>
+  <thead>
+    <tr><th>Lista</th><th class="c">Broj pokretanja</th><th>Namena</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Brza</td><td class="c">5</td><td>pušta se posle svake izmene; mora proći za nekoliko sekundi</td></tr>
+    <tr><td>Spora</td><td class="c">2</td><td>testovi za pokrivenost, rade pun proračun</td></tr>
+    <tr><td>Slučajna</td><td class="c">20</td><td>isti test sa dvadeset različitih početnih vrednosti generatora</td></tr>
+  </tbody>
+</table>
+
+<p>Elaboracija se radi <b>jednom</b>, pa svi testovi rade nad istim snimkom. Merenjem:
+pokretanje bez ponovne elaboracije traje nekoliko sekundi umesto tridesetak. Za
+dvadeset sedam pokretanja to je razlika između par minuta i pola sata.</p>
+
+<div class="note">
+<p><b>Prva puna regresija je pala na šest od dvadeset seed-ova</b> — i greška je bila
+prava. Slika se slala kao <i>jedan</i> paketni prenos, a protokol dozvoljava najviše
+256 beat-ova po prenosu. Podela je bila savršeno čista: svih šest palih imalo je više
+od 256 piksela, svi prošli manje.</p>
+<p>To je najbolji argument za više seed-ova. Do tada je taj test pokretan samo sa
+jednim seed-om, koji je slučajno dao mali skup — i prolazio je. Jedan seed bi tu grešku
+krio koliko god dugo.</p>
+</div>
+
+<h1>9. Korak 7 — Dva simulatora</h1>
+
+<p class="noind">Isto okruženje je pušteno na Vivado XSim-u i na Cadence Xcelium-u.
+Lista testova, njihov redosled i način provere su <b>isti</b> — grana se samo koji par
+skripti se poziva. Da se regresija razlikuje po simulatoru, ne bi dokazivala
+prenosivost nego samo da postoje dve različite regresije.</p>
+
+<p>Prenosivost je proverena, ne pretpostavljena: nijedna putanja u spiskovima izvornih
+datoteka nije apsolutna, a jedini sistemski pozivi u celom testbenču su standardni.</p>
+
+<table>
+  <caption><b>Tabela 6.</b> Ishod na oba simulatora</caption>
+  <thead>
+    <tr><th></th><th class="c">Vivado XSim</th><th class="c">Cadence Xcelium 19.03</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Testova prošlo</td><td class="c">27 od 27</td><td class="c">27 od 27</td></tr>
+    <tr><td>Trajanje</td><td class="c">341 s</td><td class="c">68 s</td></tr>
+    <tr><td>UVM biblioteka</td><td class="c">1.2</td><td class="c">CDNS-1.1d</td></tr>
+  </tbody>
+</table>
+
+<p>Ceo SystemVerilog kod se preveo na Xcelium-u bez ijedne greške iz prvog pokušaja.
+Ono što nije prošlo bio je <b>projekat</b>, i o tome govori sledeće poglavlje.</p>
+
+<h1>10. Šta je verifikacija stvarno pronašla</h1>
+
+<p class="noind">Ovo je najvažniji deo odbrane. Okruženje nije napravljeno da bi
+potvrdilo ono što se već znalo, nego da bi pokazalo ono što se nije znalo.</p>
+
+<h2>10.1. Redosled adresnog kanala i kanala podataka</h2>
+
+<p class="noind">Projekat je ranije imao grešku: upisni put je visio kada podatak stigne
+pre adrese. Greška je ispravljena tako što slave sada prihvata podatak <b>tek pošto</b>
+prihvati adresu — dva signala spremnosti se nikada ne dižu u istom taktu.</p>
+
+<p>To ima dve posledice za okruženje, i obe su otkrivene merenjem, ne čitanjem:</p>
+
+<ul class="plain">
+  <li><p class="noind"><b>Drajver koji čeka oba signala odjednom visi zauvek.</b>
+  Prva proba mešovitog jezika je upravo tako i pala, i prekinuo ju je tek nadzorni
+  brojač. Zato drajver vodi kanale kao nezavisne niti.</p></li>
+  <li><p class="noind"><b>Monitor ne sme meriti redosled po rukovanju.</b> Pošto
+  potvrda na kanalu podataka <i>uvek</i> dolazi posle potvrde na adresnom kanalu,
+  merenje po rukovanju prijavljuje da je adresa uvek bila prva — i scenario koji je
+  meta celog projekta postaje nevidljiv. Izmereno: sedam puta „adresa prva“, nijednom
+  „podatak prvi“. Ispravno je meriti trenutak <b>postavljanja</b> signala, i tada se
+  dobija tačan raspored.</p></li>
+</ul>
+
+<p>Ispravka je zatim pretočena u tvrdnju koja stalno gleda: dva signala spremnosti se
+ne smeju dići u istom taktu. Ako se to ikada desi, stara greška se vratila i simulacija
+to prijavljuje istog trenutka.</p>
+
+<h2>10.2. Pokretanje dok jezgro radi nije zaštićeno</h2>
+
+<p class="noind">Uslov za pokretanje ne proverava da li je jezgro zauzeto. Upis u
+kontrolni registar tokom rada zato istovremeno stvara impuls koji jezgro zanemaruje
+(jer nije u stanju mirovanja) i <b>briše zastavicu o završetku</b>. Ponašanje je
+stvarno, dosad neprovereno, i pokriveno je zasebnim testom i sopstvenim bins-om.</p>
+
+<h2>10.3. Četiri svojstva memorijskog prostora</h2>
+
+<table>
+  <caption><b>Tabela 7.</b> Ponašanja izvedena iz koda, nijedno ranije provereno</caption>
+  <thead>
+    <tr><th>Svojstvo</th><th>Zapažanje</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Region rezultata je samo za čitanje</td><td>upis se tiho zanemaruje, a odgovor na magistrali je i dalje uredan</td></tr>
+    <tr><td>Region šablona se preklapa</td><td>memorija je plića od adresnog prostora, pa se adrese na razmaku od 1024 reči poklapaju</td></tr>
+    <tr><td>Gornja 24 bita pri čitanju su nule</td><td>za sliku i šablon, jer se osmobitni podatak dopunjuje nulama</td></tr>
+    <tr><td>Nemapirani region vraća nule</td><td>a ne grešku na magistrali</td></tr>
+  </tbody>
+</table>
+
+<p>Uz to je potvrđeno da projekat poštuje masku upisa: upis sa spuštenim najnižim bitom
+maske ne menja memoriju. Kada je to uneto u referentni model, otkrila se rupa u samom
+okruženju — monitor za tu magistralu masku uopšte nije prikupljao, pa je slika memorije
+ostajala prazna. Model koji čita polje koje monitor ne puni je tiha rupa.</p>
+
+<h2>10.4. Tri mesta na kojima se projekat oslanja na blagost jednog alata</h2>
+
+<p class="noind">Ovo se moglo videti <b>samo</b> puštanjem na drugom simulatoru.</p>
+
+<table>
+  <caption><b>Tabela 8.</b> Razlike između simulatora</caption>
+  <thead>
+    <tr><th>Šta je odbijeno</th><th>Uzrok</th><th>Rešenje</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Agregat u registru statusa</td><td>širina dolazi iz generika, pa opseg nije statički poznat</td><td>opcija prevodioca</td></tr>
+    <tr><td>Grananje po vrednosti adrese</td><td>isti razlog, podtip nije statički poznat</td><td>jedan red u deklaraciji</td></tr>
+    <tr><td>Prekoračenje opsega u nultom trenutku</td><td>celobrojni signali bez početne vrednosti dobijaju najmanji mogući broj</td><td>podešavanje simulatora</td></tr>
+  </tbody>
+</table>
+
+<p>Sve tri potiču iz standardnog AXI šablona i nijedna ne utiče na rad na ploči. Dve su
+rešene podešavanjem alata. Treća je tražila izmenu jednog reda u kopiji koja se
+verifikuje; da je ta izmena bez uticaja na ponašanje <b>izmereno</b> je, a ne
+pretpostavljeno — puna regresija pre i posle dala je bajt-identičan ispis u svih
+27 logova, uz istu pokrivenost.</p>
+
+<div class="note">
+<p>Ako se na odbrani postavi samo jedno pitanje o koraku 7, odgovor je ovo poglavlje:
+dvostruka simulacija nije formalnost nego je otkrila tri stvarna oslanjanja na
+ponašanje jednog alata, i nijedno se ne vidi bez nje.</p>
+</div>

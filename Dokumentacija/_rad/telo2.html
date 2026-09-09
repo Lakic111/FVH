@@ -1,0 +1,174 @@
+<h2>2.7. Okruženje i test</h2>
+
+<p class="noind"><b>Okruženje</b> (<code>env</code>) okuplja sve agente, komponentu
+za proveru i kolektor pokrivenosti u jednu celinu koja se može ponovo upotrebiti.
+Ono je ono što se „gradi jednom, koristi svuda“.</p>
+
+<p><b>Test</b> je najviši sloj. On odlučuje koje okruženje se gradi, kako se
+podešava, i koja sekvenca se pušta. Testovi se biraju pri pokretanju simulacije, bez
+ponovnog prevođenja — u ovom projektu preko <code>+UVM_TESTNAME</code>.</p>
+
+<p>Odatle i praktična posledica: <b>manji testovi se ne brišu kada stigne veći</b>.
+Kada veliki test padne, prvo pitanje je da li je problem u magistrali ili u jezgru, a
+na to odgovaraju upravo mali testovi.</p>
+
+<h2>2.8. Analitički port</h2>
+
+<p class="noind"><b>Analitički port</b> (<code>uvm_analysis_port</code>) je način na
+koji monitor objavljuje ono što je video. Radi po principu „jedan govori, više njih
+sluša“: monitor ne zna ko ga sluša niti koliko ih ima, a slušaoci se dodaju i uklanjaju
+bez ijedne izmene u monitoru.</p>
+
+<p>Zahvaljujući tome scoreboard i kolektor pokrivenosti mogu da rade nezavisno jedan
+od drugog, iako gledaju isti saobraćaj.</p>
+
+<h2>2.9. Scoreboard i referentni model</h2>
+
+<p class="noind"><b>Scoreboard</b> je komponenta koja odgovara na pitanje „da li je
+ono što je projekat uradio tačno“. Prima transakcije od monitora, računa šta je
+očekivano, i poredi.</p>
+
+<p><b>Referentni model</b> je nezavisan opis onoga što bi projekat trebalo da uradi.
+Napisan je na višem nivou apstrakcije — bez taktova i bez signala, samo matematika i
+memorija.</p>
+
+<p>Zamka koju treba izbeći zove se <i>povezivanje pobude na proveru</i>: ako
+scoreboard dobija podatke od sekvence umesto od monitora, on ne proverava projekat
+nego samo ponavlja ono što je pobuda rekla. Zato scoreboard u ovom projektu sluša
+<b>isključivo</b> monitore i svoju sliku memorije gradi od onoga što je viđeno na
+magistrali.</p>
+
+<div class="note">
+<p><b>U ovom projektu:</b> referentni model je izveden <b>iz izvornog VHDL koda</b>,
+a ne iz udžbeničke formule. Bit-tačnost zavisi od zaokruživanja pri celobrojnom
+deljenju, odsecanja srednjih vrednosti na osam bita, širina akumulatora i grane
+„varijansa je nula → rezultat je nula“. Ničega od toga u formuli nema.</p>
+</div>
+
+<h2>2.10. Pokrivenost</h2>
+
+<p class="noind"><b>Funkcionalna pokrivenost</b> meri koliko je od zamišljenih
+situacija stvarno isprobano. Piše se kao spisak <b>tačaka</b> (šta se posmatra) i
+<b>bins-ova</b> (koje vrednosti su zanimljive), a <b>ukrštanje</b> (<code>cross</code>)
+proverava da li su se dve pojave desile zajedno, ne samo svaka ponaosob.</p>
+
+<p>Razlika u odnosu na pokrivenost koda: pokrivenost koda kaže da je neka linija
+izvršena, funkcionalna kaže da je neka <i>situacija</i> isprobana. Prva se dobija
+besplatno, druga se mora smisliti.</p>
+
+<p>Pravilo je isto kao kod scoreboard-a: uzorkuje se <b>iz monitora</b>, nikada iz
+drajvera. Merenje iz drajvera meri svojstva pobude i daje lažno visoke brojeve.</p>
+
+<h2>2.11. Tvrdnje (SVA)</h2>
+
+<p class="noind"><b>Tvrdnja</b> je pravilo koje mora važiti u svakom trenutku, zapisano
+tako da ga simulator sam proverava. Za razliku od testa, tvrdnja ne treba da bude
+pozvana — ona stalno gleda.</p>
+
+<p>Tvrdnje se pišu <b>u interfejsu</b>, ne u testu, pa važe u svakom testu — i u onima
+koji o njima ne znaju ništa. Greška se prijavljuje u trenutku nastanka, a ne tek kada
+se posledica negde ispolji.</p>
+
+<div class="note">
+<p><b>U ovom projektu:</b> petnaest tvrdnji. Trinaest su opšta pravila protokola
+(<code>VALID</code> se ne povlači pre <code>READY</code>, podatak se ne menja u
+međuvremenu, odgovor stiže tek posle poslednjeg beat-a). Dve su svojstvo baš ovog
+projekta i objašnjene su u poglavlju 10.</p>
+</div>
+
+<h2>2.12. Kako sve to sarađuje</h2>
+
+<p class="noind">Jedan prolaz kroz okruženje, redom:</p>
+
+<table>
+  <caption><b>Tabela 2.</b> Put jedne transakcije kroz okruženje</caption>
+  <thead>
+    <tr><th class="c">Br.</th><th>Ko</th><th>Šta radi</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="c">1</td><td>Test</td><td>gradi okruženje i pušta sekvencu</td></tr>
+    <tr><td class="c">2</td><td>Sekvenca</td><td>pravi stavku i randomizuje je uz ograničenja</td></tr>
+    <tr><td class="c">3</td><td>Sekvencer</td><td>predaje stavku drajveru</td></tr>
+    <tr><td class="c">4</td><td>Drajver</td><td>prevodi stavku u signale i vozi magistralu</td></tr>
+    <tr><td class="c">5</td><td>Projekat</td><td>reaguje</td></tr>
+    <tr><td class="c">6</td><td>Tvrdnje</td><td>usput proveravaju da protokol nije prekršen</td></tr>
+    <tr><td class="c">7</td><td>Monitor</td><td>gleda iste signale i sastavlja transakciju</td></tr>
+    <tr><td class="c">8</td><td>Analitički port</td><td>objavljuje je svima koji slušaju</td></tr>
+    <tr><td class="c">9</td><td>Scoreboard</td><td>poredi sa predikcijom referentnog modela</td></tr>
+    <tr><td class="c">10</td><td>Kolektor</td><td>beleži šta je od zamišljenog isprobano</td></tr>
+  </tbody>
+</table>
+
+<p>Bitno je da koraci 4 i 7 ne komuniciraju međusobno. Drajver ne zna za monitor,
+monitor ne zna za drajver, a scoreboard zna samo za monitor. Ta odvojenost je jedini
+razlog zbog kojeg okruženje uopšte može da otkrije grešku, umesto da je ponovi.</p>
+
+<h1>3. Arhitektura izgrađenog okruženja</h1>
+
+<figure>
+@@DIJAGRAM@@
+<figcaption><b>Slika 1.</b> Hijerarhija verifikacionog okruženja. Drajveri pobuđuju
+projekat kroz virtuelne interfejse, dok monitori isti saobraćaj pasivno rekonstruišu i
+prosleđuju komponenti za proveru i kolektoru pokrivenosti transakcionim putem.</figcaption>
+</figure>
+
+<p>Dva agenta, jer projekat ima dve magistrale i one rade istovremeno: podaci se pune
+preko S01 dok se upravljanje odvija preko S00. Scoreboard i kolektor kače se na izlaze
+<b>agenata</b>, dakle na monitore, i nemaju nijednu vezu ka drajverima.</p>
+
+<h1>4. Korak 2 — Verifikacioni plan</h1>
+
+<p class="noind">Prvi korak nije bio kod nego dokument: šta se tačno verifikuje, čime,
+i po kom merilu se zna da je gotovo.</p>
+
+<p>Plan nije pisan iz sećanja niti iz ranijih beleški, nego <b>čitanjem izvornog
+koda</b>. To se odmah isplatilo — tri stvari iz starih beleški pokazale su se
+netačnim:</p>
+
+<ul class="plain">
+  <li><p class="noind">Adresa <code>0x40</code>, navedena kao početak mape rezultata,
+  <b>ne postoji</b>. Magistrala S00 je šestobitna, pa je najveća adresa
+  <code>0x3F</code>. Rezultati se čitaju sa S01.</p></li>
+  <li><p class="noind">Registri <code>0x10</code> i <code>0x14</code> postoje, ali ih
+  projekat ne vodi ni na jedan port jezgra — praktično su neupotrebljeni.</p></li>
+  <li><p class="noind">Jezgro proverava dimenzije <b>tvrdnjama sa nivoom ozbiljnosti
+  <code>failure</code></b>. Kršenje ne obara jedan test nego <b>celu simulaciju</b>.
+  To je odmah postalo obavezujuće pravilo za ograničenja randomizacije.</p></li>
+</ul>
+
+<p>Rezultat je dokument sa matricom od petnaest testova, planom pokrivenosti sa
+imenovanim bins-ovima, blok dijagramom i tabelom rizika. Predat je kao prilog uz PSDS
+dokumentaciju.</p>
+
+<h1>5. Korak 3 — Osnovno okruženje</h1>
+
+<p class="noind">Najveći deo posla, građen u pet koraka, gde se svaki zatvarao nečim
+što se <b>pokreće</b> — ne fajlom koji se prevodi.</p>
+
+<table>
+  <caption><b>Tabela 3.</b> Redosled izgradnje okruženja</caption>
+  <thead>
+    <tr><th>Šta je napravljeno</th><th>Čime je dokazano da radi</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Interfejsi, paket sa adresama, vrh testbenča</td><td>simulacija se pokreće i uredno završava; oba virtuelna interfejsa stižu kroz konfiguracionu bazu</td></tr>
+    <tr><td>Stavka i drajver za S00</td><td>sedam provera upis-pa-čitanje nad četiri registra, u sva tri redosleda</td></tr>
+    <tr><td>Monitor i agent za S00</td><td>monitor rekonstruisao svih 14 transakcija i <i>izmerio</i> redosled sa magistrale</td></tr>
+    <tr><td>Agent za S01 sa paketnim prenosom</td><td>šest blokova, dužine 1, 2, 3 i 16 beat-ova, upisano jednako pročitanom</td></tr>
+    <tr><td>Okruženje, virtuelni sekvencer, smoke test</td><td>ceo put kroz jezgro: slika i šablon → dimenzije → pokretanje → čekanje → rezultat</td></tr>
+  </tbody>
+</table>
+
+<p>Za svaku proveru je posebno potvrđeno i da <b>ume da padne</b>. Provera koja nikada
+ne pada nije provera nego ukras. Postupak je bio da se namerno pokvari put kroz
+projekat — na primer, da drajver upiše vrednost sa jednim izmenjenim bitom — i da se
+vidi da sve provere prijave grešku. Zatim se kvar uklanja.</p>
+
+<div class="note">
+<p><b>Zamka koju vredi spomenuti.</b> Prvi smoke test je <i>prolazio</i>, a bio je
+bezvredan. Slika je bila linearni gradijent, pa je svaki prozor bio jednak šablonu
+uvećanom za konstantu — a mera poklapanja je na to neosetljiva. Rezultat je bio
+savršeno poklapanje na svih devet pozicija: matematički tačno, ali takav skup ne
+razlikuje ispravan projekat od onog koji uvek vraća istu vrednost. Podaci su zamenjeni
+tako da postoji tačno jedan vrh, pa je provera postala smislena.</p>
+</div>

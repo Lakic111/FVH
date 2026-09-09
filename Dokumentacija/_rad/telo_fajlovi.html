@@ -1,0 +1,229 @@
+<h1>11. Pregled izvornih fajlova</h1>
+
+<p class="noind">Okruženje je podeljeno tako da svaki fajl ima jednu odgovornost i da
+se može čitati odozdo naviše: prvo zajedničke konstante, pa opis žica, pa po jedan
+paket za svaku magistralu, pa referentni model, pa okruženje koje ih spaja, i na kraju
+testovi.</p>
+
+<table>
+  <caption><b>Tabela 9.</b> Sadržaj foldera sa izvornim kodom</caption>
+  <thead>
+    <tr><th>Fajl</th><th class="c">Linija</th><th>Uloga</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ncc_verif_pkg.sv</code></td><td class="c">80</td><td>zajedničke konstante i tipovi</td></tr>
+    <tr><td><code>axi_lite_if.sv</code></td><td class="c">127</td><td>žice i tvrdnje magistrale S00</td></tr>
+    <tr><td><code>axi_full_if.sv</code></td><td class="c">150</td><td>žice i tvrdnje magistrale S01</td></tr>
+    <tr><td><code>ncc_axil_pkg.sv</code></td><td class="c">492</td><td>ceo agent za S00</td></tr>
+    <tr><td><code>ncc_axif_pkg.sv</code></td><td class="c">540</td><td>ceo agent za S01</td></tr>
+    <tr><td><code>ncc_ref_pkg.sv</code></td><td class="c">101</td><td>referentni model</td></tr>
+    <tr><td><code>ncc_env_pkg.sv</code></td><td class="c">965</td><td>provera, merenje, okruženje, scenariji</td></tr>
+    <tr><td><code>tb_top.sv</code></td><td class="c">131</td><td>vrh: takt, reset, instanca projekta</td></tr>
+    <tr><td><code>tests/ncc_test_pkg.sv</code></td><td class="c">347</td><td>svi testovi</td></tr>
+    <tr><td><code>tb_mixed_probe.sv</code></td><td class="c">149</td><td>zapis prve probe, van upotrebe</td></tr>
+  </tbody>
+</table>
+
+<h2>11.1. ncc_verif_pkg.sv — zajedničke konstante</h2>
+
+<p class="noind">Jedino mesto na kome stoje adrese registara, pomeraji memorijskih
+regiona, dubine memorija i granice dopuštenih dimenzija. Sve je izvedeno čitanjem
+izvornog koda jezgra, pa nijedan „magičan broj“ ne sme da se pojavi kasnije u
+testovima.</p>
+
+<p>Ovde su i dva nabrojiva tipa koja se koriste svuda: <code>region_e</code> (slika,
+šablon, rezultat, nemapirano) i <code>aw_w_order_e</code> (adresa prva, podatak prvi,
+istovremeno).</p>
+
+<p>Paket se namerno <b>ne</b> zove <code>ncc_pkg</code>, iako bi to bilo prirodnije:
+projekat već ima VHDL paket tog imena, a u mešovitoj simulaciji oba završavaju u istoj
+biblioteci i imena bi se sudarila.</p>
+
+<h2>11.2. axi_lite_if.sv i axi_full_if.sv — interfejsi</h2>
+
+<p class="noind">Svaki opisuje žice jedne magistrale i uz njih <b>dva clocking bloka</b>:
+jedan kojim drajver vozi signale, drugi kojim ih monitor samo uzorkuje. Razdvojeni su
+da monitor ne bi gledao pobudu umesto magistrale.</p>
+
+<p>U istim fajlovima stoje i <b>tvrdnje</b>, ukupno petnaest. Nalaze se ovde, a ne u
+testu, pa važe u svakom pokretanju — i u onima koja o njima ne znaju ništa:</p>
+
+<ul class="plain">
+  <li><p class="noind">signal potvrde se ne povlači pre nego što stigne odgovor, a
+  podatak i adresa se u međuvremenu ne menjaju — na svim kanalima;</p></li>
+  <li><p class="noind">odgovor na upis ne sme stići pre poslednjeg beat-a paketnog
+  prenosa;</p></li>
+  <li><p class="noind">dva signala spremnosti se nikada ne dižu u istom taktu — to je
+  ispravka stare greške pretočena u pravilo koje simulator stalno proverava.</p></li>
+</ul>
+
+<p>Razlika između dva fajla je samo u tome što S01 ima i kanale za paketni prenos
+(dužina, veličina, poslednji beat, identifikator).</p>
+
+<h2>11.3. ncc_axil_pkg.sv — agent za kontrolne registre</h2>
+
+<p class="noind">Sve što je potrebno da bi se vozila magistrala S00, u jednom paketu.
+Sadrži šest celina:</p>
+
+<table>
+  <caption><b>Tabela 10.</b> Sadržaj paketa za S00</caption>
+  <thead>
+    <tr><th>Klasa</th><th>Šta radi</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ncc_reg_item</code></td><td>jedna registarska transakcija: adresa, podatak, smer, redosled kanala, razmak. Ograničenja biraju samo dopuštene adrese, zabranjuju upis u registar koji je samo za čitanje i težinski biraju redosled kanala</td></tr>
+    <tr><td><code>ncc_axil_sequencer</code></td><td>saobraćajac; obična specijalizacija standardne klase</td></tr>
+    <tr><td><code>ncc_axil_driver</code></td><td>prevodi stavku u signale. Kanale vodi kao tri nezavisne niti</td></tr>
+    <tr><td><code>ncc_axil_monitor</code></td><td>pasivno rekonstruiše transakcije i meri redosled kanala</td></tr>
+    <tr><td><code>ncc_axil_agent_config</code></td><td>podešavanja: aktivan ili pasivan režim, bazna adresa</td></tr>
+    <tr><td><code>ncc_axil_agent</code></td><td>pakuje prethodno u jednu komponentu sa jednim izlazom</td></tr>
+  </tbody>
+</table>
+
+<p>Na kraju paketa su dve sekvence: osnovna, sa pomoćnim zadacima „upiši“ i „pročitaj“,
+i izvedena, koja izvodi sedam provera upis-pa-čitanje nad četiri registra u sva tri
+redosleda kanala.</p>
+
+<div class="note">
+<p><b>Najvažnijih deset redova u paketu</b> su u drajveru. Kanali se pokreću unutar
+<code>fork…join</code>, a polje <code>order</code> određuje samo koliko taktova nit
+čeka pre nego što krene. Sekvencijalno čekanje na oba signala spremnosti bi visilo
+zauvek, jer se oni nikada ne dižu istovremeno.</p>
+</div>
+
+<h2>11.4. ncc_axif_pkg.sv — agent za memoriju</h2>
+
+<p class="noind">Isti raspored kao prethodni paket, uz paketni prenos. Stavka
+<code>ncc_mem_item</code> nosi region, adresu reči, dužinu prenosa, niz podataka i
+masku upisa.</p>
+
+<p>Ograničenja u ovoj stavci su zanimljiviji deo, jer opisuju pravila protokola:</p>
+
+<ul class="plain">
+  <li><p class="noind">najviše 256 beat-ova po jednom prenosu;</p></li>
+  <li><p class="noind">prenos ne sme preći granicu od 4 KB;</p></li>
+  <li><p class="noind">prenos ne sme izaći iz adresnog prostora regiona — što nije isto
+  što i dubina memorije, pa je aliasiranje i dalje moguće testirati.</p></li>
+</ul>
+
+<p>Drajver ima petlju po beat-ovima i postavlja oznaku poslednjeg beat-a. Monitor
+skuplja beat-ove do te oznake, a redosled kanala meri po <b>prvom</b> beat-u — kasniji
+ne govore ništa o odnosu prema adresnom kanalu.</p>
+
+<h2>11.5. ncc_ref_pkg.sv — referentni model</h2>
+
+<p class="noind">Najkraći fajl, a najosetljiviji. Jedna funkcija koja iz slike, šablona
+i dimenzija računa celu mapu rezultata.</p>
+
+<p>Napisan je prema izvornom kodu jezgra, a ne prema formuli, jer bit-tačnost zavisi
+od sitnica kojih u formuli nema: zaokruživanje pri celobrojnom deljenju srednjih
+vrednosti, odsecanje na osam bita, širine akumulatora od 27 i 26 bita, odsecanje
+proizvoda na 52 bita, posebna grana kada je varijansa nula, i konačno deljenje u
+83-bitnoj aritmetici.</p>
+
+<p>Čist SystemVerilog, bez poziva ka jeziku C — da bi model prešao na drugi simulator
+bez dodatnog koraka prevođenja.</p>
+
+<h2>11.6. ncc_env_pkg.sv — provera, merenje i scenariji</h2>
+
+<p class="noind">Najveći fajl, jer okuplja sve što nije vezano za jednu magistralu.</p>
+
+<p><b>Scoreboard</b> ima dva ulaza, po jedan za svaki monitor. Upisi u memorijske
+regione pune njegovu sliku memorije, upisi u registre pamte podešavanja, upis u
+kontrolni registar pokreće računanje predikcije, a čitanja regiona rezultata se porede.
+Modeluje i ponašanja koja se lako previde: masku upisa, aliasiranje šablona i to da je
+region rezultata samo za čitanje. Na kraju ima proveru koja prijavljuje grešku ako
+scoreboard nije izvršio nijedno poređenje — jer provera koja ništa nije uporedila nije
+dokaz ispravnosti nego rupa.</p>
+
+<p><b>Kolektor pokrivenosti</b> je zasebna komponenta na istim ulazima. Tri grupe:
+dimenzije, upravljanje i magistrala, sa tri ukrštanja.</p>
+
+<p><b>Okruženje</b> gradi oba agenta, scoreboard, kolektor i virtuelni sekvencer, pa
+ih povezuje. Scoreboard i kolektor kače se na izlaze agenata, nikada na drajvere.</p>
+
+<p>Na kraju fajla su četiri scenarija:</p>
+
+<table>
+  <caption><b>Tabela 11.</b> Scenariji u okruženju</caption>
+  <thead>
+    <tr><th>Sekvenca</th><th>Šta izvodi</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ncc_smoke_seq</code></td><td>ceo put: slika i šablon preko S01, dimenzije preko S00, pokretanje, čekanje uz nadzorni brojač, čitanje rezultata</td></tr>
+    <tr><td><code>ncc_cov_seq</code></td><td>gađa bins-ove: dužine prenosa, maske upisa, svi regioni u sva tri redosleda, pokretanje dok jezgro radi</td></tr>
+    <tr><td><code>ncc_dim_sweep_seq</code></td><td>prolazi kroz svih devetnaest dostižnih kombinacija bins-ova dimenzija</td></tr>
+    <tr><td><code>ncc_random_seq</code></td><td>nasumičan skup uz ograničenja koja jemče ugovor sa jezgrom; menja se sa svakim seed-om</td></tr>
+  </tbody>
+</table>
+
+<h2>11.7. tb_top.sv — vrh testbenča</h2>
+
+<p class="noind">Ovde se spajaju dva sveta. Modul pravi takt od 100 MHz i reset,
+instancira oba interfejsa, instancira projekat u VHDL-u i povezuje njegove portove na
+žice interfejsa. Zatim kroz konfiguracionu bazu prosleđuje virtuelne interfejse naniže
+i pokreće test.</p>
+
+<p>Ono što ovde <b>ne</b> stoji jednako je važno: nijedan signal magistrale se ne vozi
+odavde. Time svaki signal ima tačno jednog gospodara — drajvera.</p>
+
+<p>Na kraju je nadzorni brojač koji obara simulaciju ako se ne završi na vreme. Bez
+njega bi stara greška obesila regresiju umesto da je oborila, a test koji visi ne daje
+nikakvu informaciju.</p>
+
+<h2>11.8. tests/ncc_test_pkg.sv — testovi</h2>
+
+<p class="noind">Sedam testova poređanih od najmanjeg ka najvećem. To nije stvar ukusa
+nego postupak za traženje uzroka: kada veliki test padne, prvo pitanje je da li je
+problem u magistrali ili u jezgru, a na to odgovaraju upravo mali.</p>
+
+<table>
+  <caption><b>Tabela 12.</b> Testovi i šta svaki dokazuje</caption>
+  <thead>
+    <tr><th>Test</th><th>Šta dokazuje</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>ncc_vif_test</code></td><td>virtuelni interfejsi stižu, reset se otpušta, projekat miruje</td></tr>
+    <tr><td><code>ncc_axil_smoke_test</code></td><td>registri se upisuju i čitaju, u sva tri redosleda kanala</td></tr>
+    <tr><td><code>ncc_axil_agent_test</code></td><td>monitor vidi tačno ono što je drajver poslao, uključujući izmereni redosled</td></tr>
+    <tr><td><code>ncc_axif_smoke_test</code></td><td>paketni prenos radi za dužine 1, 2, 3 i 16 beat-ova</td></tr>
+    <tr><td><code>ncc_smoke_test</code></td><td>ceo put kroz jezgro, uz proveru scoreboard-a</td></tr>
+    <tr><td><code>ncc_cov_test</code></td><td>gađa bins-ove pokrivenosti</td></tr>
+    <tr><td><code>ncc_dim_sweep_test</code></td><td>prolazi kroz sve kombinacije dimenzija</td></tr>
+    <tr><td><code>ncc_random_test</code></td><td>nasumična pobuda; pušta se sa dvadeset seed-ova</td></tr>
+  </tbody>
+</table>
+
+<p>Fajl <code>tb_mixed_probe.sv</code> ostaje u folderu ali nije u spisku za
+prevođenje. To je bila prva proba, koja je dokazala da se VHDL i SystemVerilog uopšte
+mogu elaborirati zajedno; zadržan je kao zapis o tome kako je otkriveno da se dva
+signala spremnosti nikada ne dižu istovremeno.</p>
+
+<h2>11.9. Spiskovi izvornih fajlova i skripte</h2>
+
+<p class="noind"><code>rtl.f</code> i <code>tb.f</code> su obični tekstualni spiskovi —
+koje fajlove prevesti i kojim redom. Redosled nije proizvoljan: paket mora biti preveden
+pre onoga ko ga koristi, a komponenta pre onoga ko je instancira.</p>
+
+<p>Zahvaljujući njima postoji <b>jedno mesto</b> koje zna šta projekat sadrži. Sve
+skripte čitaju iste spiskove, pa dodavanje fajla znači izmenu na jednom mestu umesto na
+četiri. Putanje su relativne, da se ceo folder prenese na drugu mašinu bez izmena.</p>
+
+<table>
+  <caption><b>Tabela 13.</b> Skripte</caption>
+  <thead>
+    <tr><th>Skripta</th><th>Šta radi</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>build.sh</code></td><td>analiza i elaboracija, jednom za celu regresiju</td></tr>
+    <tr><td><code>run_one.sh</code></td><td>jedan test nad već izgrađenim snimkom</td></tr>
+    <tr><td><code>regress.sh</code></td><td>cela lista, tabela ishoda, pa pokrivenost</td></tr>
+    <tr><td><code>coverage.sh</code></td><td>spaja baze iz svih pokretanja i pravi izveštaj</td></tr>
+    <tr><td><code>build_xrun.sh</code>, <code>run_one_xrun.sh</code></td><td>isto to, za drugi simulator</td></tr>
+    <tr><td><code>spakuj.sh</code></td><td>priprema folder za prenos na drugu mašinu</td></tr>
+  </tbody>
+</table>
+
+<p>Podela na „izgradi“ i „pokreni“ nije kozmetička: elaboracija traje desetak puta duže
+od pokretanja, pa se za dvadeset sedam pokretanja radi jednom umesto dvadeset sedam
+puta.</p>
