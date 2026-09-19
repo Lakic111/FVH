@@ -1,0 +1,84 @@
+
+****** xsim v2025.2 (64-bit)
+  **** SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+  **** IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+  **** SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+  **** Start of session at: Sat Sep  5 14:27:55 2026
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source xsim.dir/sim_tb_top/xsim_script.tcl
+# xsim {sim_tb_top} -testplusarg "UVM_TESTNAME=ncc_axil_agent_test" -autoloadwcfg -runall -sv_seed 1
+Time resolution is 1 ps
+run -all
+UVM_INFO C:AMDDesignToÿÿÿ‚5.2Vivadodata/system_verilog/uvm_1.2/xlnx_uvm_package.sv(18601) @ 0: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+UVM-1.2
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_DO_NOT_NEED_CONSTRUCTOR undefined.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO C:AMDDesignToÿÿÿ‚5.2Vivadodata/system_verilog/uvm_1.2/xlnx_uvm_package.sv(18648) @ 0: reporter [NO_DPI_TSTNAME] UVM_NO_DPI defined--getting UVM_TESTNAME directly, without DPI
+UVM_INFO @ 0: reporter [RNTST] Running test ncc_axil_agent_test...
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_axil_pkg.sv(384) @ 0: uvm_test_top.agent [CFG] nema konfiguracije u bazi, koristi se podrazumevana (UVM_ACTIVE)
+UVM_INFO C:AMDDesignToÿÿÿ‚5.2Vivadodata/system_verilog/uvm_1.2/xlnx_uvm_package.sv(20867) @ 0: reporter [UVM/COMP/NAMECHECK] This implementation of the component name checks requires DPI to be enabled
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(141) @ 125000: uvm_test_top.sub [SUB] monitor: upis  0x00 = 0x0000005a (ORDER_AW_FIRST)
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(145) @ 145000: uvm_test_top.sub [SUB] monitor: citanje 0x00 = 0x0000005a
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_axil_pkg.sv(471) @ 145000: uvm_test_top.agent.sqr@@seq [RW] REG_IMG_W (ORDER_AW_FIRST): adresa 0x00 = 0x0000005a
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(141) @ 185000: uvm_test_top.sub [SUB] monitor: upis  0x00 = 0x0000002d (ORDER_W_FIRST)
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(145) @ 205000: uvm_test_top.sub [SUB] monitor: citanje 0x00 = 0x0000002d
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_axil_pkg.sv(471) @ 205000: uvm_test_top.agent.sqr@@seq [RW] REG_IMG_W (ORDER_W_FIRST): adresa 0x00 = 0x0000002d
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(141) @ 235000: uvm_test_top.sub [SUB] monitor: upis  0x00 = 0x0000001e (ORDER_SIMUL)
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(145) @ 255000: uvm_test_top.sub [SUB] monitor: citanje 0x00 = 0x0000001e
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_axil_pkg.sv(471) @ 255000: uvm_test_top.agent.sqr@@seq [RW] REG_IMG_W (ORDER_SIMUL): adresa 0x00 = 0x0000001e
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(141) @ 295000: uvm_test_top.sub [SUB] monitor: upis  0x04 = 0x0000005a (ORDER_W_FIRST)
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(145) @ 315000: uvm_test_top.sub [SUB] monitor: citanje 0x04 = 0x0000005a
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_axil_pkg.sv(471) @ 315000: uvm_test_top.agent.sqr@@seq [RW] REG_IMG_H (ORDER_W_FIRST): adresa 0x04 = 0x0000005a
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(141) @ 345000: uvm_test_top.sub [SUB] monitor: upis  0x08 = 0x00000019 (ORDER_SIMUL)
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(145) @ 365000: uvm_test_top.sub [SUB] monitor: citanje 0x08 = 0x00000019
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_axil_pkg.sv(471) @ 365000: uvm_test_top.agent.sqr@@seq [RW] REG_TMP_W (ORDER_SIMUL): adresa 0x08 = 0x00000019
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(141) @ 395000: uvm_test_top.sub [SUB] monitor: upis  0x0c = 0x0000000f (ORDER_AW_FIRST)
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(145) @ 415000: uvm_test_top.sub [SUB] monitor: citanje 0x0c = 0x0000000f
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_axil_pkg.sv(471) @ 415000: uvm_test_top.agent.sqr@@seq [RW] REG_TMP_H (ORDER_AW_FIRST): adresa 0x0c = 0x0000000f
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(141) @ 455000: uvm_test_top.sub [SUB] monitor: upis  0x00 = 0xdeadbe5a (ORDER_W_FIRST)
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(145) @ 475000: uvm_test_top.sub [SUB] monitor: citanje 0x00 = 0xdeadbe5a
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_axil_pkg.sv(471) @ 475000: uvm_test_top.agent.sqr@@seq [RW] REG_IMG_W puna rec (ORDER_W_FIRST): adresa 0x00 = 0xdeadbe5a
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_axil_pkg.sv(488) @ 475000: uvm_test_top.agent.sqr@@seq [RW] svi registri: upisano jednako procitanom, sva tri redosleda
+UVM_INFO C:AMDDesignToÿÿÿ‚5.2Vivadodata/system_verilog/uvm_1.2/xlnx_uvm_package.sv(19968) @ 525000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv(220) @ 525000: uvm_test_top [CHK] monitor: 7 upisa, 7 citanja; redosled AW_FIRST=2 W_FIRST=3 SIMUL=2
+UVM_INFO C:AMDDesignToÿÿÿ‚5.2Vivadodata/system_verilog/uvm_1.2/xlnx_uvm_package.sv(13673) @ 525000: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   29
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[CFG]     1
+[CHK]     1
+[NO_DPI_TSTNAME]     1
+[RNTST]     1
+[RW]     8
+[SUB]    14
+[TEST_DONE]     1
+[UVM/COMP/NAMECHECK]     1
+[UVM/RELNOTES]     1
+
+WARNING: The Functional Coverage Database has not been updated during simulation. Please recheck testbench to confirm that covergroups are being instantiated correctly and rerun simulation.
+$finish called at time : 525 ns : File "C:\AMDDesignTools\2025.2\Vivado\data/system_verilog/uvm_1.2/xlnx_uvm_package.sv" Line 18699
+exit
+INFO: [Common 17-206] Exiting xsim at Sat Sep  5 14:27:56 2026...

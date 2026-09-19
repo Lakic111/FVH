@@ -1,0 +1,102 @@
+
+****** xsim v2025.2 (64-bit)
+  **** SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+  **** IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+  **** SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+  **** Start of session at: Sat Sep  5 14:28:44 2026
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source xsim.dir/sim_tb_top/xsim_script.tcl
+# xsim {sim_tb_top} -testplusarg "UVM_TESTNAME=ncc_dim_sweep_test" -autoloadwcfg -runall -sv_seed 1
+Time resolution is 1 ps
+run -all
+UVM_INFO C:AMDDesignToÿÿÿ‚5.2Vivadodata/system_verilog/uvm_1.2/xlnx_uvm_package.sv(18601) @ 0: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+UVM-1.2
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_DO_NOT_NEED_CONSTRUCTOR undefined.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO C:AMDDesignToÿÿÿ‚5.2Vivadodata/system_verilog/uvm_1.2/xlnx_uvm_package.sv(18648) @ 0: reporter [NO_DPI_TSTNAME] UVM_NO_DPI defined--getting UVM_TESTNAME directly, without DPI
+UVM_INFO @ 0: reporter [RNTST] Running test ncc_dim_sweep_test...
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_axil_pkg.sv(384) @ 0: uvm_test_top.env.axil_agent [CFG] nema konfiguracije u bazi, koristi se podrazumevana (UVM_ACTIVE)
+UVM_INFO C:AMDDesignToÿÿÿ‚5.2Vivadodata/system_verilog/uvm_1.2/xlnx_uvm_package.sv(20867) @ 0: reporter [UVM/COMP/NAMECHECK] This implementation of the component name checks requires DPI to be enabled
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 3165000: uvm_test_top.env.sb [SB] predikcija spremna: slika 1x1, sablon 1x1, mapa 1 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 3745000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 1x1 / 1x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 3915000: uvm_test_top.env.sb [SB] predikcija spremna: slika 20x1, sablon 1x1, mapa 20 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 10395000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 20x1 / 1x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 10565000: uvm_test_top.env.sb [SB] predikcija spremna: slika 20x1, sablon 5x1, mapa 16 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 30205000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 20x1 / 5x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 30375000: uvm_test_top.env.sb [SB] predikcija spremna: slika 20x1, sablon 15x1, mapa 6 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 39015000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 20x1 / 15x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 39185000: uvm_test_top.env.sb [SB] predikcija spremna: slika 45x1, sablon 1x1, mapa 45 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 53405000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 45x1 / 1x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 53575000: uvm_test_top.env.sb [SB] predikcija spremna: slika 45x1, sablon 5x1, mapa 41 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 103215000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 45x1 / 5x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 103385000: uvm_test_top.env.sb [SB] predikcija spremna: slika 45x1, sablon 15x1, mapa 31 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 144525000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 45x1 / 15x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 144695000: uvm_test_top.env.sb [SB] predikcija spremna: slika 45x1, sablon 20x1, mapa 26 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 180835000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 45x1 / 20x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 181005000: uvm_test_top.env.sb [SB] predikcija spremna: slika 45x1, sablon 30x1, mapa 16 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 205645000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 45x1 / 30x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 205815000: uvm_test_top.env.sb [SB] predikcija spremna: slika 60x1, sablon 1x1, mapa 60 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 224695000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 60x1 / 1x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 224865000: uvm_test_top.env.sb [SB] predikcija spremna: slika 60x1, sablon 5x1, mapa 56 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 292505000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 60x1 / 5x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 292675000: uvm_test_top.env.sb [SB] predikcija spremna: slika 60x1, sablon 15x1, mapa 46 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 353315000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 60x1 / 15x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 353485000: uvm_test_top.env.sb [SB] predikcija spremna: slika 60x1, sablon 20x1, mapa 41 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 409865000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 60x1 / 20x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 410035000: uvm_test_top.env.sb [SB] predikcija spremna: slika 60x1, sablon 30x1, mapa 31 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 456415000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 60x1 / 30x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 456585000: uvm_test_top.env.sb [SB] predikcija spremna: slika 90x1, sablon 1x1, mapa 90 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 484765000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 90x1 / 1x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 484935000: uvm_test_top.env.sb [SB] predikcija spremna: slika 90x1, sablon 5x1, mapa 86 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 588575000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 90x1 / 5x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 588745000: uvm_test_top.env.sb [SB] predikcija spremna: slika 90x1, sablon 15x1, mapa 76 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 688385000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 90x1 / 15x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 688555000: uvm_test_top.env.sb [SB] predikcija spremna: slika 90x1, sablon 20x1, mapa 71 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 785435000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 90x1 / 20x1 zavrsen                               
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(127) @ 785605000: uvm_test_top.env.sb [SB] predikcija spremna: slika 90x1, sablon 30x1, mapa 61 vrednosti
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(714) @ 875485000: uvm_test_top.env.vsqr@@seq [COVSEQ] skup 90x1 / 30x1 zavrsen                               
+UVM_INFO C:AMDDesignToÿÿÿ‚5.2Vivadodata/system_verilog/uvm_1.2/xlnx_uvm_package.sv(19968) @ 875575000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(169) @ 875575000: uvm_test_top.env.sb [SB] 8 poredjenja, 0 neslaganja
+UVM_INFO C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv(338) @ 875575000: uvm_test_top.env.cov [COV] pokrivenost: dimenzije 68.0%, kontrola 95.0%, AXI 65.0%, ukupno 76.0%
+UVM_INFO C:AMDDesignToÿÿÿ‚5.2Vivadodata/system_verilog/uvm_1.2/xlnx_uvm_package.sv(13673) @ 875575000: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   46
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[CFG]     1
+[COV]     1
+[COVSEQ]    19
+[NO_DPI_TSTNAME]     1
+[RNTST]     1
+[SB]    20
+[TEST_DONE]     1
+[UVM/COMP/NAMECHECK]     1
+[UVM/RELNOTES]     1
+
+$finish called at time : 875575 ns : File "C:\AMDDesignTools\2025.2\Vivado\data/system_verilog/uvm_1.2/xlnx_uvm_package.sv" Line 18699
+run: Time (s): cpu = 00:00:00 ; elapsed = 00:00:40 . Memory (MB): peak = 220.980 ; gain = 0.000
+exit
+INFO: xsimkernel Simulation Memory Usage: 292928 KB (Peak: 292928 KB), Simulation CPU Usage: 40374 ms
+INFO: [Common 17-206] Exiting xsim at Sat Sep  5 14:29:26 2026...

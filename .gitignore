@@ -2,5 +2,10 @@
 /dodatno/
 /*.pdf
 .obsidian/
-/verif/result/
+# verif/result/ = izlazi simulacije (Vivado xsim/xcrg) -- komituju se samo
+# citljivi izvestaji (.log/.txt), ne binarni sim baze (.vdb/.psdb/.pb/.sdb/...)
+/verif/result/**
+!/verif/result/**/
+!/verif/result/**/*.log
+!/verif/result/**/*.txt
 FVH Vault/Prilozi/

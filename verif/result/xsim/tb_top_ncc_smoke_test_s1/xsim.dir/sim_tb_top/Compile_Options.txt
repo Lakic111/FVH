@@ -1,0 +1,1 @@
+-L "uvm" -timescale "1ns/1ps" -debug "off" "tb_top" -s "sim_tb_top" 

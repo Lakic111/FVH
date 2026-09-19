@@ -1,0 +1,32 @@
+#-----------------------------------------------------------
+# xsim v2025.2 (64-bit)
+# SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+# IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+# SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+# Start of session at: Sat Sep  5 10:56:03 2026
+# Process ID         : 380
+# Current directory  : C:/Users/pc/Desktop/FVH/verif/result/xsim/tb_mixed_probe
+# Command line       : xsim.exe -mode tcl -source {xsim.dir/sim_tb_mixed_probe/xsim_script.tcl}
+# Log file           : C:/Users/pc/Desktop/FVH/verif/result/xsim/tb_mixed_probe/xsim.log
+# Journal file       : C:/Users/pc/Desktop/FVH/verif/result/xsim/tb_mixed_probe\xsim.jou
+# Running On         : DESKTOP-CDOE0CH
+# Platform           : Windows Server 2016 or Windows 10
+# Operating System   : 26200
+# Processor Detail   : AMD Ryzen 7 7445HS w/ Radeon 740M Graphics     
+# CPU Frequency      : 3194 MHz
+# CPU Physical cores : 6
+# CPU Logical cores  : 12
+# Host memory        : 16387 MB
+# Swap memory        : 26843 MB
+# Total Virtual      : 43230 MB
+# Available Virtual  : 27555 MB
+#-----------------------------------------------------------
+source xsim.dir/sim_tb_mixed_probe/xsim_script.tcl
+# xsim {sim_tb_mixed_probe} -autoloadwcfg -runall
+Time resolution is 1 ps
+run -all
+OK: REG_IMG_W upisano i procitano 0x0000005a
+PASS: mesoviti jezik VHDL+SV radi u XSim-u
+$finish called at time : 215 ns : File "C:/Users/pc/Desktop/FVH/verif/src/tb_mixed_probe.sv" Line 139
+exit
+INFO: [Common 17-206] Exiting xsim at Sat Sep  5 10:56:05 2026...

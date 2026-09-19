@@ -1,0 +1,44 @@
+Vivado Simulator v2025.2
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+Running: C:/AMDDesignTools/2025.2/Vivado/bin/unwrapped/win64.o/xelab.exe -L uvm -timescale 1ns/1ps -debug off tb_top -s sim_tb_top 
+Multi-threading is on. Using 10 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+WARNING: [VRFC 10-3645] port 's01_axi_awuser' remains unconnected for this instance [C:/Users/pc/Desktop/FVH/verif/src/tb_top.sv:43]
+WARNING: [VRFC 10-5021] port 's01_axi_buser' is not connected on this instance [C:/Users/pc/Desktop/FVH/verif/src/tb_top.sv:43]
+Completed static elaboration
+Starting simulation data flow analysis
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling package std.standard
+Compiling package std.textio
+Compiling package ieee.std_logic_1164
+Compiling package ieee.numeric_std
+Compiling package work.ncc_pkg
+Compiling package uvm.uvm_pkg
+Compiling package std.std
+Compiling package work.ncc_axil_pkg
+Compiling package work.ncc_verif_pkg
+Compiling package work.ncc_axif_pkg
+Compiling package work.ncc_test_pkg
+Compiling package work.ncc_env_pkg
+Compiling package work.ncc_ref_pkg
+Compiling module work.mst_cb
+Compiling module work.mon_cb
+Compiling module work.axi_lite_if_default
+Compiling module work.mst_cb
+Compiling module work.mon_cb
+Compiling module work.axi_full_if_default
+Compiling architecture arch_imp of entity work.ncc_accel_slave_lite_v1_0_S00_AXI [ncc_accel_slave_lite_v1_0_s00_ax...]
+Compiling architecture arch_imp of entity work.ncc_accel_slave_full_v1_0_S01_AXI [ncc_accel_slave_full_v1_0_s01_ax...]
+Compiling architecture rtl of entity work.dp_bram [dp_bram_default]
+Compiling architecture rtl of entity work.dp_bram [\dp_bram(addr_w=10)\]
+Compiling architecture rtl of entity work.dp_bram [\dp_bram(data_w=32)\]
+Compiling architecture rtl of entity work.mem_subsystem [mem_subsystem_default]
+Compiling architecture rtl of entity work.seq_divider [\seq_divider(w=18)\]
+Compiling architecture rtl of entity work.seq_divider [\seq_divider(w=83)\]
+Compiling architecture rtl of entity work.ncc_core [ncc_core_default]
+Compiling architecture arch_imp of entity work.ncc_accel [ncc_accel_default]
+Compiling module work.tb_top
+Built simulation snapshot sim_tb_top

@@ -1,0 +1,7 @@
+Running: xsim.dir/sim_tb_mixed_probe/xsimk.exe -runall -simmode gui -wdb sim_tb_mixed_probe.wdb -simrunnum 0 -socket 52283
+Design successfully loaded
+Design Loading Memory Usage: 11124 KB (Peak: 11124 KB)
+Design Loading CPU Usage: 61 ms
+Simulation completed
+Simulation Memory Usage: 11716 KB (Peak: 11716 KB)
+Simulation CPU Usage: 61 ms

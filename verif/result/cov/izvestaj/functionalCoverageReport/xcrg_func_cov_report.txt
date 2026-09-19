@@ -1,0 +1,488 @@
+
+ Xcrg Functional Coverage Report 
+
+ // To generate a more detailed report in html format, please run xcrg -dir <database> -report_format html -report_dir <dir>
+ // This is a text report also in CSV format. By exporting to Excel and using , as the delimiter, the data can be split into individual rows and columns
+ // This report contains 3 sections, Total Summary, CoverGroups Summary and CoverPoint Tables sections 
+ // In order to navigate to a CoverPoint's Table, the TableTag printed for the respective covergroup/instance can be grepped in this report
+ // For example, if covergroup name is g1 and coverpoint is cp1, the TableTag to go to the Group's CoverPoint Table summary is g1_cp1 
+ // For example, if covergroup name is g1, instance name is i1, coverpoint is cp1, the TableTag to go to the Instance's CoverPoint Table summary is g1_i1_cp1 
+
+
+
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: Total Summary ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+   Date             :, 09/05/26 14:39:58 Central European Summer Time
+   User             :, pc
+   Version          :, Vivado Simulator Coverage Report 2025.2
+   Command Line     :, C:/AMDDesignTools/2025.2/Vivado/bin/unwrapped/win64.o/xcrg.exe -file baze.txt -report_format text -report_dir ./izvestaj 
+   Number of Tests  :, 1
+
+   Coverage Score            :, 100
+   Total Insts Score         :, 100
+   Total no of Cover Groups  :, 3
+   Total no of Instances     :, 3
+
+
+     CgName,                                           Score,      NumInsts,   AvgInstScore,   Weight,     Goal,       Merge Insts,    Get Inst Cov,   Per Inst,   AutoBinMax,     Comment,    
+
+       ncc_env_pkg::ncc_coverage::cg_dimenzije           ,100         ,1           ,100             ,1           ,100         ,0               ,0               ,1           ,64              ,            ,
+       ncc_env_pkg::ncc_coverage::cg_kontrola            ,100         ,1           ,100             ,1           ,100         ,0               ,0               ,1           ,64              ,            ,
+       ncc_env_pkg::ncc_coverage::cg_axi                 ,100         ,1           ,100             ,1           ,100         ,0               ,0               ,1           ,64              ,            ,
+
+
+
+
+
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: CoverGroups Summary ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+Cover Group Details : ncc_env_pkg::ncc_coverage::cg_dimenzije
+
+CgName,                                           Score,      NumInsts,   AvgInstScore,   Weight,     Goal,       Merge Insts,    Get Inst Cov,   Per Inst,   AutoBinMax,     Comment,    
+
+ncc_env_pkg::ncc_coverage::cg_dimenzije           ,100         ,1           ,100             ,1           ,100         ,0               ,0               ,1           ,64              ,            ,
+
+      Instances of CoverGroup - ncc_env_pkg::ncc_coverage::cg_dimenzije
+
+             InstName,                                         Score,      Weight,     Goal,       AtLeast,    AutoBinMax, PrintMissing,   IsInst,     Comment,    
+             	his .cg_dimenzije                                ,100         ,1           ,100         ,1           ,64          ,0               ,1           ,            ,
+
+
+      Instance 	his .cg_dimenzije Cover Point Details 
+
+             Name,                                             TableTag,     Expected,   Uncovered,  Covered,    Percent,    Goal,       Weight,     AtLeast,    AutoBinMax, Comment,    
+             cp_img_w                                          ,cg_dimenzije_	his .cg_dimenzije_cp_img_w,5           ,0           ,5           ,100         ,100         ,1           ,1           ,64          ,            ,
+             cp_img_h                                          ,cg_dimenzije_	his .cg_dimenzije_cp_img_h,5           ,0           ,5           ,100         ,100         ,1           ,1           ,64          ,            ,
+             cp_tmp_w                                          ,cg_dimenzije_	his .cg_dimenzije_cp_tmp_w,5           ,0           ,5           ,100         ,100         ,1           ,1           ,64          ,            ,
+             cp_tmp_h                                          ,cg_dimenzije_	his .cg_dimenzije_cp_tmp_h,5           ,0           ,5           ,100         ,100         ,1           ,1           ,64          ,            ,
+
+
+      Instance 	his .cg_dimenzije Cross Cover Point Details 
+
+             Name,                                             TableTag,     Expected,   Uncovered,  Covered,    Percent,    Goal,       Weight,     AtLeast,    Comment,    
+             x_img_tmp                                         ,cg_dimenzije_	his .cg_dimenzije_x_img_tmp,19          ,0           ,19          ,100         ,100         ,1           ,1           ,            ,
+
+
+
+
+
+
+
+
+Cover Group Details : ncc_env_pkg::ncc_coverage::cg_kontrola
+
+CgName,                                           Score,      NumInsts,   AvgInstScore,   Weight,     Goal,       Merge Insts,    Get Inst Cov,   Per Inst,   AutoBinMax,     Comment,    
+
+ncc_env_pkg::ncc_coverage::cg_kontrola            ,100         ,1           ,100             ,1           ,100         ,0               ,0               ,1           ,64              ,            ,
+
+      Instances of CoverGroup - ncc_env_pkg::ncc_coverage::cg_kontrola
+
+             InstName,                                         Score,      Weight,     Goal,       AtLeast,    AutoBinMax, PrintMissing,   IsInst,     Comment,    
+             	his .cg_kontrola                                 ,100         ,1           ,100         ,1           ,64          ,0               ,1           ,            ,
+
+
+      Instance 	his .cg_kontrola Cover Point Details 
+
+             Name,                                             TableTag,     Expected,   Uncovered,  Covered,    Percent,    Goal,       Weight,     AtLeast,    AutoBinMax, Comment,    
+             cp_start                                          ,cg_kontrola_	his .cg_kontrola_cp_start,2           ,0           ,2           ,100         ,100         ,1           ,1           ,64          ,            ,
+             cp_busy                                           ,cg_kontrola_	his .cg_kontrola_cp_busy,2           ,0           ,2           ,100         ,100         ,1           ,1           ,64          ,            ,
+             cp_done                                           ,cg_kontrola_	his .cg_kontrola_cp_done,2           ,0           ,2           ,100         ,100         ,1           ,1           ,64          ,            ,
+
+
+      Instance 	his .cg_kontrola Cross Cover Point Details 
+
+             Name,                                             TableTag,     Expected,   Uncovered,  Covered,    Percent,    Goal,       Weight,     AtLeast,    Comment,    
+             x_start_busy                                      ,cg_kontrola_	his .cg_kontrola_x_start_busy,4           ,0           ,4           ,100         ,100         ,1           ,1           ,            ,
+             x_start_done                                      ,cg_kontrola_	his .cg_kontrola_x_start_done,4           ,0           ,4           ,100         ,100         ,1           ,1           ,            ,
+
+
+
+
+
+
+
+
+Cover Group Details : ncc_env_pkg::ncc_coverage::cg_axi
+
+CgName,                                           Score,      NumInsts,   AvgInstScore,   Weight,     Goal,       Merge Insts,    Get Inst Cov,   Per Inst,   AutoBinMax,     Comment,    
+
+ncc_env_pkg::ncc_coverage::cg_axi                 ,100         ,1           ,100             ,1           ,100         ,0               ,0               ,1           ,64              ,            ,
+
+      Instances of CoverGroup - ncc_env_pkg::ncc_coverage::cg_axi
+
+             InstName,                                         Score,      Weight,     Goal,       AtLeast,    AutoBinMax, PrintMissing,   IsInst,     Comment,    
+             	his .cg_axi                                      ,100         ,1           ,100         ,1           ,64          ,0               ,1           ,            ,
+
+
+      Instance 	his .cg_axi Cover Point Details 
+
+             Name,                                             TableTag,     Expected,   Uncovered,  Covered,    Percent,    Goal,       Weight,     AtLeast,    AutoBinMax, Comment,    
+             cp_order                                          ,cg_axi_	his .cg_axi_cp_order,3           ,0           ,3           ,100         ,100         ,1           ,1           ,64          ,            ,
+             cp_region                                         ,cg_axi_	his .cg_axi_cp_region,5           ,0           ,5           ,100         ,100         ,1           ,1           ,64          ,            ,
+             cp_len                                            ,cg_axi_	his .cg_axi_cp_len,5           ,0           ,5           ,100         ,100         ,1           ,1           ,64          ,            ,
+             cp_strb                                           ,cg_axi_	his .cg_axi_cp_strb,4           ,0           ,4           ,100         ,100         ,1           ,1           ,64          ,            ,
+
+
+      Instance 	his .cg_axi Cross Cover Point Details 
+
+             Name,                                             TableTag,     Expected,   Uncovered,  Covered,    Percent,    Goal,       Weight,     AtLeast,    Comment,    
+             x_order_region                                    ,cg_axi_	his .cg_axi_x_order_region,15          ,0           ,15          ,100         ,100         ,1           ,1           ,            ,
+
+
+
+
+
+
+
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: CoverPoint Tables::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+ Cover Point Table for Inst : 	his .cg_dimenzije, Variable :, cp_img_w
+ Table tag :, cg_dimenzije_	his .cg_dimenzije_cp_img_w
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ UserDefined,   5           ,0           ,5           ,100         ,
+
+                     Covered bins 
+
+      Name,       Hit Count,  AtLeast,    
+      min         ,4           ,1           ,
+      ispod       ,26          ,1           ,
+      coarse      ,6           ,1           ,
+      iznad       ,7           ,1           ,
+      max         ,6           ,1           ,
+
+
+
+
+
+
+ Cover Point Table for Inst : 	his .cg_dimenzije, Variable :, cp_img_h
+ Table tag :, cg_dimenzije_	his .cg_dimenzije_cp_img_h
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ UserDefined,   5           ,0           ,5           ,100         ,
+
+                     Covered bins 
+
+      Name,       Hit Count,  AtLeast,    
+      min         ,22          ,1           ,
+      ispod       ,24          ,1           ,
+      coarse      ,1           ,1           ,
+      iznad       ,1           ,1           ,
+      max         ,1           ,1           ,
+
+
+
+
+
+
+ Cover Point Table for Inst : 	his .cg_dimenzije, Variable :, cp_tmp_w
+ Table tag :, cg_dimenzije_	his .cg_dimenzije_cp_tmp_w
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ UserDefined,   5           ,0           ,5           ,100         ,
+
+                     Covered bins 
+
+      Name,       Hit Count,  AtLeast,    
+      min         ,11          ,1           ,
+      ispod       ,24          ,1           ,
+      coarse      ,5           ,1           ,
+      iznad       ,5           ,1           ,
+      max         ,4           ,1           ,
+
+
+
+
+
+
+ Cover Point Table for Inst : 	his .cg_dimenzije, Variable :, cp_tmp_h
+ Table tag :, cg_dimenzije_	his .cg_dimenzije_cp_tmp_h
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ UserDefined,   5           ,0           ,5           ,100         ,
+
+                     Covered bins 
+
+      Name,       Hit Count,  AtLeast,    
+      min         ,26          ,1           ,
+      ispod       ,20          ,1           ,
+      coarse      ,1           ,1           ,
+      iznad       ,1           ,1           ,
+      max         ,1           ,1           ,
+
+
+
+
+
+
+ Cross Cover Point Table for Inst : 	his .cg_dimenzije, Variable :, x_img_tmp
+ Table tag :, cg_dimenzije_	his .cg_dimenzije_x_img_tmp
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ Total,          19          ,0           ,19          ,100         ,
+ Automatic,      19          ,0           ,19          ,1           ,
+
+                 Auto Covered bins 
+
+      cp_img_w        ,cp_tmp_w        ,Hit Count,  AtLeast,    
+      min             ,min             ,4           ,1           ,
+      ispod           ,min             ,4           ,1           ,
+      ispod           ,ispod           ,21          ,1           ,
+      ispod           ,coarse          ,1           ,1           ,
+      coarse          ,min             ,1           ,1           ,
+      coarse          ,ispod           ,1           ,1           ,
+      coarse          ,coarse          ,2           ,1           ,
+      coarse          ,iznad           ,1           ,1           ,
+      coarse          ,max             ,1           ,1           ,
+      iznad           ,min             ,1           ,1           ,
+      iznad           ,ispod           ,1           ,1           ,
+      iznad           ,coarse          ,1           ,1           ,
+      iznad           ,iznad           ,3           ,1           ,
+      iznad           ,max             ,1           ,1           ,
+      max             ,min             ,1           ,1           ,
+      max             ,ispod           ,1           ,1           ,
+      max             ,coarse          ,1           ,1           ,
+      max             ,iznad           ,1           ,1           ,
+      max             ,max             ,2           ,1           ,
+
+
+
+
+
+
+ Cover Point Table for Inst : 	his .cg_kontrola, Variable :, cp_start
+ Table tag :, cg_kontrola_	his .cg_kontrola_cp_start
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ UserDefined,   2           ,0           ,2           ,100         ,
+
+                     Covered bins 
+
+      Name,       Hit Count,  AtLeast,    
+      ne          ,273774      ,1           ,
+      da          ,49          ,1           ,
+
+
+
+
+
+
+ Cover Point Table for Inst : 	his .cg_kontrola, Variable :, cp_busy
+ Table tag :, cg_kontrola_	his .cg_kontrola_cp_busy
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ UserDefined,   2           ,0           ,2           ,100         ,
+
+                     Covered bins 
+
+      Name,       Hit Count,  AtLeast,    
+      ne          ,117         ,1           ,
+      da          ,273706      ,1           ,
+
+
+
+
+
+
+ Cover Point Table for Inst : 	his .cg_kontrola, Variable :, cp_done
+ Table tag :, cg_kontrola_	his .cg_kontrola_cp_done
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ UserDefined,   2           ,0           ,2           ,100         ,
+
+                     Covered bins 
+
+      Name,       Hit Count,  AtLeast,    
+      ne          ,273750      ,1           ,
+      da          ,73          ,1           ,
+
+
+
+
+
+
+ Cross Cover Point Table for Inst : 	his .cg_kontrola, Variable :, x_start_busy
+ Table tag :, cg_kontrola_	his .cg_kontrola_x_start_busy
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ Total,          4           ,0           ,4           ,100         ,
+ Automatic,      4           ,0           ,4           ,1           ,
+
+                 Auto Covered bins 
+
+      cp_start        ,cp_busy         ,Hit Count,  AtLeast,    
+      ne              ,ne              ,69          ,1           ,
+      ne              ,da              ,273705      ,1           ,
+      da              ,ne              ,48          ,1           ,
+      da              ,da              ,1           ,1           ,
+
+
+
+
+
+
+ Cross Cover Point Table for Inst : 	his .cg_kontrola, Variable :, x_start_busy
+ Table tag :, cg_kontrola_	his .cg_kontrola_x_start_busy
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ Total,          4           ,0           ,4           ,100         ,
+ Automatic,      4           ,0           ,4           ,1           ,
+
+                 Auto Covered bins 
+
+      cp_start        ,cp_busy         ,Hit Count,  AtLeast,    
+      ne              ,ne              ,69          ,1           ,
+      ne              ,da              ,273705      ,1           ,
+      da              ,ne              ,48          ,1           ,
+      da              ,da              ,1           ,1           ,
+
+
+
+
+
+
+ Cover Point Table for Inst : 	his .cg_axi, Variable :, cp_order
+ Table tag :, cg_axi_	his .cg_axi_cp_order
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ UserDefined,   3           ,0           ,3           ,100         ,
+
+                     Covered bins 
+
+      Name,       Hit Count,  AtLeast,    
+      auto_ORDER_AW_FIRST,281         ,1           ,
+      auto_ORDER_W_FIRST,143         ,1           ,
+      auto_ORDER_SIMUL,117         ,1           ,
+
+
+
+
+
+
+ Cover Point Table for Inst : 	his .cg_axi, Variable :, cp_region
+ Table tag :, cg_axi_	his .cg_axi_cp_region
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ UserDefined,   5           ,0           ,5           ,100         ,
+
+                     Covered bins 
+
+      Name,       Hit Count,  AtLeast,    
+      auto_COV_S00,321         ,1           ,
+      auto_COV_S01_IMG,78          ,1           ,
+      auto_COV_S01_TMP,71          ,1           ,
+      auto_COV_S01_RES,30          ,1           ,
+      auto_COV_S01_NONE,41          ,1           ,
+
+
+
+
+
+
+ Cover Point Table for Inst : 	his .cg_axi, Variable :, cp_len
+ Table tag :, cg_axi_	his .cg_axi_cp_len
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ UserDefined,   5           ,0           ,5           ,100         ,
+
+                     Covered bins 
+
+      Name,       Hit Count,  AtLeast,    
+      b1          ,333         ,1           ,
+      b2          ,13          ,1           ,
+      b3_15       ,72          ,1           ,
+      b16_255     ,110         ,1           ,
+      b256        ,13          ,1           ,
+
+
+
+
+
+
+ Cover Point Table for Inst : 	his .cg_axi, Variable :, cp_strb
+ Table tag :, cg_axi_	his .cg_axi_cp_strb
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ UserDefined,   4           ,0           ,4           ,100         ,
+
+                     Covered bins 
+
+      Name,       Hit Count,  AtLeast,    
+      puna        ,537         ,1           ,
+      b1          ,1           ,1           ,
+      b3          ,1           ,1           ,
+      b9          ,1           ,1           ,
+
+
+
+
+
+
+ Cross Cover Point Table for Inst : 	his .cg_axi, Variable :, x_order_region
+ Table tag :, cg_axi_	his .cg_axi_x_order_region
+
+                      Summary 
+
+ Category,       Expected,   Uncovered,  Covered,    Percent,    
+ Total,          15          ,0           ,15          ,100         ,
+ Automatic,      15          ,0           ,15          ,1           ,
+
+                 Auto Covered bins 
+
+      cp_order        ,cp_region       ,Hit Count,  AtLeast,    
+      auto_ORDER_AW_FIRST,auto_COV_S00    ,109         ,1           ,
+      auto_ORDER_AW_FIRST,auto_COV_S01_IMG,49          ,1           ,
+      auto_ORDER_AW_FIRST,auto_COV_S01_TMP,56          ,1           ,
+      auto_ORDER_AW_FIRST,auto_COV_S01_RES,28          ,1           ,
+      auto_ORDER_AW_FIRST,auto_COV_S01_NONE,39          ,1           ,
+      auto_ORDER_W_FIRST,auto_COV_S00    ,114         ,1           ,
+      auto_ORDER_W_FIRST,auto_COV_S01_IMG,17          ,1           ,
+      auto_ORDER_W_FIRST,auto_COV_S01_TMP,10          ,1           ,
+      auto_ORDER_W_FIRST,auto_COV_S01_RES,1           ,1           ,
+      auto_ORDER_W_FIRST,auto_COV_S01_NONE,1           ,1           ,
+      auto_ORDER_SIMUL,auto_COV_S00    ,98          ,1           ,
+      auto_ORDER_SIMUL,auto_COV_S01_IMG,12          ,1           ,
+      auto_ORDER_SIMUL,auto_COV_S01_TMP,5           ,1           ,
+      auto_ORDER_SIMUL,auto_COV_S01_RES,1           ,1           ,
+      auto_ORDER_SIMUL,auto_COV_S01_NONE,1           ,1           ,
+
+
+
+
+
+

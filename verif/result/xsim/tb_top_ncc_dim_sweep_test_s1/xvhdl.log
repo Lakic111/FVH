@@ -1,0 +1,15 @@
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/pc/Desktop/FVH/verif/rtl/ncc_pkg.vhd" into library work
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/pc/Desktop/FVH/verif/rtl/dp_bram.vhd" into library work
+INFO: [VRFC 10-3107] analyzing entity 'dp_bram'
+WARNING: [VRFC 10-2115] shared variables must be of a protected type [C:/Users/pc/Desktop/FVH/verif/rtl/dp_bram.vhd:18]
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/pc/Desktop/FVH/verif/rtl/mem_subsystem.vhd" into library work
+INFO: [VRFC 10-3107] analyzing entity 'mem_subsystem'
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/pc/Desktop/FVH/verif/rtl/ncc_core.vhd" into library work
+INFO: [VRFC 10-3107] analyzing entity 'seq_divider'
+INFO: [VRFC 10-3107] analyzing entity 'ncc_core'
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/pc/Desktop/FVH/verif/rtl/ncc_accel_slave_lite_v1_0_S00_AXI.vhd" into library work
+INFO: [VRFC 10-3107] analyzing entity 'ncc_accel_slave_lite_v1_0_S00_AXI'
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/pc/Desktop/FVH/verif/rtl/ncc_accel_slave_full_v1_0_S01_AXI.vhd" into library work
+INFO: [VRFC 10-3107] analyzing entity 'ncc_accel_slave_full_v1_0_S01_AXI'
+INFO: [VRFC 10-163] Analyzing VHDL file "C:/Users/pc/Desktop/FVH/verif/rtl/ncc_accel.vhd" into library work
+INFO: [VRFC 10-3107] analyzing entity 'ncc_accel'

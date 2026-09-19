@@ -1,0 +1,76 @@
+############################################################
+# FVH regresija -- rezim: sve, seed-ova za slucajni: 20
+# 2026-09-05 13:23:33
+############################################################
+elaboracija: gotova
+
+--- brza lista ---
+  ncc_vif_test                 seed 1       3s  PASS
+  ncc_axil_smoke_test          seed 1       3s  PASS
+  ncc_axil_agent_test          seed 1       3s  PASS
+  ncc_axif_smoke_test          seed 1       3s  PASS
+  ncc_smoke_test               seed 1       3s  PASS
+
+--- spora lista ---
+  ncc_cov_test                 seed 1      44s  PASS
+  ncc_dim_sweep_test           seed 1      48s  PASS
+
+--- slucajna lista (20 seed-ova) ---
+  ncc_random_test              seed 1      20s  PASS
+  ncc_random_test              seed 2       5s  PASS
+  ncc_random_test              seed 3       4s  PASS
+  ncc_random_test              seed 4      16s  PASS
+  ncc_random_test              seed 5      10s  PASS
+  ncc_random_test              seed 6       9s  PASS
+  ncc_random_test              seed 7      15s  PASS
+  ncc_random_test              seed 8       3s  PASS
+  ncc_random_test              seed 9      19s  PASS
+  ncc_random_test              seed 10      7s  PASS
+  ncc_random_test              seed 11     14s  PASS
+  ncc_random_test              seed 12     12s  PASS
+  ncc_random_test              seed 13      7s  PASS
+  ncc_random_test              seed 14     14s  PASS
+  ncc_random_test              seed 15     11s  PASS
+  ncc_random_test              seed 16     29s  PASS
+  ncc_random_test              seed 17      7s  PASS
+  ncc_random_test              seed 18     22s  PASS
+  ncc_random_test              seed 19      9s  PASS
+  ncc_random_test              seed 20     32s  PASS
+
+############################################################
+# UKUPNO: 27 prosli, 0 pali, 373 s
+############################################################
+
+=== baze u spajanju (23) ===
+  ncc_cov_test_s1
+  ncc_dim_sweep_test_s1
+  ncc_random_test_s1
+  ncc_random_test_s10
+  ncc_random_test_s11
+  ncc_random_test_s12
+  ncc_random_test_s13
+  ncc_random_test_s14
+  ncc_random_test_s15
+  ncc_random_test_s16
+  ncc_random_test_s17
+  ncc_random_test_s18
+  ncc_random_test_s19
+  ncc_random_test_s2
+  ncc_random_test_s20
+  ncc_random_test_s3
+  ncc_random_test_s4
+  ncc_random_test_s5
+  ncc_random_test_s6
+  ncc_random_test_s7
+  ncc_random_test_s8
+  ncc_random_test_s9
+  ncc_smoke_test_s1
+=== ukupno ===
+   Coverage Score            :, 100
+=== po grupama ===
+  ncc_env_pkg::ncc_coverage::cg_axi          100%
+  ncc_env_pkg::ncc_coverage::cg_dimenzije    100%
+  ncc_env_pkg::ncc_coverage::cg_kontrola     100%
+=== tacke ispod 100% ===
+  (prazno znaci: sve tacke su 100%)
+Ceo izvestaj: /c/Users/pc/Desktop/FVH/verif/result/cov/izvestaj/functionalCoverageReport/

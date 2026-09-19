@@ -1,0 +1,74 @@
+ Reading from File : baze.txt
+
+ Added 23 Coverage dir/databases path[s] from file
+
+
+ Options Set are : 
+
+   Command Line               : xcrg -file baze.txt -report_format text -report_dir ./izvestaj
+   Report Format              : text
+   Log File                   : xcrg.log
+   Functional Coverage Dir[s] : .
+   Functional Coverage DB[s]  : ncc_cov_test_s1
+                                ncc_dim_sweep_test_s1
+                                ncc_random_test_s1
+                                ncc_random_test_s10
+                                ncc_random_test_s11
+                                ncc_random_test_s12
+                                ncc_random_test_s13
+                                ncc_random_test_s14
+                                ncc_random_test_s15
+                                ncc_random_test_s16
+                                ncc_random_test_s17
+                                ncc_random_test_s18
+                                ncc_random_test_s19
+                                ncc_random_test_s2
+                                ncc_random_test_s20
+                                ncc_random_test_s3
+                                ncc_random_test_s4
+                                ncc_random_test_s5
+                                ncc_random_test_s6
+                                ncc_random_test_s7
+                                ncc_random_test_s8
+                                ncc_random_test_s9
+                                ncc_smoke_test_s1
+   Coverage File              : baze.txt
+
+
+
+********************************************************
+                  Functional Coverage Report 
+********************************************************
+
+ Restoring Functional Coverage DB[s] from : 
+  1	./xsim.covdb/ncc_cov_test_s1/xsim.covinfo
+  2	./xsim.covdb/ncc_dim_sweep_test_s1/xsim.covinfo
+  3	./xsim.covdb/ncc_random_test_s1/xsim.covinfo
+  4	./xsim.covdb/ncc_random_test_s10/xsim.covinfo
+  5	./xsim.covdb/ncc_random_test_s11/xsim.covinfo
+  6	./xsim.covdb/ncc_random_test_s12/xsim.covinfo
+  7	./xsim.covdb/ncc_random_test_s13/xsim.covinfo
+  8	./xsim.covdb/ncc_random_test_s14/xsim.covinfo
+  9	./xsim.covdb/ncc_random_test_s15/xsim.covinfo
+  10	./xsim.covdb/ncc_random_test_s16/xsim.covinfo
+  11	./xsim.covdb/ncc_random_test_s17/xsim.covinfo
+  12	./xsim.covdb/ncc_random_test_s18/xsim.covinfo
+  13	./xsim.covdb/ncc_random_test_s19/xsim.covinfo
+  14	./xsim.covdb/ncc_random_test_s2/xsim.covinfo
+  15	./xsim.covdb/ncc_random_test_s20/xsim.covinfo
+  16	./xsim.covdb/ncc_random_test_s3/xsim.covinfo
+  17	./xsim.covdb/ncc_random_test_s4/xsim.covinfo
+  18	./xsim.covdb/ncc_random_test_s5/xsim.covinfo
+  19	./xsim.covdb/ncc_random_test_s6/xsim.covinfo
+  20	./xsim.covdb/ncc_random_test_s7/xsim.covinfo
+  21	./xsim.covdb/ncc_random_test_s8/xsim.covinfo
+  22	./xsim.covdb/ncc_random_test_s9/xsim.covinfo
+  23	./xsim.covdb/ncc_smoke_test_s1/xsim.covinfo
+
+ Functional Coverage Merge Directory              : .
+ Functional Coverage Merge DB                     : xcrg_mergedDB
+ Saving the Merged Functional Coverage Info at    : ./xsim.covdb/xcrg_mergedDB/xsim.covinfo
+ Created Coverage Report Directory    : ./izvestaj/functionalCoverageReport
+
+ Creating CSV+Text Report at          : ./izvestaj/functionalCoverageReport/xcrg_func_cov_report.txt
+

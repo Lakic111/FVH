@@ -1,0 +1,10 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/pc/Desktop/FVH/verif/src/ncc_verif_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/pc/Desktop/FVH/verif/src/axi_lite_if.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/pc/Desktop/FVH/verif/src/axi_full_if.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/pc/Desktop/FVH/verif/src/ncc_axil_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/pc/Desktop/FVH/verif/src/ncc_axif_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/pc/Desktop/FVH/verif/src/ncc_ref_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/pc/Desktop/FVH/verif/src/ncc_env_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/pc/Desktop/FVH/verif/tests/ncc_test_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/pc/Desktop/FVH/verif/src/tb_top.sv" into library work
+INFO: [VRFC 10-311] analyzing module tb_top

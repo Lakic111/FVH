@@ -1,0 +1,7 @@
+Running: xsim.dir/sim_tb_top/xsimk.exe -runall -sv_seed 1 -simmode gui -testplusarg UVM_TESTNAME=ncc_vif_test -wdb sim_tb_top.wdb -simrunnum 0 -socket 55891
+Design successfully loaded
+Design Loading Memory Usage: 19316 KB (Peak: 19316 KB)
+Design Loading CPU Usage: 77 ms
+Simulation completed
+Simulation Memory Usage: 24016 KB (Peak: 24016 KB)
+Simulation CPU Usage: 93 ms
