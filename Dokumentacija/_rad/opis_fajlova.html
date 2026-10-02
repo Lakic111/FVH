@@ -1,0 +1,296 @@
+<!doctype html><html lang="sr"><head><meta charset="utf-8"><title>Opis fajlova verifikacionog okruženja</title><style>
+  @page { size: A4; margin: 20mm 18mm 18mm 18mm; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Times New Roman", Times, serif; font-size: 11.5pt; line-height: 1.45;
+    color: #000; margin: 0; text-align: justify; hyphens: auto;
+  }
+  p { margin: 0 0 0.55em 0; text-indent: 1.2em; }
+  p.noind { text-indent: 0; }
+  h1 { font-size: 15pt; font-weight: bold; margin: 1.6em 0 0.7em 0; page-break-after: avoid; }
+  h1.first { margin-top: 0; }
+  h1.nova { page-break-before: always; margin-top: 0; }
+  h2 { font-size: 12.5pt; margin: 1.2em 0 0.45em 0; page-break-after: avoid; }
+
+  .cover { page-break-after: always; text-align: center; padding-top: 45mm; }
+  .cover .subj { font-size: 13pt; margin-top: 26mm; font-variant: small-caps; }
+  .cover .title { font-size: 21pt; font-weight: bold; margin: 8mm 14mm 0 14mm; line-height: 1.3; }
+  .cover .rule { border-top: 1.4pt solid #000; width: 70%; margin: 9mm auto; }
+  .cover .meta { font-size: 12pt; margin-top: 20mm; line-height: 1.9; }
+
+  table { border-collapse: collapse; width: 100%; margin: 0.7em 0 0.25em 0; font-size: 10pt; }
+  tr { page-break-inside: avoid; }
+  caption { caption-side: bottom; font-size: 9.5pt; font-style: italic; padding-top: 0.4em; text-align: center; }
+  caption b { font-style: normal; }
+  th, td { padding: 3.5px 7px; text-align: left; vertical-align: top; }
+  thead th { border-top: 1.1pt solid #000; border-bottom: 0.7pt solid #000; font-weight: bold; text-align: center; }
+  tbody tr:last-child td { border-bottom: 1.1pt solid #000; }
+  tbody tr + tr td { border-top: 0.3pt solid #ccc; }
+  td:first-child { white-space: nowrap; width: 31%; }
+
+  code, .mono { font-family: Consolas, "Courier New", monospace; font-size: 9.4pt; }
+  pre {
+    font-family: Consolas, "Courier New", monospace; font-size: 9pt; line-height: 1.3;
+    background: #f6f6f4; border: 0.5pt solid #ccc; padding: 7px 9px; margin: 0.6em 0;
+    page-break-inside: avoid; text-align: left; white-space: pre;
+  }
+  .note {
+    border-left: 2.5pt solid #555; background: #f4f4f2; padding: 6px 11px; margin: 0.8em 0;
+    font-size: 10.3pt; page-break-inside: avoid;
+  }
+  .note p { text-indent: 0; margin: 0 0 .35em 0; }
+  .note p:last-child { margin-bottom: 0; }
+  ol.plain, ul.plain { margin: 0.4em 0 0.7em 0; padding-left: 1.5em; }
+  ol.plain li, ul.plain li { margin-bottom: 0.28em; }
+</style></head><body>
+
+<div class="cover">
+  <div class="subj">Funkcionalna verifikacija hardvera</div>
+  <div class="rule"></div>
+  <div class="title">Verifikaciono okruženje za NCC akcelerator: opis svih fajlova</div>
+  <div class="rule"></div>
+  <div class="meta">
+    Grupa: <b>y25-g10</b><br>
+    Folder <code>predaja/verif/</code>
+  </div>
+</div>
+
+<h1 class="first">1. Pregled</h1>
+
+<p class="noind">Okruženje proverava VHDL IP jezgro <code>ncc_accel</code>. Jezgro ima dva
+magistralna interfejsa: AXI4-Lite <b>S00</b> za kontrolne registre i AXI4-Full <b>S01</b> za
+memorije slike, šablona i rezultata. Za svaki interfejs postoji poseban UVM agent. Iznad
+agenata stoji okruženje sa scoreboard-om i kolektorom pokrivenosti. Testovi biraju koju
+sekvencu pokreću.</p>
+
+<p>Pravilo rasporeda: <b>svaka klasa je u svom fajlu</b>. Klase su grupisane u SystemVerilog
+pakete. Fajl paketa (<code>*_pkg.sv</code>) ne sadrži kod klasa. Samo uvozi pakete od kojih
+zavisi i uključuje (<code>`include</code>) svoje klase, i to po redosledu zavisnosti.</p>
+
+<pre>verif/
+├── README.md, .gitattributes, rtl.f, tb.f
+├── rtl/                  VHDL izvori DUT-a
+├── src/
+│   ├── ncc_verif_pkg.sv  zajednički parametri
+│   ├── interfaces/       AXI interfejsi + SVA tvrdnje
+│   ├── axil_agent/       agent za S00 (AXI4-Lite)
+│   ├── axif_agent/       agent za S01 (AXI4-Full)
+│   ├── ref_model/        referentni model NCC²
+│   ├── env/              scoreboard, coverage, virtuelni sekvencer, env
+│   └── sequences/        virtuelne sekvence
+├── tests/                testovi, jedan po fajlu
+├── tb/tb_top.sv          vrh simulacije
+├── sim/                  skripte za pokretanje
+└── result/               izlazi simulacije (pravi ih skripta, nije u git-u)</pre>
+
+<h2>Redosled prevođenja i zavisnosti paketa</h2>
+
+<p class="noind">Paket se može prevesti tek kada su prevedeni paketi koje uvozi. Zato
+<code>tb.f</code> navodi fajlove sledećim redom:</p>
+
+<pre>ncc_verif_pkg ─┬─► ncc_axil_pkg ─┐
+               ├─► ncc_axif_pkg ─┼─► ncc_env_pkg ─► ncc_seq_pkg ─► ncc_test_pkg ─► tb_top
+               └─► ncc_ref_pkg ──┘
+axi_lite_if, axi_full_if  (interfejsi; koriste ih drajveri, monitori i tb_top)</pre>
+
+<h2>Tok jedne provere kroz okruženje</h2>
+
+<ol class="plain">
+  <li><b>Test</b> (<code>tests/</code>) gradi okruženje i pokreće virtuelnu sekvencu na virtuelnom sekvenceru.</li>
+  <li><b>Virtuelna sekvenca</b> (<code>src/sequences/</code>) šalje stavke odgovarajućem
+    sekvenceru. Registri idu na S00 sekvencer, a slika, šablon i rezultati na S01 sekvencer.</li>
+  <li><b>Drajver</b> preuzima stavku od sekvencera i pretvara je u AXI signale na virtuelnom interfejsu.</li>
+  <li><b>DUT</b> (<code>rtl/</code>) odgovara na magistrali.</li>
+  <li><b>Monitor</b> pasivno posmatra isti interfejs, rekonstruiše transakciju i objavljuje je na analysis port.</li>
+  <li><b>Scoreboard</b> i <b>coverage</b> primaju transakcije sa oba monitora. Scoreboard
+    računa predikciju referentnim modelom i poredi je sa pročitanim rezultatom. Coverage
+    beleži šta je pokriveno.</li>
+</ol>
+
+<h1 class="nova">2. Fajlovi u korenu</h1>
+
+<table>
+  <thead><tr><th>Fajl</th><th>Opis</th></tr></thead>
+  <tbody>
+    <tr><td><code>README.md</code></td><td>Kratko uputstvo: struktura foldera, kako se okruženje pokreće u XSim-u i Xcelium-u, spisak skripti i testova.</td></tr>
+    <tr><td><code>.gitattributes</code></td><td>Zahteva LF prelome redova za <code>.sh</code>, <code>.sv</code>, <code>.vhd</code>, <code>.f</code> i <code>.tcl</code>. Skripta sa CRLF prelomima na Linuxu javlja „bad interpreter”, a filelist sa CRLF daje imena fajlova sa <code>\r</code> na kraju.</td></tr>
+    <tr><td><code>rtl.f</code></td><td>Spisak VHDL izvora DUT-a, po redosledu prevođenja: prvo paket, pa memorije, jezgro, AXI slave-ovi i na kraju vrh.</td></tr>
+    <tr><td><code>tb.f</code></td><td>Spisak SV izvora po redosledu zavisnosti paketa, plus <code>+incdir+</code> direktorijumi. Iz njih alat traži fajlove klasa koje paketi uključuju. Sve putanje su relativne u odnosu na <code>verif/</code>.</td></tr>
+  </tbody>
+</table>
+
+<h1>3. <code>rtl/</code> — dizajn koji se verifikuje (DUT)</h1>
+
+<p class="noind">Ovo je zamrznuta kopija VHDL izvora iz PSDS projekta. Verifikacija ne menja
+ponašanje DUT-a. Jedina izmena je jedan red u deklaraciji S00 slave-a, opisana u tabeli.</p>
+
+<table>
+  <thead><tr><th>Fajl</th><th>Opis</th></tr></thead>
+  <tbody>
+    <tr><td><code>ncc_pkg.vhd</code></td><td>VHDL paket sa zajedničkim konstantama i tipovima jezgra.</td></tr>
+    <tr><td><code>dp_bram.vhd</code></td><td>Dvoportna blok memorija. Oba porta imaju sinhrono čitanje sa kašnjenjem od jednog takta i mogu da upisuju.</td></tr>
+    <tr><td><code>mem_subsystem.vhd</code></td><td>Tri memorije: slika, šablon i rezultat. Port A je vezan na S01 (procesor), a port B na jezgro. Region se bira bitovima adrese 16:15: <code>00</code> je slika, <code>01</code> šablon, <code>10</code> rezultat. Reč se bira bitovima 14:2.</td></tr>
+    <tr><td><code>ncc_core.vhd</code></td><td>Računsko jezgro: automat stanja i sekvencijalni delitelj (<code>seq_divider</code>). Računa NCC² nad integralnom slikom. Na početku rada tvrdnjama proverava uslove nad dimenzijama U1–U4.</td></tr>
+    <tr><td><code>ncc_accel_slave_lite_v1_0_S00_AXI.vhd</code></td><td>AXI4-Lite slave sa kontrolnim registrima: dimenzije, <code>CTRL</code> i <code>STATUS</code>. U njemu je ranije popravljena greška zbog koje je upis visio kada <code>W</code> stigne pre <code>AW</code>. Zbog Xcelium-a je promenjen jedan red u deklaraciji, a širina je ostala ista.</td></tr>
+    <tr><td><code>ncc_accel_slave_full_v1_0_S01_AXI.vhd</code></td><td>AXI4-Full slave (Xilinx šablon) koji mapira memorije u adresni prostor od 128 KB i podržava paketne prenose.</td></tr>
+    <tr><td><code>ncc_accel.vhd</code></td><td>Vrh IP jezgra. Povezuje S00, S01, memorijski podsistem i jezgro. Ovaj entitet se instancira u <code>tb_top</code>.</td></tr>
+  </tbody>
+</table>
+
+<h1 class="nova">4. <code>src/</code> — zajednički fajlovi i interfejsi</h1>
+
+<table>
+  <thead><tr><th>Fajl</th><th>Opis</th></tr></thead>
+  <tbody>
+    <tr><td><code>ncc_verif_pkg.sv</code></td><td>Paket zajedničkih parametara izvedenih iz RTL-a: širine magistrala, adrese registara (<code>REG_IMG_W</code> … <code>REG_STATUS</code>), regioni S01 (<code>region_e</code>), kapaciteti memorija, granice dimenzija (90×90 i 30×30) i nabrajanje redosleda AW/W kanala (<code>aw_w_order_e</code>). Uvoze ga svi ostali paketi.</td></tr>
+    <tr><td><code>interfaces/axi_lite_if.sv</code></td><td>Interfejs za S00: svi AXI4-Lite signali, blok takta za drajver (<code>mst_cb</code>) i blok takta za monitor (<code>mon_cb</code>). Sadrži SVA tvrdnje: VALID i sadržaj moraju ostati stabilni dok ne stigne READY, na svih pet kanala. Tvrdnja <code>!(awready &amp;&amp; wready)</code> čuva da se AW/W greška ne vrati.</td></tr>
+    <tr><td><code>interfaces/axi_full_if.sv</code></td><td>Interfejs za S01. Ima iste blokove takta i tvrdnje kao S00, uz dodatak AXI4-Full signala (ID, LEN, BURST, LAST…). Dodatna tvrdnja proverava da <code>BVALID</code> dolazi tek posle <code>WLAST</code>.</td></tr>
+    <tr><td><code>ref_model/ncc_ref_pkg.sv</code></td><td>Referentni model: funkcija <code>ncc_predikcija()</code> računa celu mapu NCC² u formatu Q1.31 iz slike, šablona i dimenzija. Napisana je bihevioralno, bit-tačno prema RTL-u, bez DPI-a. Poziva je scoreboard.</td></tr>
+  </tbody>
+</table>
+
+<h1>5. <code>src/axil_agent/</code> — agent za S00 (AXI4-Lite)</h1>
+
+<table>
+  <thead><tr><th>Fajl</th><th>Opis</th></tr></thead>
+  <tbody>
+    <tr><td><code>ncc_axil_pkg.sv</code></td><td>Paket agenta. Uvozi UVM i <code>ncc_verif_pkg</code>, definiše tip <code>reg_rw_e</code> (upis ili čitanje) i uključuje sve fajlove ispod.</td></tr>
+    <tr><td><code>ncc_reg_item.sv</code></td><td>Sekvencijalna stavka: jedan upis ili čitanje registra. Polja su adresa, podatak, smer, redosled AW/W kanala, razmak između kanala i <code>wstrb</code>. Ograničenja raspoređuju sva tri redosleda (2 : 2 : 1) i ne dozvoljavaju upis u <code>STATUS</code>.</td></tr>
+    <tr><td><code>ncc_axil_sequencer.sv</code></td><td>Sekvencer: prosleđuje stavke iz sekvence drajveru.</td></tr>
+    <tr><td><code>ncc_axil_driver.sv</code></td><td>Drajver: pretvara stavku u AXI4-Lite signale. Kanale AW, W i B vodi kao paralelne niti (<code>fork … join</code>), tako da može namerno da pošalje <code>W</code> pre <code>AW</code>, posle njega ili istovremeno.</td></tr>
+    <tr><td><code>ncc_axil_monitor.sv</code></td><td>Monitor: pasivno posmatra magistralu kroz <code>mon_cb</code>. Upis sklapa tek kad se završi rukovanje na B kanalu. Redosled AW/W meri po trenutku kada je VALID postavljen. Svaku transakciju objavljuje na <code>ap</code>.</td></tr>
+    <tr><td><code>ncc_axil_agent_config.sv</code></td><td>Konfiguracija agenta: aktivan ili pasivan režim, bazna adresa i ime virtuelnog interfejsa.</td></tr>
+    <tr><td><code>ncc_axil_agent.sv</code></td><td>Agent: uvek pravi monitor, a u aktivnom režimu i sekvencer i drajver, koje povezuje. Analysis port monitora izvodi napolje.</td></tr>
+    <tr><td><code>sequences/ncc_axil_base_seq.sv</code></td><td>Osnovna S00 sekvenca sa pomoćnim zadacima <code>upisi()</code> i <code>procitaj()</code>.</td></tr>
+    <tr><td><code>sequences/ncc_reg_rw_seq.sv</code></td><td>Direktna sekvenca: upiše registar, pa ga pročita i uporedi. Radi to nad četiri registra dimenzija, u sva tri redosleda AW/W.</td></tr>
+  </tbody>
+</table>
+
+<h1 class="nova">6. <code>src/axif_agent/</code> — agent za S01 (AXI4-Full)</h1>
+
+<p class="noind">Raspored je isti kao kod S00 agenta. Razlika je u tome što se ovde prenose
+paketi (burst-ovi) od više reči.</p>
+
+<table>
+  <thead><tr><th>Fajl</th><th>Opis</th></tr></thead>
+  <tbody>
+    <tr><td><code>ncc_axif_pkg.sv</code></td><td>Paket agenta. Definiše tip <code>mem_rw_e</code> i uključuje fajlove ispod.</td></tr>
+    <tr><td><code>ncc_mem_item.sv</code></td><td>Stavka: jedan paketni upis ili čitanje. Polja su region, početna reč, dužina (1–256 beat-ova), niz podataka, <code>wstrb</code>, redosled AW/W i razmak. Ograničenja poštuju AXI pravila: najviše 256 beat-ova i bez prelaska granice od 4 KB.</td></tr>
+    <tr><td><code>ncc_axif_sequencer.sv</code></td><td>Sekvencer za S01.</td></tr>
+    <tr><td><code>ncc_axif_driver.sv</code></td><td>Drajver: vodi paketni upis (više beat-ova, <code>WLAST</code> na poslednjem) i paketno čitanje. Kao i kod S00, kanali su paralelne niti, pa su moguća sva tri redosleda.</td></tr>
+    <tr><td><code>ncc_axif_monitor.sv</code></td><td>Monitor: skuplja beat-ove u paket, proverava da broj beat-ova odgovara <code>AWLEN</code>, meri redosled AW/W i objavljuje celu transakciju.</td></tr>
+    <tr><td><code>ncc_axif_agent_config.sv</code></td><td>Konfiguracija agenta (aktivan ili pasivan režim, bazna adresa).</td></tr>
+    <tr><td><code>ncc_axif_agent.sv</code></td><td>Agent: monitor, a u aktivnom režimu i sekvencer i drajver.</td></tr>
+    <tr><td><code>sequences/ncc_axif_base_seq.sv</code></td><td>Osnovna S01 sekvenca sa zadacima <code>upisi_blok()</code> i <code>procitaj_blok()</code>.</td></tr>
+    <tr><td><code>sequences/ncc_mem_blok_seq.sv</code></td><td>Upiše blok piksela pa ga pročita i uporedi. Koristi dužine od 1, 2, 3, 8 i 16 beat-ova u regionima slike i šablona, u sva tri redosleda.</td></tr>
+  </tbody>
+</table>
+
+<h1>7. <code>src/env/</code> — okruženje</h1>
+
+<table>
+  <thead><tr><th>Fajl</th><th>Opis</th></tr></thead>
+  <tbody>
+    <tr><td><code>ncc_env_pkg.sv</code></td><td>Paket okruženja. Uvozi oba agenta i referentni model. Deklariše posebne analysis imp-ove (<code>_reg</code>, <code>_mem</code>, <code>_covreg</code>, <code>_covmem</code>), jer scoreboard i coverage primaju dva toka transakcija. Definiše i tip <code>cov_region_e</code>.</td></tr>
+    <tr><td><code>ncc_scoreboard.sv</code></td><td>Scoreboard. Sluša <b>isključivo monitore</b>, nikad drajvere. Iz upisa na S01 gradi senku memorije slike i šablona, a iz upisa na S00 pamti dimenzije. Na upis <code>CTRL.start</code> poziva referentni model i pravi predikciju. Svako čitanje regiona rezultata poredi sa predikcijom, bit po bit. Na kraju testa prijavljuje grešku ako nije izvršeno nijedno poređenje.</td></tr>
+    <tr><td><code>ncc_coverage.sv</code></td><td>Kolektor funkcionalne pokrivenosti, odvojen od scoreboard-a. Ima tri covergroup-e. <code>cg_dimenzije</code> pokriva dimenzije slike i šablona i njihovo ukrštanje. <code>cg_kontrola</code> pokriva ukrštanja <code>start × busy</code> i <code>start × done</code>. <code>cg_axi</code> pokriva ukrštanje redosleda AW/W i regiona, dužinu paketa i <code>wstrb</code>.</td></tr>
+    <tr><td><code>ncc_virtual_sequencer.sv</code></td><td>Virtuelni sekvencer. Nema svoje stavke, već drži pokazivače na oba prava sekvencera (<code>axil_sqr</code>, <code>axif_sqr</code>), da bi jedna sekvenca mogla da vodi obe magistrale.</td></tr>
+    <tr><td><code>ncc_env.sv</code></td><td>Okruženje. Pravi oba agenta, virtuelni sekvencer, scoreboard i coverage. U <code>connect_phase</code> povezuje sekvencere u virtuelni sekvencer, a portove monitora na scoreboard i coverage.</td></tr>
+  </tbody>
+</table>
+
+<h1 class="nova">8. <code>src/sequences/</code> — virtuelne sekvence</h1>
+
+<p class="noind">Ove sekvence vode ceo scenario preko obe magistrale istovremeno, pa se
+pokreću na virtuelnom sekvenceru.</p>
+
+<table>
+  <thead><tr><th>Fajl</th><th>Opis</th></tr></thead>
+  <tbody>
+    <tr><td><code>ncc_seq_pkg.sv</code></td><td>Paket virtuelnih sekvenci. Uvozi <code>ncc_env_pkg</code> zbog tipa virtuelnog sekvencera.</td></tr>
+    <tr><td><code>ncc_virtual_base_seq.sv</code></td><td>Osnova svih virtuelnih sekvenci. Pomoćni zadaci su <code>reg_upisi</code>/<code>reg_procitaj</code> preko S00 i <code>mem_upisi</code>/<code>mem_procitaj</code> preko S01. Zadaci <code>mem_upisi_deljeno</code>/<code>mem_procitaj_deljeno</code> deo veliki blok na pakete do 256 beat-ova koji ne prelaze granicu od 4 KB.</td></tr>
+    <tr><td><code>ncc_smoke_seq.sv</code></td><td>Ceo put kroz DUT na malom primeru (slika 4×4, šablon 2×2). Upiše sliku i šablon, postavi dimenzije, pokrene jezgro, sačeka <code>done_sticky</code> i pročita mapu rezultata. Šablon je isečak slike, pa na tom mestu mora biti tačno <code>0x80000000</code>.</td></tr>
+    <tr><td><code>ncc_cov_seq.sv</code></td><td>Sekvenca za pokrivenost. Pokreće više skupova dimenzija i sva tri redosleda. Pokreće jezgro i dok radi (test T7: ponovni <code>start</code> dok je <code>busy=1</code>), čita nemapirani region i koristi uske vrednosti <code>wstrb</code>.</td></tr>
+    <tr><td><code>ncc_dim_sweep_seq.sv</code></td><td>Proširenje <code>ncc_cov_seq</code> koje prolazi kroz sve legalne kombinacije bin-ova dimenzija, njih 19. Pripada sporoj listi.</td></tr>
+    <tr><td><code>ncc_random_seq.sv</code></td><td>Slučajna sekvenca. Dimenzije i broj dodatnih paketa se biraju slučajno, uz ograničenja koja poštuju ugovor U1–U4. Svaki seed daje drugi scenario.</td></tr>
+  </tbody>
+</table>
+
+<h1>9. <code>tests/</code> — testovi</h1>
+
+<p class="noind">Testovi su poređani od najjednostavnijeg ka najsloženijem. Ako nešto ne
+radi, prvi test koji padne pokazuje gde je problem.</p>
+
+<table>
+  <thead><tr><th>Fajl</th><th>Opis</th></tr></thead>
+  <tbody>
+    <tr><td><code>ncc_test_pkg.sv</code></td><td>Paket testova. Uvozi sve ostale pakete i uključuje fajlove ispod.</td></tr>
+    <tr><td><code>ncc_vif_test.sv</code></td><td>Proverava da oba virtuelna interfejsa stižu kroz <code>uvm_config_db</code> i da DUT miruje posle reseta.</td></tr>
+    <tr><td><code>ncc_axil_smoke_test.sv</code></td><td>Ručno pravi S00 sekvencer i drajver, bez agenta, i pokreće <code>ncc_reg_rw_seq</code>. Proverava upis i čitanje registara u sva tri redosleda.</td></tr>
+    <tr><td><code>ncc_mon_subscriber.sv</code></td><td>Pomoćna komponenta (nije test): prima transakcije od S00 monitora, ispisuje ih i broji upise, čitanja i redoslede.</td></tr>
+    <tr><td><code>ncc_axil_agent_test.sv</code></td><td>Isti stimulus kao prethodni test, ali kroz agenta. Proverava da je monitor video tačno onoliko upisa, čitanja i redosleda koliko je sekvenca poslala.</td></tr>
+    <tr><td><code>ncc_axif_smoke_test.sv</code></td><td>S01 agent sa <code>ncc_mem_blok_seq</code>: paketni upis i čitanje.</td></tr>
+    <tr><td><code>ncc_base_test.sv</code></td><td>Osnovni test sa punim okruženjem (<code>ncc_env</code>). Svi testovi ispod ga nasleđuju.</td></tr>
+    <tr><td><code>ncc_smoke_test.sv</code></td><td>Pokreće <code>ncc_smoke_seq</code>, ceo put kroz jezgro uz proveru scoreboard-a.</td></tr>
+    <tr><td><code>ncc_cov_test.sv</code></td><td>Pokreće <code>ncc_cov_seq</code> (brza lista za pokrivenost).</td></tr>
+    <tr><td><code>ncc_dim_sweep_test.sv</code></td><td>Pokreće <code>ncc_dim_sweep_seq</code> (spora lista).</td></tr>
+    <tr><td><code>ncc_random_test.sv</code></td><td>Pokreće <code>ncc_random_seq</code>. Regresija ga pokreće sa 20 različitih seed-ova.</td></tr>
+  </tbody>
+</table>
+
+<h1>10. <code>tb/</code> — vrh simulacije</h1>
+
+<table>
+  <thead><tr><th>Fajl</th><th>Opis</th></tr></thead>
+  <tbody>
+    <tr><td><code>tb_top.sv</code></td><td>Modul koji simulator elaborira. Generiše takt od 100 MHz i reset, instancira oba interfejsa i DUT <code>ncc_accel</code> i povezuje ih. Interfejse prosleđuje okruženju kroz <code>uvm_config_db</code> i poziva <code>run_test()</code>. Ime testa dolazi iz argumenta <code>+UVM_TESTNAME</code>. Nadzorni brojač prekida simulaciju posle 50 ms, da test koji visi ne bi zaustavio celu regresiju.</td></tr>
+  </tbody>
+</table>
+
+<h1>11. <code>sim/</code> — skripte za pokretanje</h1>
+
+<p class="noind">Skripte rade iz bilo kog direktorijuma, na Linuxu i na Windows-u (Git Bash).
+Nijedna putanja nije zakucana: sve se računa u odnosu na <code>verif/</code>, a Vivado se traži
+automatski.</p>
+
+<table>
+  <thead><tr><th>Fajl</th><th>Opis</th></tr></thead>
+  <tbody>
+    <tr><td><code>common.sh</code></td><td>Zajedničke funkcije koje ostale skripte uključuju sa <code>source</code>. Određuje koren <code>verif/</code>, čita <code>rtl.f</code> i <code>tb.f</code> i pronalazi Vivado alate. Redosled traženja je <code>XILINX_BIN</code>, pa <code>XILINX_VIVADO</code>, pa <code>PATH</code>, pa uobičajene instalacije. Na Windows-u rešava i to da <code>cmd.exe</code> deli argumente na znaku <code>=</code>.</td></tr>
+    <tr><td><code>build.sh</code></td><td>XSim: analiza VHDL-a (<code>xvhdl -2008</code>), analiza SV-a (<code>xvlog -sv -L uvm</code>) i elaboracija (<code>xelab</code>). Radi se jednom, a svi testovi zatim koriste isti snimak.</td></tr>
+    <tr><td><code>run_one.sh</code></td><td>XSim: pokreće jedan test sa zadatim seed-om nad gotovim snimkom. Čuva bazu pokrivenosti pod imenom <code>test_sSEED</code> i ispisuje jednu liniju PASS ili FAIL.</td></tr>
+    <tr><td><code>run_xsim.sh</code></td><td>Prečica za jedan test: <code>build.sh</code> pa <code>run_one.sh</code>.</td></tr>
+    <tr><td><code>regress.sh</code></td><td>Cela regresija jednom komandom: brza lista (5 testova), spora lista (2 testa) i slučajni test sa N seed-ova. Na kraju ispisuje tabelu i zbir. Simulator se bira sa <code>SIM=xsim|xrun</code>, a broj seed-ova sa <code>SEEDS=N</code>. Za oba simulatora lista testova i provera su iste.</td></tr>
+    <tr><td><code>coverage.sh</code></td><td>Spaja baze pokrivenosti svih pokretanja alatom <code>xcrg</code> i ispisuje ukupnu pokrivenost, pokrivenost po grupama i tačke ispod 100%.</td></tr>
+    <tr><td><code>build_xrun.sh</code></td><td>Elaboracija u Cadence Xcelium-u (<code>xrun -elaborate -v200x -relax -uvm</code>). Ovo je parnjak <code>build.sh</code>.</td></tr>
+    <tr><td><code>run_one_xrun.sh</code></td><td>Jedan test u Xcelium-u. Ovo je parnjak <code>run_one.sh</code>.</td></tr>
+    <tr><td><code>xrun_run.tcl</code></td><td>Komande za Xcelium simulaciju. Grešku TRRANGEC iz Xilinx AXI4-Full šablona spušta na nivo upozorenja (u nultom trenutku simulacije, na putu koji ovo okruženje ne koristi), zatim pokreće simulaciju do kraja.</td></tr>
+  </tbody>
+</table>
+
+<h2>Najvažnije komande</h2>
+
+<pre>./sim/run_xsim.sh                    # jedan test (ncc_smoke_test), XSim
+./sim/regress.sh                     # cela regresija + pokrivenost, XSim
+SIM=xrun ./sim/regress.sh            # ista regresija u Xcelium-u</pre>
+
+<h1>12. <code>result/</code> — izlazi simulacije</h1>
+
+<p class="noind">Skripte prave ovaj folder i on se ne čuva u git-u.</p>
+
+<table>
+  <thead><tr><th>Putanja</th><th>Opis</th></tr></thead>
+  <tbody>
+    <tr><td><code>result/build/</code></td><td>XSim snimak i logovi prevođenja (<code>xvhdl.out</code>, <code>xvlog.out</code>, <code>xelab.out</code>).</td></tr>
+    <tr><td><code>result/run/</code></td><td>Po jedan log za svaki test i seed, na primer <code>ncc_random_test_s7.log</code>.</td></tr>
+    <tr><td><code>result/cov/</code></td><td>Baze pokrivenosti svih pokretanja i spojeni izveštaj u <code>izvestaj/functionalCoverageReport/</code>.</td></tr>
+    <tr><td><code>result/build_xrun/</code>, <code>result/run_xrun/</code></td><td>Isto za Xcelium.</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <p><b>Očekivani ishod:</b> 27 prošlo, 0 palo, na oba simulatora. Funkcionalna pokrivenost
+  posle spajanja svih baza je 100% u sve tri covergroup-e.</p>
+</div>
+
+</body></html>

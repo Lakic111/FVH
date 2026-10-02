@@ -1,0 +1,849 @@
+<!doctype html><html lang="sr"><head><meta charset="utf-8"><title>Skripta za odbranu FVH</title><style>
+  @page { size: A4; margin: 18mm 18mm 17mm 18mm; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Times New Roman", Times, serif; font-size: 11.5pt; line-height: 1.42;
+    color: #000; margin: 0; text-align: justify; hyphens: auto;
+  }
+  p { margin: 0 0 0.55em 0; }
+  h1 { font-size: 15pt; font-weight: bold; margin: 0 0 0.7em 0; page-break-before: always; page-break-after: avoid; }
+  h1.first { page-break-before: avoid; }
+  h2 { font-size: 12.5pt; margin: 1.15em 0 0.4em 0; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 0.9em 0 0.3em 0; page-break-after: avoid; }
+  .put { font-family: Consolas, "Courier New", monospace; font-size: 9pt; color: #444; margin: -0.3em 0 0.5em 0; }
+
+  .cover { page-break-after: always; text-align: center; padding-top: 45mm; }
+  .cover .subj { font-size: 13pt; margin-top: 26mm; font-variant: small-caps; }
+  .cover .title { font-size: 22pt; font-weight: bold; margin: 8mm 14mm 0 14mm; line-height: 1.3; }
+  .cover .sub { font-size: 13pt; margin-top: 5mm; }
+  .cover .rule { border-top: 1.4pt solid #000; width: 70%; margin: 9mm auto; }
+  .cover .meta { font-size: 12pt; margin-top: 20mm; line-height: 1.9; }
+
+  .toc { page-break-after: always; }
+  .toc h1 { text-align: center; page-break-before: avoid; }
+  .toc ol { margin: 0; padding-left: 1.6em; }
+  .toc li { margin: 0.25em 0; }
+
+  code { font-family: Consolas, "Courier New", monospace; font-size: 9.4pt; }
+  pre {
+    font-family: Consolas, "Courier New", monospace; font-size: 8.8pt; line-height: 1.3;
+    background: #f6f6f4; border: 0.5pt solid #ccc; padding: 6px 9px; margin: 0.5em 0 0.6em 0;
+    page-break-inside: avoid; text-align: left; white-space: pre;
+  }
+  pre .k { color: #7a1f5c; font-weight: bold; }
+  pre .c { color: #2f6b2f; }
+
+  table { border-collapse: collapse; width: 100%; margin: 0.6em 0 0.3em 0; font-size: 10pt; }
+  tr { page-break-inside: avoid; }
+  th, td { padding: 3px 7px; text-align: left; vertical-align: top; }
+  thead th { border-top: 1.1pt solid #000; border-bottom: 0.7pt solid #000; font-weight: bold; }
+  tbody tr:last-child td { border-bottom: 1.1pt solid #000; }
+  tbody tr + tr td { border-top: 0.3pt solid #ccc; }
+
+  .note { border-left: 2.5pt solid #555; background: #f4f4f2; padding: 6px 11px; margin: 0.7em 0; font-size: 10.5pt; page-break-inside: avoid; }
+  .note p { margin: 0 0 .3em 0; }
+  .note p:last-child { margin-bottom: 0; }
+  .pitanje { border-left: 2.5pt solid #7a1f5c; background: #f8f2f6; padding: 6px 11px; margin: 0.7em 0; font-size: 10.5pt; page-break-inside: avoid; }
+  .pitanje p { margin: 0 0 .3em 0; }
+  .pitanje p:last-child { margin-bottom: 0; }
+  ol.plain, ul.plain { margin: 0.3em 0 0.6em 0; padding-left: 1.5em; }
+  ol.plain li, ul.plain li { margin-bottom: 0.25em; }
+  .qa { page-break-inside: avoid; margin-bottom: 0.75em; }
+  .qa .q { font-weight: bold; margin-bottom: 0.15em; }
+</style></head><body>
+
+<div class="cover">
+  <div class="subj">Funkcionalna verifikacija hardvera</div>
+  <div class="rule"></div>
+  <div class="title">Skripta za odbranu</div>
+  <div class="sub">Prolaz kroz kod UVM okruženja za NCC akcelerator, redom</div>
+  <div class="rule"></div>
+  <div class="meta">Grupa: <b>y25-g10</b><br>Kod: <code>predaja/verif/</code></div>
+</div>
+
+<div class="toc">
+  <h1>Sadržaj</h1>
+  <ol>
+    <li>Velika slika: šta verifikujemo i kako je okruženje složeno</li>
+    <li>Zajednički parametri — <code>ncc_verif_pkg.sv</code></li>
+    <li>Interfejsi i SVA tvrdnje — <code>src/interfaces/</code></li>
+    <li>Vrh simulacije — <code>tb/tb_top.sv</code></li>
+    <li>S00 agent (AXI4-Lite) — <code>src/axil_agent/</code></li>
+    <li>S01 agent (AXI4-Full) — <code>src/axif_agent/</code></li>
+    <li>Referentni model — <code>src/ref_model/ncc_ref_pkg.sv</code></li>
+    <li>Okruženje: scoreboard, coverage, env — <code>src/env/</code></li>
+    <li>Virtuelne sekvence — <code>src/sequences/</code></li>
+    <li>Testovi — <code>tests/</code></li>
+    <li>Skripte i regresija — <code>sim/</code></li>
+    <li>Moguća pitanja na odbrani</li>
+  </ol>
+</div>
+
+<!-- ===================================================================== -->
+<h1 class="first">1. Velika slika</h1>
+
+<h2>Šta je DUT</h2>
+<p>DUT je VHDL IP jezgro <code>ncc_accel</code>, koje smo napravili na PSDS-u. Ono traži
+šablon u slici normalizovanom unakrsnom korelacijom (NCC). Za svaku poziciju šablona u slici
+računa NCC² u formatu Q1.31. Vrednost <code>0x80000000</code> znači 1,0, tj. savršeno
+poklapanje. Jezgro ima dva magistralna interfejsa:</p>
+<ul class="plain">
+  <li><b>S00 — AXI4-Lite</b>, kontrolni registri: dimenzije slike i šablona (<code>0x00–0x0C</code>), <code>CTRL</code> (<code>0x30</code>, bit 0 = start) i <code>STATUS</code> (<code>0x34</code>, bit 0 = <code>done_sticky</code>, bit 1 = <code>busy</code>).</li>
+  <li><b>S01 — AXI4-Full</b>, memorije: slika na <code>+0x00000</code>, šablon na <code>+0x08000</code>, rezultat na <code>+0x10000</code>. Jedan piksel zauzima jednu 32-bitnu reč.</li>
+</ul>
+<p>Rad sa jezgrom uvek ide istim redom: upiše se slika i šablon preko S01, upišu se
+dimenzije preko S00, upiše se <code>CTRL.start</code>, čeka se <code>done_sticky</code> u
+<code>STATUS</code>, pa se mapa rezultata pročita preko S01. <b>Ceo verifikacioni kod oponaša
+ovaj tok i proverava ga.</b></p>
+
+<h2>UVM hijerarhija u simulaciji</h2>
+<pre>tb_top  (modul: takt, reset, DUT, interfejsi)
+ └─ uvm_test_top        npr. ncc_smoke_test  (bira se sa +UVM_TESTNAME)
+     └─ env             ncc_env
+         ├─ axil_agent  ncc_axil_agent   ── sqr, drv, mon   → S00
+         ├─ axif_agent  ncc_axif_agent   ── sqr, drv, mon   → S01
+         ├─ vsqr        ncc_virtual_sequencer (pokazivači na oba sqr)
+         ├─ sb          ncc_scoreboard   ← oba monitora
+         └─ cov         ncc_coverage     ← oba monitora</pre>
+
+<h2>Put jedne transakcije</h2>
+<pre>sekvenca ──stavka──► sekvencer ──► drajver ──signali──► DUT
+                                                  │
+              scoreboard ◄──┬── monitor ◄──signali─┘
+              coverage   ◄──┘   (analysis port)</pre>
+<p><b>Sekvenca</b> odlučuje <i>šta</i> se radi. <b>Drajver</b> odlučuje <i>kako</i> to izgleda
+na žicama. <b>Monitor</b> pasivno gleda šta se zaista desilo. <b>Scoreboard</b> proverava da
+li je rezultat tačan, a <b>coverage</b> beleži šta je isprobano.</p>
+
+<h2>UVM faze koje koristimo</h2>
+<table>
+  <thead><tr><th style="width:22%">Faza</th><th>Šta se u njoj radi kod nas</th></tr></thead>
+  <tbody>
+    <tr><td><code>build_phase</code></td><td>Komponente se prave odozgo nadole (<code>type_id::create</code>), a drajveri i monitori preuzimaju virtuelni interfejs iz <code>uvm_config_db</code>.</td></tr>
+    <tr><td><code>connect_phase</code></td><td>Povezuju se portovi: drajver sa sekvencerom, monitori sa scoreboard-om i coverage-om, sekvenceri u virtuelni sekvencer.</td></tr>
+    <tr><td><code>run_phase</code></td><td>Jedina faza koja troši simulaciono vreme (task). Drajveri i monitori ovde rade u beskonačnoj petlji, a test pokreće sekvencu.</td></tr>
+    <tr><td><code>check_phase</code></td><td>Scoreboard proverava da je uopšte nešto uporedio. <code>ncc_axil_agent_test</code> proverava brojače monitora.</td></tr>
+    <tr><td><code>report_phase</code></td><td>Coverage ispisuje procenat pokrivenosti.</td></tr>
+  </tbody>
+</table>
+
+<h2>Paketi i redosled prevođenja</h2>
+<p>Svaka klasa je u svom fajlu. Fajl paketa (<code>*_pkg.sv</code>) samo uvozi zavisnosti i
+<code>`include</code>-uje klase. Redosled u <code>tb.f</code> prati zavisnosti:</p>
+<pre>ncc_verif_pkg → interfejsi → ncc_axil_pkg → ncc_axif_pkg → ncc_ref_pkg
+              → ncc_env_pkg → ncc_seq_pkg → ncc_test_pkg → tb_top</pre>
+
+<!-- ===================================================================== -->
+<h1>2. Zajednički parametri</h1>
+<div class="put">src/ncc_verif_pkg.sv</div>
+
+<p>Ovaj paket nema klase, samo konstante i tipove izvedene iz RTL-a. Sve ostalo ga uvozi,
+pa se adrese i širine pišu na <b>jednom</b> mestu.</p>
+<pre><span class="k">parameter</span> <span class="k">int</span> S00_ADDR_W = 6;    <span class="c">// max adresa 0x3F</span>
+<span class="k">parameter</span> <span class="k">int</span> S01_ADDR_W = 17;   <span class="c">// 128 KB</span>
+<span class="k">parameter</span> <span class="k">bit</span> [S00_ADDR_W-1:0] REG_CTRL   = 6'h30;  <span class="c">// upis bit0 = start</span>
+<span class="k">parameter</span> <span class="k">bit</span> [S00_ADDR_W-1:0] REG_STATUS = 6'h34;  <span class="c">// samo citanje</span>
+
+<span class="k">typedef enum bit</span> [1:0] {
+  REGION_IMG = 2'b00, REGION_TMP = 2'b01, REGION_RESULT = 2'b10, REGION_NONE = 2'b11
+} region_e;                          <span class="c">// = bitovi adrese 16:15</span>
+
+<span class="k">parameter</span> <span class="k">int</span> TMP_WORDS = 1024;     <span class="c">// memorija sablona je manja od svog regiona</span>
+<span class="k">parameter</span> <span class="k">int</span> MAX_IMG_W = 90, MAX_TMP_W = 30, MAX_TMP_PIX = 900;
+
+<span class="k">typedef enum</span> { ORDER_AW_FIRST, ORDER_W_FIRST, ORDER_SIMUL } aw_w_order_e;</pre>
+<ul class="plain">
+  <li><code>region_e</code> odgovara tome kako RTL dekodira adresu: bitovi 16:15 biraju region, a bitovi 14:2 reč.</li>
+  <li><code>TMP_WORDS = 1024</code>: memorija šablona ima samo 1024 reči, a region je velik 8192 reči. Adrese iznad 1024 se zato „preslikavaju” nazad (aliasing). Scoreboard to mora da zna.</li>
+  <li><code>aw_w_order_e</code> je najvažniji tip u projektu. AXI dozvoljava da podatak (<code>W</code>) stigne pre adrese (<code>AW</code>), posle nje ili istovremeno. Naš S00 je imao grešku: upis je <b>visio</b> kada <code>W</code> stigne pre <code>AW</code>. Zato svaki upis u okruženju nosi redosled, a mi namerno isprobavamo sva tri.</li>
+  <li>Granice 90/30/900 su ugovor U1–U4 koji jezgro proverava tvrdnjama. Slučajna pobuda mora da ih poštuje.</li>
+</ul>
+
+<!-- ===================================================================== -->
+<h1>3. Interfejsi i SVA tvrdnje</h1>
+<div class="put">src/interfaces/axi_lite_if.sv, src/interfaces/axi_full_if.sv</div>
+
+<p>Interfejs je „snop žica” između SystemVerilog okruženja i VHDL DUT-a. U <code>tb_top</code>
+se instancira i vezuje na portove DUT-a. Klase do njega dolaze preko <b>virtuelnog
+interfejsa</b> (pokazivača).</p>
+
+<h2>Clocking blokovi</h2>
+<pre><span class="k">clocking</span> mst_cb @(<span class="k">posedge</span> clk);          <span class="c">// za DRAJVER</span>
+  <span class="k">default input</span> #1step <span class="k">output</span> #1ns;
+  <span class="k">output</span> awaddr, awvalid, wdata, wstrb, wvalid, bready, ...;
+  <span class="k">input</span>  awready, wready, bresp, bvalid, ...;
+<span class="k">endclocking</span>
+
+<span class="k">clocking</span> mon_cb @(<span class="k">posedge</span> clk);          <span class="c">// za MONITOR -- samo ulazi</span>
+  <span class="k">default input</span> #1step;
+  <span class="k">input</span> awaddr, awvalid, awready, wdata, ...;
+<span class="k">endclocking</span></pre>
+<ul class="plain">
+  <li><code>input #1step</code>: ulaz se očitava vrednošću koju je signal imao <b>neposredno pre</b> ivice takta, isto kao što bi ga video flip-flop. Tako nema trke između okruženja i DUT-a.</li>
+  <li><code>output #1ns</code>: drajver menja signal 1 ns <b>posle</b> ivice, pa DUT na sledećoj ivici vidi stabilnu vrednost.</li>
+  <li>Monitor ima zaseban blok koji ima samo ulaze, pa fizički ne može ništa da pobudi.</li>
+</ul>
+
+<h2>Protokolske tvrdnje (SVA)</h2>
+<pre><span class="k">property</span> p_aw_drzi;
+  @(<span class="k">posedge</span> clk) <span class="k">disable iff</span> (!rstn)
+    awvalid &amp;&amp; !awready |=&gt; awvalid &amp;&amp; $stable(awaddr);
+<span class="k">endproperty</span>
+a_aw_drzi: <span class="k">assert property</span> (p_aw_drzi)
+  <span class="k">else</span> $error("AXI-Lite S00: AWVALID ili AWADDR promenjen pre AWREADY");</pre>
+<p>Čita se ovako: „ako je VALID podignut, a READY još nije, onda u <b>sledećem taktu</b>
+(<code>|=&gt;</code>) VALID mora i dalje biti podignut, a adresa ista (<code>$stable</code>).”
+To je osnovno AXI pravilo: jednom ponuđena transakcija ne sme se povući ni promeniti.
+<code>disable iff (!rstn)</code> isključuje proveru tokom reseta. Iste tvrdnje postoje za
+svih pet kanala.</p>
+
+<pre><span class="c">// Cuva popravku AW/W buga: awready i wready se ne smeju dici istovremeno.</span>
+<span class="k">property</span> p_nikad_oba_ready;
+  @(<span class="k">posedge</span> clk) <span class="k">disable iff</span> (!rstn) !(awready &amp;&amp; wready);
+<span class="k">endproperty</span></pre>
+<p>Ova tvrdnja je popravka AW/W greške zapisana u izvršnom obliku. Ispravljeni S00 nikad ne
+podiže oba READY signala u istom taktu. Ako bi se to ikad desilo, greška se vratila.
+Tvrdnja stoji u interfejsu, pa važi u <b>svakom</b> testu, i u onima koji o njoj ništa ne
+znaju.</p>
+
+<p>S01 interfejs ima iste tvrdnje i još jednu, specifičnu za pakete:</p>
+<pre><span class="k">property</span> p_b_posle_wlast;
+  @(<span class="k">posedge</span> clk) <span class="k">disable iff</span> (!rstn)
+    $rose(bvalid) |-&gt; $past(wvalid &amp;&amp; wready &amp;&amp; wlast, 1);
+<span class="k">endproperty</span></pre>
+<p>Odgovor na upis (<code>BVALID</code>) sme da se pojavi tek kada je primljen poslednji beat
+paketa (<code>WLAST</code>). <code>$rose</code> hvata trenutak podizanja signala, a
+<code>$past(..., 1)</code> gleda prethodni takt.</p>
+
+<!-- ===================================================================== -->
+<h1>4. Vrh simulacije</h1>
+<div class="put">tb/tb_top.sv</div>
+
+<p>Ovo je jedini <b>modul</b> u okruženju (sve ostalo su klase). Simulator elaborira njega.</p>
+<pre><span class="k">localparam realtime</span> CLK_PERIOD = 10ns;          <span class="c">// 100 MHz, kao na ploci</span>
+<span class="k">always</span> #(CLK_PERIOD/2) clk = ~clk;
+
+<span class="k">initial begin</span>                                    <span class="c">// reset 10 taktova</span>
+  rstn = 1'b0;  <span class="k">repeat</span> (10) @(<span class="k">posedge</span> clk);  rstn = 1'b1;
+<span class="k">end</span>
+
+axi_lite_if #(...) axil_if (.clk(clk), .rstn(rstn));
+axi_full_if #(...) axif_if (.clk(clk), .rstn(rstn));
+
+ncc_accel dut ( .s00_axi_awaddr(axil_if.awaddr), ... );   <span class="c">// VHDL DUT</span>
+
+<span class="k">initial begin</span>
+  uvm_config_db#(<span class="k">virtual</span> axi_lite_if #(...))::set(<span class="k">null</span>, "*", "axil_vif", axil_if);
+  uvm_config_db#(<span class="k">virtual</span> axi_full_if #(...))::set(<span class="k">null</span>, "*", "axif_vif", axif_if);
+  run_test();
+<span class="k">end</span>
+
+<span class="k">initial begin</span>                                    <span class="c">// nadzorni brojac</span>
+  #50ms;  `uvm_fatal("WATCHDOG", "simulacija nije zavrsila na vreme")
+<span class="k">end</span></pre>
+<ul class="plain">
+  <li><b>Mešoviti jezik:</b> SystemVerilog modul direktno instancira VHDL entitet <code>ncc_accel</code>. Simulator to podržava ako su oba jezika prevedena u istu biblioteku.</li>
+  <li><b><code>uvm_config_db::set</code></b> ostavlja virtuelni interfejs u globalnoj „bazi” pod imenom <code>axil_vif</code>, odnosno <code>axif_vif</code>. Putanja <code>"*"</code> znači da ga svaka komponenta može preuzeti. Drajveri i monitori ga preuzimaju sa <code>get</code>.</li>
+  <li><b><code>run_test()</code></b> pravi test čije ime dolazi iz argumenta <code>+UVM_TESTNAME=...</code> i pokreće sve UVM faze. Tako se jedan isti snimak simulacije koristi za sve testove.</li>
+  <li><b>Nadzorni brojač:</b> ako se simulacija zaglavi (na primer vrati se AW/W hang), posle 50 ms prijavljuje fatalnu grešku. Test koji visi ne daje nikakvu informaciju, a test koji padne daje.</li>
+</ul>
+
+<!-- ===================================================================== -->
+<h1>5. S00 agent (AXI4-Lite)</h1>
+<div class="put">src/axil_agent/</div>
+
+<p>Agent je paket od tri komponente koje rade sa jednim interfejsom: sekvencer, drajver i
+monitor. Ovde ih prolazimo redom, kako ih paket uključuje.</p>
+
+<h2>5.1 Sekvencijalna stavka</h2>
+<div class="put">ncc_reg_item.sv</div>
+<p>Stavka je <b>opis jedne transakcije</b>, bez ikakvog znanja o žicama.</p>
+<pre><span class="k">class</span> ncc_reg_item <span class="k">extends</span> uvm_sequence_item;
+  <span class="k">rand bit</span> [S00_ADDR_W-1:0] addr;
+  <span class="k">rand bit</span> [S00_DATA_W-1:0] data;   <span class="c">// kod citanja: drajver upisuje procitano</span>
+  <span class="k">rand</span> reg_rw_e             rw;
+  <span class="k">rand</span> aw_w_order_e         order;
+  <span class="k">rand bit</span> [3:0]            strb;
+  <span class="k">rand int unsigned</span>         gap;    <span class="c">// taktova izmedju pokretanja dva kanala</span>
+  <span class="k">bit</span> [1:0] resp;                   <span class="c">// BRESP / RRESP, popunjava drajver</span>
+
+  <span class="k">constraint</span> c_order  { order <span class="k">dist</span> { ORDER_AW_FIRST := 2, ORDER_W_FIRST := 2,
+                                     ORDER_SIMUL := 1 }; }
+  <span class="k">constraint</span> c_gap    { order == ORDER_SIMUL -&gt; gap == 0;
+                        order != ORDER_SIMUL -&gt; gap <span class="k">inside</span> {[1:4]}; }
+  <span class="k">constraint</span> c_addr   { <span class="k">soft</span> addr <span class="k">inside</span> { REG_IMG_W, ..., REG_STATUS }; }
+  <span class="k">constraint</span> c_status { addr == REG_STATUS -&gt; rw == REG_READ; }
+
+  `uvm_object_utils_begin(ncc_reg_item)
+    `uvm_field_int(addr, UVM_ALL_ON) ...
+  `uvm_object_utils_end</pre>
+<ul class="plain">
+  <li><code>rand</code> polja se biraju slučajno pozivom <code>randomize()</code>, uz poštovanje ograničenja.</li>
+  <li><code>dist</code> daje težine: redosledi AW-prvi i W-prvi biraju se dvostruko češće od istovremenog.</li>
+  <li><code>-&gt;</code> je implikacija: ako su kanali istovremeni, razmak mora biti 0, a inače je od 1 do 4 takta.</li>
+  <li><code>soft</code> ograničenje je „podrazumevano”: sekvenca ga može pregaziti (na primer upisom u neiskorišćeni registar) bez pada randomizacije.</li>
+  <li><code>STATUS</code> se samo čita, pa ograničenje ne dozvoljava upis u njega.</li>
+  <li>Makroi <code>`uvm_object_utils</code> i <code>`uvm_field_*</code> registruju klasu u <b>fabrici</b> (da radi <code>type_id::create</code>) i daju gotove <code>print</code>, <code>copy</code> i <code>compare</code>.</li>
+</ul>
+
+<h2>5.2 Sekvencer</h2>
+<div class="put">ncc_axil_sequencer.sv</div>
+<pre><span class="k">class</span> ncc_axil_sequencer <span class="k">extends</span> uvm_sequencer #(ncc_reg_item);
+  `uvm_component_utils(ncc_axil_sequencer)
+  ...
+<span class="k">endclass</span></pre>
+<p>Sekvencer nema svoju logiku. On je „red čekanja” između sekvence i drajvera: sekvenca mu
+predaje stavke, a drajver ih uzima jednu po jednu. Parametrizovan je tipom stavke, pa
+prihvata samo <code>ncc_reg_item</code>.</p>
+
+<h2>5.3 Drajver</h2>
+<div class="put">ncc_axil_driver.sv</div>
+<pre><span class="k">function void</span> build_phase(uvm_phase phase);
+  <span class="k">if</span> (!uvm_config_db#(<span class="k">virtual</span> axi_lite_if #(...))::get(<span class="k">this</span>, "", "axil_vif", vif))
+    `uvm_fatal("NOVIF", "axil_vif nije nadjen u uvm_config_db")
+<span class="k">endfunction</span>
+
+<span class="k">task</span> run_phase(uvm_phase phase);
+  idle();                                   <span class="c">// svi VALID = 0</span>
+  <span class="k">wait</span> (vif.rstn === 1'b1);
+  <span class="k">forever begin</span>
+    seq_item_port.get_next_item(req);       <span class="c">// blokira dok sekvenca ne posalje</span>
+    <span class="k">if</span> (req.rw == REG_WRITE) drive_write(req);
+    <span class="k">else</span>                     drive_read(req);
+    seq_item_port.item_done();              <span class="c">// javlja sekvenci da je gotovo</span>
+  <span class="k">end</span>
+<span class="k">endtask</span></pre>
+<p>Ovo je standardna petlja drajvera. <code>get_next_item</code> čeka stavku,
+<code>item_done</code> javlja sekvenci da je stavka izvršena. Tek tada se sekvenci vraća
+<code>finish_item</code>, pa sekvenca u stavci već vidi pročitani podatak.</p>
+
+<pre><span class="k">task</span> drive_write(ncc_reg_item it);
+  <span class="k">case</span> (it.order)                      <span class="c">// kasnjenje svakog kanala</span>
+    ORDER_AW_FIRST: <span class="k">begin</span> aw_kasnjenje = 0;      w_kasnjenje = it.gap; <span class="k">end</span>
+    ORDER_W_FIRST:  <span class="k">begin</span> aw_kasnjenje = it.gap; w_kasnjenje = 0;      <span class="k">end</span>
+    <span class="k">default</span>:        <span class="k">begin</span> aw_kasnjenje = 0;      w_kasnjenje = 0;      <span class="k">end</span>
+  <span class="k">endcase</span>
+  <span class="k">fork</span>
+    <span class="k">begin</span> : kanal_aw
+      <span class="k">repeat</span> (aw_kasnjenje) @(vif.mst_cb);
+      vif.mst_cb.awaddr  &lt;= it.addr;
+      vif.mst_cb.awvalid &lt;= 1'b1;
+      <span class="k">do</span> @(vif.mst_cb); <span class="k">while</span> (vif.mst_cb.awready !== 1'b1);   <span class="c">// rukovanje</span>
+      vif.mst_cb.awvalid &lt;= 1'b0;
+    <span class="k">end</span>
+    <span class="k">begin</span> : kanal_w  ... <span class="k">end</span>               <span class="c">// isto za W</span>
+    <span class="k">begin</span> : kanal_b
+      vif.mst_cb.bready &lt;= 1'b1;
+      <span class="k">do</span> @(vif.mst_cb); <span class="k">while</span> (vif.mst_cb.bvalid !== 1'b1);
+      it.resp = vif.mst_cb.bresp;
+      vif.mst_cb.bready &lt;= 1'b0;
+    <span class="k">end</span>
+  <span class="k">join</span>
+<span class="k">endtask</span></pre>
+<p><b>Ključni deo celog okruženja.</b> Tri AXI kanala (AW, W, B) vode se kao <b>tri paralelne
+niti</b> (<code>fork … join</code>), jer su i u AXI-ju nezavisni. Zbog toga drajver može da
+pošalje <code>W</code> pre <code>AW</code>, sa razmakom od <code>gap</code> taktova, a to je
+upravo scenario koji je ranije obarao S00. Petlja <code>do … while (ready)</code> je AXI
+rukovanje: VALID ostaje gore dok slave ne odgovori READY-jem. <code>join</code> čeka sve
+tri niti. Čitanje radi isto, sa dva kanala (AR i R).</p>
+
+<h2>5.4 Monitor</h2>
+<div class="put">ncc_axil_monitor.sv</div>
+<p>Monitor ne pobuđuje ništa. Posmatra interfejs kroz <code>mon_cb</code> i od signala
+rekonstruiše transakcije. Ima pet paralelnih niti, po jednu za svaki kanal:</p>
+<pre><span class="k">task</span> run_phase(uvm_phase phase);
+  <span class="k">wait</span> (vif.rstn === 1'b1);
+  <span class="k">fork</span>  prati_aw();  prati_w();  prati_b();  prati_ar();  prati_r();  <span class="k">join</span>
+<span class="k">endtask</span>
+
+<span class="k">task</span> prati_aw();
+  <span class="k">forever begin</span>
+    @(vif.mon_cb);
+    <span class="k">if</span> (vif.mon_cb.awvalid === 1'b1 &amp;&amp; !prethodni) t_postavljen = $time;  <span class="c">// VALID se upravo podigao</span>
+    prethodni = (vif.mon_cb.awvalid === 1'b1);
+    <span class="k">if</span> (vif.mon_cb.awvalid === 1'b1 &amp;&amp; vif.mon_cb.awready === 1'b1)
+      aw_q.push_back('{addr: vif.mon_cb.awaddr, t: t_postavljen});        <span class="c">// rukovanje</span>
+  <span class="k">end</span>
+<span class="k">endtask</span></pre>
+<ul class="plain">
+  <li>Svaki obavljen AW i W ide u svoj red (<code>aw_q</code>, <code>w_q</code>), zajedno sa trenutkom kada je VALID <b>podignut</b>.</li>
+  <li>Upis se sklapa tek na rukovanju kanala <b>B</b> (<code>prati_b</code>). Tada su i adresa i podatak sigurno primljeni, pa se iz oba reda uzima po jedan element.</li>
+  <li>Redosled se računa poređenjem vremena: <code>aw.t &lt; w.t</code> daje <code>AW_FIRST</code>, <code>aw.t &gt; w.t</code> daje <code>W_FIRST</code>, a jednaka vremena daju <code>SIMUL</code>. Meri se po <b>podizanju VALID-a</b>, a ne po rukovanju, jer popravljeni S00 uvek prvo prihvata AW, pa bi po rukovanju svaki upis izgledao kao „AW prvi”.</li>
+  <li>Ako stigne B bez para AW/W, monitor prijavljuje kršenje AXI protokola.</li>
+  <li>Gotova stavka se šalje dalje sa <code>ap.write(it)</code>. To je <b>analysis port</b>, na koji su vezani scoreboard i coverage.</li>
+</ul>
+
+<h2>5.5 Konfiguracija i agent</h2>
+<div class="put">ncc_axil_agent_config.sv, ncc_axil_agent.sv</div>
+<pre><span class="k">function void</span> build_phase(uvm_phase phase);
+  <span class="k">if</span> (!uvm_config_db#(ncc_axil_agent_config)::get(<span class="k">this</span>, "", "cfg", cfg))
+    cfg = ncc_axil_agent_config::type_id::create("cfg");   <span class="c">// podrazumevano: UVM_ACTIVE</span>
+  mon = ncc_axil_monitor::type_id::create("mon", <span class="k">this</span>);    <span class="c">// monitor UVEK</span>
+  <span class="k">if</span> (cfg.is_active == UVM_ACTIVE) <span class="k">begin</span>
+    sqr = ncc_axil_sequencer::type_id::create("sqr", <span class="k">this</span>);
+    drv = ncc_axil_driver   ::type_id::create("drv", <span class="k">this</span>);
+  <span class="k">end</span>
+<span class="k">endfunction</span>
+
+<span class="k">function void</span> connect_phase(uvm_phase phase);
+  mon.ap.connect(ap);                                     <span class="c">// port monitora ide napolje</span>
+  <span class="k">if</span> (cfg.is_active == UVM_ACTIVE)
+    drv.seq_item_port.connect(sqr.seq_item_export);       <span class="c">// drajver &lt;- sekvencer</span>
+<span class="k">endfunction</span></pre>
+<p><b>Aktivan</b> agent pobuđuje magistralu (ima drajver i sekvencer). <b>Pasivan</b> agent ima
+samo monitor i služi za posmatranje, na primer kada bi isti agent gledao magistralu u većem
+sistemu gde nju vodi procesor. To je ponovna upotrebljivost komponenti.</p>
+
+<h2>5.6 Sekvence S00 agenta</h2>
+<div class="put">sequences/ncc_axil_base_seq.sv, sequences/ncc_reg_rw_seq.sv</div>
+<pre><span class="k">task</span> upisi(<span class="k">bit</span> [5:0] a, <span class="k">bit</span> [31:0] d, aw_w_order_e o = ORDER_AW_FIRST, <span class="k">int unsigned</span> g = 1);
+  ncc_reg_item it = ncc_reg_item::type_id::create("it");
+  start_item(it);                                    <span class="c">// trazi dozvolu od sekvencera</span>
+  ok = it.randomize() <span class="k">with</span> { addr == a; data == d; rw == REG_WRITE; order == o; gap == g; };
+  finish_item(it);                                   <span class="c">// predaje drajveru i ceka item_done</span>
+<span class="k">endtask</span></pre>
+<p>Ovo je obrazac koji se ponavlja u svim sekvencama: <code>create</code>, pa
+<code>start_item</code>, pa <code>randomize() with {…}</code> (fiksiramo ono što nam treba,
+ostalo je slučajno), pa <code>finish_item</code>. <code>ncc_reg_rw_seq</code> ovim zadacima
+upiše registar, pročita ga i uporedi, nad četiri registra dimenzija i u sva tri redosleda.</p>
+
+<!-- ===================================================================== -->
+<h1>6. S01 agent (AXI4-Full)</h1>
+<div class="put">src/axif_agent/</div>
+
+<p>Raspored je isti kao kod S00 (stavka, sekvencer, drajver, monitor, konfiguracija, agent,
+sekvence). Ovde su opisane samo razlike, koje sve potiču od toga što AXI4-Full prenosi
+<b>pakete</b> (burst-ove) od više reči.</p>
+
+<h2>6.1 Stavka</h2>
+<div class="put">ncc_mem_item.sv</div>
+<pre><span class="k">rand</span> region_e     region;
+<span class="k">rand bit</span> [12:0]   word;          <span class="c">// indeks reci u regionu (addr[14:2])</span>
+<span class="k">rand int unsigned</span> len;           <span class="c">// broj beat-ova = AWLEN + 1</span>
+<span class="k">rand bit</span> [31:0]   data[];        <span class="c">// dinamicki niz, len elemenata</span>
+
+<span class="k">constraint</span> c_len   { len <span class="k">inside</span> {[1:256]};  data.size() == len; }
+<span class="k">constraint</span> c_4k    { ((word * 4) % 4096) + (len * 4) &lt;= 4096; }
+<span class="k">constraint</span> c_opseg { word + len &lt;= 8192; }
+
+<span class="k">function bit</span> [16:0] puna_adresa();  <span class="k">return</span> {region, word, 2'b00};  <span class="k">endfunction</span></pre>
+<ul class="plain">
+  <li><code>c_len</code>: AXI paket ima najviše 256 beat-ova, a niz podataka mora imati tačno <code>len</code> elemenata.</li>
+  <li><code>c_4k</code>: AXI <b>zabranjuje</b> da paket pređe granicu od 4 KB.</li>
+  <li><code>puna_adresa()</code> spaja region, reč i dva nulta bita (poravnanje na 4 bajta) u 17-bitnu adresu, isto kako je RTL rastavlja.</li>
+</ul>
+
+<h2>6.2 Drajver</h2>
+<div class="put">ncc_axif_driver.sv</div>
+<pre><span class="k">begin</span> : kanal_w
+  <span class="k">repeat</span> (w_kasnjenje) @(vif.mst_cb);
+  <span class="k">for</span> (<span class="k">int</span> i = 0; i &lt; it.len; i++) <span class="k">begin</span>
+    vif.mst_cb.wdata  &lt;= it.data[i];
+    vif.mst_cb.wlast  &lt;= (i == it.len - 1);        <span class="c">// poslednji beat</span>
+    vif.mst_cb.wvalid &lt;= 1'b1;
+    <span class="k">do</span> @(vif.mst_cb); <span class="k">while</span> (vif.mst_cb.wready !== 1'b1);
+  <span class="k">end</span>
+  vif.mst_cb.wvalid &lt;= 1'b0;
+<span class="k">end</span></pre>
+<p>Isti <code>fork</code> sa tri kanala kao kod S00, samo što W kanal šalje <code>len</code>
+beat-ova i podiže <code>WLAST</code> na poslednjem. Adresni kanal šalje <code>AWLEN = len-1</code>,
+<code>AWSIZE = 4 bajta</code> i <code>AWBURST = INCR</code> (adresa raste). Čitanje prima beat-ove
+dok ne skupi <code>len</code> reči.</p>
+
+<h2>6.3 Monitor</h2>
+<div class="put">ncc_axif_monitor.sv</div>
+<p>Beat-ove sa W kanala skuplja u bafer. Na rukovanju B kanala uzima adresu iz reda AW,
+proverava da je broj primljenih beat-ova jednak <code>AWLEN+1</code> i od toga pravi jednu
+stavku za ceo paket. Za čitanje skuplja R beat-ove dok ne vidi <code>RLAST</code>. Ako svi
+beat-ovi paketa nemaju isti <code>WSTRB</code>, izdaje upozorenje.</p>
+
+<h2>6.4 Sekvence S01 agenta</h2>
+<p><code>ncc_axif_base_seq</code> daje <code>upisi_blok()</code> i <code>procitaj_blok()</code>.
+<code>ncc_mem_blok_seq</code> upiše blok, pročita ga i uporedi, sa dužinama 1, 2, 3, 8 i 16
+beat-ova, u regionima slike i šablona i u sva tri redosleda. Memorija čuva samo donjih 8
+bita piksela, pa se poredi <code>poslato &amp; 0xFF</code>.</p>
+
+<!-- ===================================================================== -->
+<h1>7. Referentni model</h1>
+<div class="put">src/ref_model/ncc_ref_pkg.sv</div>
+
+<p>Referentni model je „druga, nezavisna implementacija” istog algoritma, napisana
+bihevioralno u SystemVerilog-u. Scoreboard poredi DUT sa njim. Model je <b>bit-tačan</b>:
+koristi iste širine, isto zaokruživanje i isti format kao RTL, pa se poređenje radi sa
+<code>!==</code>, bez tolerancije.</p>
+
+<p>Za svaku poziciju (u, v) šablona u slici računa se:</p>
+<p style="text-align:center"><i>NCC²(u,v) = ( Σ df·dt )² / ( Σ df² · Σ dt² )</i>,
+&nbsp; gde je <i>df = f − f̄</i> &nbsp;i&nbsp; <i>dt = t − t̄</i></p>
+<p><i>f</i> je piksel slike ispod šablona, <i>t</i> je piksel šablona, a <i>f̄</i> i
+<i>t̄</i> su njihove srednje vrednosti.</p>
+
+<pre>t_mean = 8'(( sum_t + (count / 2) ) / count);          <span class="c">// srednja vrednost sablona, zaokruzena</span>
+<span class="k">for</span> (v ...) <span class="k">for</span> (u ...) <span class="k">begin</span>
+  f_bar = 8'(( sum_f + (count / 2) ) / count);         <span class="c">// srednja vrednost prozora</span>
+  ...
+  <span class="k">bit signed</span> [8:0]  df = 9'(slika[...])  - 9'(f_bar);   <span class="c">// razlika, 9 bita sa znakom</span>
+  <span class="k">bit signed</span> [8:0]  dt = 9'(sablon[...]) - 9'(t_mean);
+  <span class="k">bit signed</span> [17:0] p_num = df * dt;                     <span class="c">// proizvodi kao u RTL-u</span>
+  sum_num += p_num;  sum_den_f += 26'(df*df);  sum_den_t += 26'(dt*dt);
+  ...
+  <span class="k">if</span> (sum_den_f == 0 || sum_den_t == 0) rezultat = 0;   <span class="c">// ravan prozor ili sablon</span>
+  num_sq   = sum_num * sum_num;
+  den_prod = sum_den_f * sum_den_t;
+  kolicnik = (83'(num_sq) &lt;&lt; 31) / 83'(den_prod);       <span class="c">// pomeranje za 31 = format Q1.31</span>
+  rezultat[v * res_w + u] = kolicnik[31:0];
+<span class="k">end</span></pre>
+<ul class="plain">
+  <li>Srednje vrednosti se zaokružuju (<code>+ count/2</code>) i skraćuju na 8 bita, kao u RTL-u.</li>
+  <li>Kvadriranjem brojioca nestaje znak, pa je NCC² uvek između 0 i 1.</li>
+  <li>Pomeranje za 31 bit pre deljenja daje format Q1.31, pa 1,0 postaje <code>0x80000000</code>.</li>
+  <li>Kada je imenilac 0 (svi pikseli isti), rezultat je 0, isto kao u jezgru.</li>
+</ul>
+
+<!-- ===================================================================== -->
+<h1>8. Okruženje</h1>
+<div class="put">src/env/</div>
+
+<h2>8.1 Paket i analysis imp-ovi</h2>
+<div class="put">ncc_env_pkg.sv</div>
+<pre>`uvm_analysis_imp_decl(_reg)
+`uvm_analysis_imp_decl(_mem)
+`uvm_analysis_imp_decl(_covreg)
+`uvm_analysis_imp_decl(_covmem)</pre>
+<p>Komponenta koja prima transakcije implementira metodu <code>write()</code>. Scoreboard i
+coverage primaju <b>dva</b> toka (sa S00 i sa S01), a klasa ne može imati dve metode istog
+imena. Ovi makroi prave nove tipove ulaza (<code>uvm_analysis_imp_reg</code> i ostale), koji
+pozivaju <code>write_reg()</code>, <code>write_mem()</code> i tako dalje.</p>
+
+<h2>8.2 Scoreboard</h2>
+<div class="put">ncc_scoreboard.sv</div>
+<p>Scoreboard sluša <b>isključivo monitore</b>. Ne zna ništa o sekvencama ni drajverima, i
+sve što zna vidi na magistrali. Radi u četiri koraka:</p>
+
+<pre><span class="c">// 1. i 2. -- ulaz sa S00: pamti dimenzije, na start racuna predikciju</span>
+<span class="k">function void</span> write_reg(ncc_reg_item t);
+  <span class="k">if</span> (t.rw == REG_WRITE) <span class="k">case</span> (t.addr)
+    REG_IMG_W: img_w = t.data[7:0];    ...
+    REG_CTRL:  <span class="k">if</span> (t.data[CTRL_START_BIT]) pokreni();
+  <span class="k">endcase</span>
+  <span class="k">else if</span> (t.addr == REG_STATUS &amp;&amp; t.data[STATUS_DONE_BIT]) video_done = 1'b1;
+<span class="k">endfunction</span>
+
+<span class="c">// ulaz sa S01: upisi pune senku memorije, citanja rezultata se porede</span>
+<span class="k">function void</span> write_mem(ncc_mem_item t);
+  <span class="k">if</span> (t.rw == MEM_WRITE) <span class="k">begin</span>
+    <span class="k">if</span> (!t.strb[0]) <span class="k">return</span>;          <span class="c">// RTL: mem_we &lt;= wr_beat and WSTRB(0)</span>
+    <span class="k">case</span> (t.region)
+      REGION_IMG: <span class="k">foreach</span> (t.data[i]) senka_slika[t.word + i] = t.data[i][7:0];
+      REGION_TMP: <span class="k">foreach</span> (t.data[i]) senka_sablon[(t.word + i) % TMP_WORDS] = t.data[i][7:0];
+      REGION_RESULT: ;                  <span class="c">// samo citanje -- upis se zanemaruje</span>
+    <span class="k">endcase</span>
+  <span class="k">end else if</span> (t.region == REGION_RESULT) uporedi(t);
+<span class="k">endfunction</span></pre>
+<ul class="plain">
+  <li><b>Senka memorije</b> (<code>senka_slika</code>, <code>senka_sablon</code>) je asocijativni niz: kopija onoga što bi trebalo da bude u memoriji DUT-a, sastavljena iz viđenih upisa.</li>
+  <li><code>strb[0]</code>: RTL upisuje u memoriju samo kada je bit 0 signala <code>WSTRB</code> postavljen, pa senka mora da se ponaša isto.</li>
+  <li><code>% TMP_WORDS</code>: memorija šablona ima 1024 reči, pa se veće adrese preslikavaju (aliasing).</li>
+</ul>
+
+<pre><span class="c">// 3. -- predikcija</span>
+<span class="k">protected function void</span> pokreni();
+  ... slika/sablon se prepisuju iz senke (nepoznato = 0) ...
+  ncc_predikcija(img_w, img_h, tmp_w, tmp_h, slika, sablon, mapa);   <span class="c">// referentni model</span>
+  <span class="k">foreach</span> (mapa[i]) predikcija[i] = mapa[i];
+<span class="k">endfunction</span>
+
+<span class="c">// 4. -- poredjenje svake procitane reci rezultata</span>
+<span class="k">foreach</span> (t.data[i]) <span class="k">begin</span>
+  idx = t.word + i;
+  br_poredjenja++;
+  <span class="k">if</span> (t.data[i] !== predikcija[idx]) <span class="k">begin</span>
+    br_gresaka++;
+    `uvm_error("SB", $sformatf("rezultat[%0d] (u=%0d, v=%0d): ocekivano 0x%08x, dobijeno 0x%08x", ...))
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="c">// zavrsna provera</span>
+<span class="k">function void</span> check_phase(uvm_phase phase);
+  <span class="k">if</span> (br_poredjenja == 0) `uvm_error("SB", "scoreboard nije izvrsio nijedno poredjenje")
+<span class="k">endfunction</span></pre>
+<p><code>check_phase</code> je zaštita od „lažnog prolaza”. Scoreboard koji ništa nije
+uporedio nije dokaz ispravnosti, pa se to prijavljuje kao greška.</p>
+
+<h2>8.3 Coverage</h2>
+<div class="put">ncc_coverage.sv</div>
+<p>Funkcionalna pokrivenost odgovara na pitanje <i>da li smo isprobali sve što smo planirali</i>.
+Odvojena je od scoreboard-a: jedna komponenta proverava tačnost, a druga potpunost. Vezana je
+na iste monitore.</p>
+<pre><span class="k">covergroup</span> cg_dimenzije <span class="k">with function</span> sample(<span class="k">int unsigned</span> iw, ih, tw, th);
+  cp_img_w: <span class="k">coverpoint</span> iw { <span class="k">bins</span> min = {1}; <span class="k">bins</span> ispod = {[2:44]}; <span class="k">bins</span> coarse = {45};
+                           <span class="k">bins</span> iznad = {[46:89]}; <span class="k">bins</span> max = {90}; }
+  ...
+  x_img_tmp: <span class="k">cross</span> cp_img_w, cp_tmp_w {
+    <span class="k">ignore_bins</span> nemoguce_min = <span class="k">binsof</span>(cp_img_w.min) &amp;&amp; !<span class="k">binsof</span>(cp_tmp_w.min);
+  }
+<span class="k">endgroup</span>
+
+<span class="k">covergroup</span> cg_kontrola <span class="k">with function</span> sample(<span class="k">bit</span> start, busy, done);
+  x_start_busy: <span class="k">cross</span> cp_start, cp_busy;     <span class="c">// (1,1) = start dok jezgro radi, test T7</span>
+  x_start_done: <span class="k">cross</span> cp_start, cp_done;
+<span class="k">endgroup</span>
+
+<span class="k">covergroup</span> cg_axi <span class="k">with function</span> sample(aw_w_order_e ord, cov_region_e reg_o, ...);
+  x_order_region: <span class="k">cross</span> cp_order, cp_region;  <span class="c">// sredisnji cilj: AW/W redosled u svakom regionu</span>
+  cp_len:  <span class="k">coverpoint</span> blen { <span class="k">bins</span> b1={1}; <span class="k">bins</span> b2={2}; <span class="k">bins</span> b3_15={[3:15]}; ... <span class="k">bins</span> b256={256}; }
+  cp_strb: <span class="k">coverpoint</span> strb { <span class="k">bins</span> puna={4'hF}; <span class="k">bins</span> b1={4'h1}; ... }
+<span class="k">endgroup</span></pre>
+<ul class="plain">
+  <li><b>Bin-ovi</b> dele opseg na zanimljive klase: granice (1, 90), sredinu i „grubu” veličinu 45 (pola segmenta table, koju koristi aplikacija).</li>
+  <li><b><code>cross</code></b> traži da se svaka <i>kombinacija</i> pojavi. Najvažniji je <code>redosled × region</code>: AW/W greška se proverava u svakom memorijskom regionu i u registrima.</li>
+  <li><b><code>ignore_bins</code></b> izbacuje kombinacije koje su nemoguće po ugovoru U4 (šablon ne sme biti veći od slike). Bez toga bi 100% bilo nedostižno.</li>
+  <li><code>sample()</code> se poziva ručno. Dimenzije se uzorkuju u trenutku upisa u <code>CTRL</code>, kada su stvarno u upotrebi, a ne pri svakom upisu dimenzije.</li>
+</ul>
+
+<h2>8.4 Virtuelni sekvencer i env</h2>
+<div class="put">ncc_virtual_sequencer.sv, ncc_env.sv</div>
+<pre><span class="k">class</span> ncc_virtual_sequencer <span class="k">extends</span> uvm_sequencer;
+  ncc_axil_sequencer axil_sqr;     <span class="c">// samo pokazivaci</span>
+  ncc_axif_sequencer axif_sqr;
+<span class="k">endclass</span>
+
+<span class="c">// ncc_env::connect_phase</span>
+vsqr.axil_sqr = axil_agent.sqr;
+vsqr.axif_sqr = axif_agent.sqr;
+axil_agent.ap.connect(sb.reg_imp);   axif_agent.ap.connect(sb.mem_imp);
+axil_agent.ap.connect(cov.reg_imp);  axif_agent.ap.connect(cov.mem_imp);</pre>
+<p>Jedan scenario mora da vodi <b>obe</b> magistrale: sliku šalje preko S01, a start preko
+S00. Običan sekvencer zna samo za jednu. Virtuelni sekvencer ne šalje ništa sam, već drži
+pokazivače na oba prava sekvencera, a sekvenca preko njih bira gde šalje. <code>ncc_env</code>
+pravi sve komponente i povezuje ih tačno onako kako pokazuje dijagram u poglavlju 1.</p>
+
+<!-- ===================================================================== -->
+<h1>9. Virtuelne sekvence</h1>
+<div class="put">src/sequences/</div>
+
+<h2>9.1 Osnova</h2>
+<div class="put">ncc_virtual_base_seq.sv</div>
+<pre><span class="k">class</span> ncc_virtual_base_seq <span class="k">extends</span> uvm_sequence;
+  `uvm_declare_p_sequencer(ncc_virtual_sequencer)    <span class="c">// p_sequencer = nas virtuelni sekvencer</span>
+
+  <span class="k">task</span> reg_upisi(...);
+    start_item(it, -1, p_sequencer.axil_sqr);        <span class="c">// stavka ide na S00 sekvencer</span>
+    ...
+  <span class="k">task</span> mem_upisi(...);
+    start_item(it, -1, p_sequencer.axif_sqr);        <span class="c">// stavka ide na S01 sekvencer</span>
+
+  <span class="c">// AXI: najvise 256 beat-ova i bez prelaska granice od 4 KB -- veci blok se deli</span>
+  <span class="k">function int unsigned</span> komad(<span class="k">int unsigned</span> w, ostalo);
+    do_granice = 1024 - (w % 1024);                  <span class="c">// 4 KB = 1024 reci</span>
+    <span class="k">return</span> min(256, ostalo, do_granice);
+  <span class="k">endfunction</span></pre>
+<p>Makro <code>`uvm_declare_p_sequencer</code> daje sekvenci pokazivač <code>p_sequencer</code>
+pravog tipa. Treći argument <code>start_item</code>-a kaže na koji sekvencer stavka ide. Tako
+jedna sekvenca vodi obe magistrale. Zadaci <code>mem_upisi_deljeno</code> i
+<code>mem_procitaj_deljeno</code> pomoću <code>komad()</code> dele veliku sliku (do 90×90 =
+8100 reči) na legalne AXI pakete.</p>
+
+<h2>9.2 Smoke sekvenca — ceo put kroz DUT</h2>
+<div class="put">ncc_smoke_seq.sv</div>
+<pre><span class="c">// 1. slika 4x4 i sablon 2x2 preko S01 (sablon je doslovno prozor slike na (1,1))</span>
+mem_upisi(REGION_IMG, 13'd0, slika,  ORDER_AW_FIRST);
+mem_upisi(REGION_TMP, 13'd0, sablon, ORDER_W_FIRST);
+<span class="c">// 2. dimenzije preko S00, u razlicitim redosledima</span>
+reg_upisi(REG_IMG_W, 4, ORDER_AW_FIRST);  reg_upisi(REG_IMG_H, 4, ORDER_W_FIRST); ...
+<span class="c">// 3. start</span>
+reg_upisi(REG_CTRL, 32'h1, ORDER_W_FIRST);
+<span class="c">// 4. cekanje na done_sticky, sa cuvarem</span>
+<span class="k">fork</span>
+  <span class="k">begin</span> : cekanje
+    <span class="k">forever begin</span>
+      reg_procitaj(REG_STATUS, status);
+      <span class="k">if</span> (status[STATUS_DONE_BIT]) <span class="k">begin</span> gotovo = 1; <span class="k">break</span>; <span class="k">end</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+  <span class="k">begin</span> : cuvar
+    #CUVAR;  `uvm_error("SMOKE", "done_sticky nije stigao -- DUT visi ili ne racuna")
+  <span class="k">end</span>
+<span class="k">join_any</span>
+<span class="k">disable fork</span>;
+<span class="c">// 5. citanje 3x3 mape rezultata i provera pika</span>
+mem_procitaj(REGION_RESULT, 13'd0, 9, rezultat);
+<span class="k">if</span> (rezultat[4] !== 32'h8000_0000) `uvm_error(...)    <span class="c">// (u=1,v=1) mora biti tacno 1,0</span></pre>
+<ul class="plain">
+  <li><b><code>fork … join_any</code> + <code>disable fork</code></b>: pokrenu se dve niti, čekanje i čuvar. Nastavlja se čim <b>jedna</b> završi, a druga se ubija. Ako jezgro završi, čuvar se gasi. Ako jezgro visi, čuvar prijavi grešku i test pada umesto da se zaglavi.</li>
+  <li>Šablon je doslovno isečak slike na poziciji (1, 1), pa tamo mora biti tačno <code>0x80000000</code>, a svih ostalih osam vrednosti mora biti strogo manje. To je provera koju možemo izračunati napamet. Proveru svih devet vrednosti bit po bit radi scoreboard.</li>
+</ul>
+
+<h2>9.3 Sekvenca za pokrivenost</h2>
+<div class="put">ncc_cov_seq.sv, ncc_dim_sweep_seq.sv</div>
+<p>Svaki blok ove sekvence cilja određene bin-ove iz poglavlja 8.3:</p>
+<table>
+  <thead><tr><th style="width:36%">Deo sekvence</th><th>Šta pokriva</th></tr></thead>
+  <tbody>
+    <tr><td>paketi dužine 1, 2, 3, 16 i 256</td><td><code>cp_len</code></td></tr>
+    <tr><td>upisi sa <code>WSTRB</code> 0x1, 0x3, 0x9 i 0xE</td><td><code>cp_strb</code>. Uz to proverava da upis sa <code>WSTRB(0)=0</code> ne menja memoriju, kako RTL i propisuje.</td></tr>
+    <tr><td>upisi u region rezultata i nemapirani region</td><td>sve ćelije ukrštanja <code>redosled × region</code>. Čitanje nemapiranog regiona mora vratiti nule.</td></tr>
+    <tr><td>čitanje šablona na adresi 1024</td><td>aliasing memorije šablona (T14)</td></tr>
+    <tr><td><code>pokreni_skup(...)</code> sa dimenzijama 1, 20, 45, 60 i 90</td><td>bin-ove dimenzija</td></tr>
+    <tr><td><code>pokreni_skup(60, 2, 20, 2, 1'b1)</code></td><td>ponovni <code>start</code> dok je <code>busy=1</code> (T7), tj. ćeliju (1,1) ukrštanja <code>start × busy</code></td></tr>
+  </tbody>
+</table>
+<p><code>ncc_dim_sweep_seq</code> nasleđuje <code>ncc_cov_seq</code> i prolazi kroz svih 19
+legalnih kombinacija bin-ova dimenzija. Spora je, pa je u sporoj listi.</p>
+
+<h2>9.4 Slučajna sekvenca</h2>
+<div class="put">ncc_random_seq.sv</div>
+<pre><span class="k">rand int unsigned</span> iw, ih, tw, th, br_burstova;
+<span class="k">constraint</span> c_ugovor {
+  iw <span class="k">inside</span> {[2:24]};  ih <span class="k">inside</span> {[2:24]};      <span class="c">// U1</span>
+  tw <span class="k">inside</span> {[1:6]};   th <span class="k">inside</span> {[1:6]};       <span class="c">// U2</span>
+  tw * th &lt;= MAX_TMP_PIX;                       <span class="c">// U3</span>
+  tw &lt;= iw;  th &lt;= ih;                          <span class="c">// U4</span>
+}</pre>
+<p>Svaki seed daje drugi scenario: slučajne dimenzije (u okviru ugovora U1–U4), slučajne
+piksele slike i šablona, slučajan redosled AW/W za svaki upis, nekoliko slučajnih čitanja po
+regionima i upise u registre koje jezgro ne koristi. Zatim pokrene jezgro i pročita
+<b>celu</b> mapu rezultata, a scoreboard proveri svaku vrednost. Opsezi su manji od
+maksimalnih (24 umesto 90) da bi jedan seed trajao nekoliko sekundi. Maksimume pokriva
+<code>ncc_cov_seq</code>.</p>
+<div class="note"><p>Ugovor U1–U4 mora biti u ograničenjima, jer jezgro proverava dimenzije
+tvrdnjom sa nivoom <code>failure</code>, koja ruši <b>celu simulaciju</b>. Slučajna nelegalna
+dimenzija ne bi bila neuspeh testa, već pad regresije.</p></div>
+
+<!-- ===================================================================== -->
+<h1>10. Testovi</h1>
+<div class="put">tests/</div>
+
+<p>Test je vrh UVM hijerarhije. On bira okruženje i sekvencu. Svi testovi imaju isti oblik:</p>
+<pre><span class="k">class</span> ncc_smoke_test <span class="k">extends</span> ncc_base_test;       <span class="c">// ncc_base_test pravi ncc_env</span>
+  <span class="k">task</span> run_phase(uvm_phase phase);
+    ncc_smoke_seq seq = ncc_smoke_seq::type_id::create("seq");
+    phase.raise_objection(<span class="k">this</span>);              <span class="c">// "nemoj jos da zavrsavas"</span>
+    seq.start(env.vsqr);                        <span class="c">// pokreni na virtuelnom sekvenceru</span>
+    phase.drop_objection(<span class="k">this</span>);               <span class="c">// "gotov sam"</span>
+  <span class="k">endtask</span>
+<span class="k">endclass</span></pre>
+<p><b>Objection</b> je mehanizam kojim UVM zna kada da završi <code>run_phase</code>. Faza
+traje dok god neko drži podignut prigovor. Bez <code>raise_objection</code> simulacija bi se
+završila odmah, u trenutku 0.</p>
+
+<table>
+  <thead><tr><th style="width:30%">Test</th><th>Šta radi i šta dokazuje</th></tr></thead>
+  <tbody>
+    <tr><td><code>ncc_vif_test</code></td><td>Preuzme oba interfejsa iz <code>uvm_config_db</code>, sačeka reset i proveri da DUT miruje (<code>bvalid</code> i <code>rvalid</code> su 0). Dokazuje da elaboracija i povezivanje rade.</td></tr>
+    <tr><td><code>ncc_axil_smoke_test</code></td><td>Ručno napravi samo S00 sekvencer i drajver, bez agenta, i pokrene <code>ncc_reg_rw_seq</code>. Dokazuje da drajver ispravno vodi AXI4-Lite u sva tri redosleda.</td></tr>
+    <tr><td><code>ncc_axil_agent_test</code></td><td>Isto, ali kroz agenta, uz <code>ncc_mon_subscriber</code> koji broji šta je monitor video. U <code>check_phase</code> proverava 7 upisa, 7 čitanja i redoslede AW_FIRST=2, W_FIRST=3, SIMUL=2. Dokazuje da monitor tačno rekonstruiše ono što je drajver poslao.</td></tr>
+    <tr><td><code>ncc_axif_smoke_test</code></td><td>S01 agent sa <code>ncc_mem_blok_seq</code>. Dokazuje paketni prenos.</td></tr>
+    <tr><td><code>ncc_base_test</code></td><td>Samo pravi <code>ncc_env</code>. Roditelj testova ispod.</td></tr>
+    <tr><td><code>ncc_smoke_test</code></td><td><code>ncc_smoke_seq</code>: ceo put kroz jezgro, uz scoreboard (9 poređenja).</td></tr>
+    <tr><td><code>ncc_cov_test</code></td><td><code>ncc_cov_seq</code>: brza lista za pokrivenost.</td></tr>
+    <tr><td><code>ncc_dim_sweep_test</code></td><td><code>ncc_dim_sweep_seq</code>: spora lista.</td></tr>
+    <tr><td><code>ncc_random_test</code></td><td><code>ncc_random_seq</code>, pokreće se sa 20 seed-ova.</td></tr>
+  </tbody>
+</table>
+<p>Testovi su poređani od najmanjeg ka najvećem. Ako nešto ne radi, prvi test koji padne
+odmah kaže gde je problem: u povezivanju, u drajveru, u monitoru ili u jezgru.</p>
+
+<!-- ===================================================================== -->
+<h1>11. Skripte i regresija</h1>
+<div class="put">sim/</div>
+
+<pre>./sim/regress.sh
+  ├─ build.sh          xvhdl -2008 (VHDL) → xvlog -sv -L uvm (SV) → xelab   JEDNOM
+  ├─ run_one.sh × 27   xsim sim_tb_top -R -testplusarg UVM_TESTNAME=&lt;test&gt; -sv_seed &lt;N&gt;
+  │                    → PASS/FAIL + cuvanje baze pokrivenosti
+  └─ coverage.sh       xcrg spaja 23 baze → ukupna pokrivenost</pre>
+<ul class="plain">
+  <li><b>Elaboracija jednom.</b> Prevođenje i elaboracija se rade jednom, a svih 27 pokretanja koristi isti snimak. Test se bira argumentom <code>UVM_TESTNAME</code>, a ne ponovnim prevođenjem. To skraćuje regresiju za red veličine.</li>
+  <li><b>Seed</b> (<code>-sv_seed</code>) je početna vrednost generatora slučajnih brojeva. Isti seed daje uvek isti scenario, pa je svaki pad ponovljiv.</li>
+  <li><b>PASS kriterijum</b> (<code>run_one.sh</code>): log mora sadržati završni UVM izveštaj, a ne sme imati nijedan <code>UVM_ERROR</code>, <code>UVM_FATAL</code> ni pad SVA tvrdnje. Prvi uslov postoji zato što test koji se uopšte nije pokrenuo takođe „nema grešaka”.</li>
+  <li><b>Dva simulatora:</b> <code>SIM=xrun ./sim/regress.sh</code> pušta istu listu, iste seed-ove i istu proveru u Cadence Xcelium-u. Menjaju se samo skripte za prevođenje i pokretanje.</li>
+  <li><b>Prenosivost:</b> <code>common.sh</code> sam pronalazi Vivado (<code>XILINX_VIVADO</code>, <code>PATH</code> ili uobičajene instalacije), a sve putanje su relativne u odnosu na <code>verif/</code>. Skripte rade i na Linuxu i na Windows-u.</li>
+</ul>
+<p><b>Rezultat:</b> 27 prošlo, 0 palo na oba simulatora. Scoreboard je uporedio 3106 vrednosti
+bez ijednog neslaganja. Funkcionalna pokrivenost je 100% u sve tri covergroup-e.</p>
+
+<!-- ===================================================================== -->
+<h1>12. Moguća pitanja na odbrani</h1>
+
+<div class="qa"><div class="q">1. Zašto scoreboard sluša monitor, a ne drajver?</div>
+<p>Drajver zna šta je <i>hteo</i> da pošalje, a monitor vidi šta se <i>stvarno</i> desilo na
+magistrali. Kada bi scoreboard verovao drajveru, greška u drajveru ili protokolu ostala bi
+nevidljiva. Isto tako, senka memorije u scoreboard-u nastaje samo iz viđenih upisa.</p></div>
+
+<div class="qa"><div class="q">2. Kako znate da scoreboard zaista nešto proverava?</div>
+<p>Iz tri razloga. Prvo, <code>check_phase</code> prijavljuje grešku ako nije bilo nijednog
+poređenja. Drugo, ispisuje se broj poređenja (ukupno 3106 u regresiji). Treće, uradili smo
+negativnu proveru: kada smo namerno pokvarili upisni put u drajveru (<code>wdata ^ 1</code>),
+testovi su pali. Provera koja ne ume da padne ništa ne dokazuje.</p></div>
+
+<div class="qa"><div class="q">3. Kako je u okruženju pokrivena AW/W greška?</div>
+<p>Na četiri mesta. U <b>stavci</b> postoji polje <code>order</code>. <b>Drajver</b> vodi AW i W
+kao paralelne niti, pa može da pošalje W pre AW. <b>Monitor</b> meri redosled na samoj
+magistrali. <b>Coverage</b> ima ukrštanje <code>redosled × region</code>, pa je redosled
+proveren u svakom regionu. Uz to <b>SVA</b> tvrdnja <code>!(awready &amp;&amp; wready)</code> u
+interfejsu čuva popravku u svakom testu.</p></div>
+
+<div class="qa"><div class="q">4. Šta je virtuelni sekvencer i zašto vam treba?</div>
+<p>Scenario rada sa jezgrom koristi obe magistrale (slika preko S01, start preko S00).
+Virtuelni sekvencer drži pokazivače na oba prava sekvencera, pa jedna virtuelna sekvenca
+može da šalje stavke na oba.</p></div>
+
+<div class="qa"><div class="q">5. Zašto referentni model, a ne unapred izračunati golden fajlovi?</div>
+<p>Slučajni test svaki put pravi druge podatke i dimenzije, pa bi za golden fajlove trebalo
+unapred izračunati rezultat za svaki mogući ulaz. Referentni model računa predikciju tokom
+simulacije, za bilo koji ulaz. Bit-tačan je, pa se poredi bez tolerancije.</p></div>
+
+<div class="qa"><div class="q">6. Šta znači 0x80000000?</div>
+<p>NCC² u formatu Q1.31 (1 celobrojni bit i 31 razlomački). <code>0x80000000</code> je 1,0, tj.
+savršeno poklapanje šablona i prozora. Zato se skorovi porede kao neoznačeni brojevi, jer bi
+kao označeni bili negativni.</p></div>
+
+<div class="qa"><div class="q">7. Šta je clocking blok i čemu služi?</div>
+<p>Određuje <i>kada</i> okruženje čita i piše signale u odnosu na takt. Ulazi se čitaju neposredno
+pre ivice (<code>#1step</code>), a izlazi se menjaju 1 ns posle nje. Tako nema trke između
+okruženja i DUT-a, a ponašanje je isto u svakom simulatoru.</p></div>
+
+<div class="qa"><div class="q">8. Šta je objection?</div>
+<p>Mehanizam za kraj <code>run_phase</code>. Test podigne prigovor pre sekvence i spusti ga
+posle nje. Faza se završava kada niko ne drži prigovor. Bez toga bi simulacija stala u
+trenutku 0.</p></div>
+
+<div class="qa"><div class="q">9. Čemu služi fork … join_any sa disable fork?</div>
+<p>Čekanje na <code>done_sticky</code> ide paralelno sa čuvarom vremena. Koja god nit prva
+završi, druga se ubija. Ako jezgro visi, test padne sa jasnom porukom umesto da se regresija
+zaglavi.</p></div>
+
+<div class="qa"><div class="q">10. Šta je aktivan, a šta pasivan agent?</div>
+<p>Aktivan agent ima sekvencer, drajver i monitor i pobuđuje magistralu. Pasivan ima samo
+monitor i samo posmatra. Bira se kroz konfiguraciju (<code>is_active</code>). Pasivan bi
+služio kada isti agent posmatra magistralu u većem sistemu.</p></div>
+
+<div class="qa"><div class="q">11. Zašto ignore_bins u coverage-u?</div>
+<p>Neke kombinacije su nemoguće po ugovoru U4: šablon ne sme biti veći od slike. Ako se ne
+izbace, pokrivenost nikad ne može doći do 100%, a 100% onda ne bi ništa značilo. Svaki
+isključeni bin ima obrazloženje.</p></div>
+
+<div class="qa"><div class="q">12. Šta je seed i zašto 20 seed-ova?</div>
+<p>Seed je početna vrednost generatora slučajnih brojeva. Svaki daje drugi, ali ponovljiv
+scenario. Više seed-ova znači više različitih ulaza. Jedna greška u pobudi (paket duži od
+256 beat-ova) pojavila se tek na 6 od 20 seed-ova, a sa jednim seed-om ne bi bila primećena.</p></div>
+
+<div class="qa"><div class="q">13. Šta je donela simulacija u dva simulatora?</div>
+<p>Ceo SV/UVM kod preveo se u Xcelium-u iz prvog pokušaja. Xcelium je, međutim, odbio tri
+konstrukcije u Xilinx AXI šablonu DUT-a koje XSim prećutno prihvata (AGNLSC, CSODAS,
+TRRANGEC). Rešene su opcijom <code>-relax</code>, izmenom jednog reda u kopiji DUT-a i
+podešavanjem u <code>xrun_run.tcl</code>. Sa jednim simulatorom ništa od toga ne bi se
+videlo.</p></div>
+
+<div class="qa"><div class="q">14. Zašto u scoreboard-u stoji % TMP_WORDS i provera strb[0]?</div>
+<p>Scoreboard mora da modeluje memoriju tačno kao RTL. Memorija šablona ima 1024 reči, pa se
+veće adrese preslikavaju na početak. RTL upisuje samo kada je <code>WSTRB(0)=1</code>. Kada senka
+ne bi radila isto, scoreboard bi prijavljivao lažne greške.</p></div>
+
+<div class="qa"><div class="q">15. Zašto je svaka klasa u posebnom fajlu, a paket samo uključuje?</div>
+<p>Zbog preglednosti i ponovne upotrebe: agent se može uzeti zasebno i fajl odgovara klasi.
+SystemVerilog paket je i dalje jedna celina za prevođenje, a <code>`include</code> samo
+lepi fajlove u njega, po redosledu zavisnosti.</p></div>
+
+</body></html>
