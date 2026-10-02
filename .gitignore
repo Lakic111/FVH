@@ -9,3 +9,6 @@
 !/verif/result/**/*.log
 !/verif/result/**/*.txt
 FVH Vault/Prilozi/
+
+# Izlazi simulacije za predaja/verif (pravi ih sim/*.sh)
+/predaja/verif/result/

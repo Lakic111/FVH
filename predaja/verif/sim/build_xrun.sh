@@ -3,15 +3,19 @@
 #
 #   ./sim/build_xrun.sh [top_modul]
 #
-# Preduslov: . amsgo   (sa tackom -- source, ne ./amsgo)
+# Preduslov: Cadence okruzenje ucitano tako da je xrun u PATH-u
+# (na fakultetskoj masini: `. amsgo`), ili XRUN=/putanja/do/xrun.
 set -u
-
-VERIF="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$VERIF"
+source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 XRUN="${XRUN:-xrun}"
+command -v "$XRUN" > /dev/null 2>&1 || {
+  echo "GRESKA: '$XRUN' nije pronadjen -- ucitaj Cadence okruzenje ili postavi XRUN=/putanja/do/xrun"
+  exit 1
+}
+
 TOP="${1:-tb_top}"
-BUILD="result/build_xrun"
+BUILD="$VERIF/result/build_xrun"
 
 # COV=0 iskljucuje pokrivenost (trazi zasebnu licencu).
 COV="${COV:-1}"
@@ -22,17 +26,14 @@ else
   echo "NAPOMENA: pokrivenost iskljucena (COV=0)"
 fi
 
-citaj_f() { grep -v '^[[:space:]]*#' "$1" | grep -v '^[[:space:]]*$'; }
-mapfile -t RTL < <(citaj_f rtl.f)
-mapfile -t TB  < <(citaj_f tb.f)
+ucitaj_filelist rtl.f; RTL=("${IZVORI[@]}"); IZVORI=()
+ucitaj_filelist tb.f;  TB=("${IZVORI[@]}")
 
-RTL_ABS=(); for f in "${RTL[@]}"; do RTL_ABS+=("$VERIF/$f"); done
-TB_ABS=();  for f in "${TB[@]}";  do TB_ABS+=("$VERIF/$f");  done
+INC_ARG=()
+for d in "${INCDIRS[@]}"; do INC_ARG+=(-incdir "$d"); done
 
 rm -rf "$BUILD"; mkdir -p "$BUILD"
 cd "$BUILD"
-
-rm -rf xcelium.d INCA_libs *.log *.history
 
 # -v200x: VHDL-2008. -relax: potrebno za S00 (agregat sa opsegom iz generika).
 # -uvm: UVM koji dolazi uz Xcelium (ako verzija ne odgovara, dodati -uvmhome).
@@ -40,14 +41,15 @@ rm -rf xcelium.d INCA_libs *.log *.history
   -v200x -relax \
   -uvm \
   -timescale 1ns/1ps \
-  "${COV_ARG[@]}" \
+  ${COV_ARG[@]+"${COV_ARG[@]}"} \
   -top "$TOP" \
-  "${RTL_ABS[@]}" "${TB_ABS[@]}" \
+  "${INC_ARG[@]}" \
+  "${RTL[@]}" "${TB[@]}" \
   -l xrun_elab.log
 
 KOD=$?
 if [ $KOD -ne 0 ]; then
-  echo "FAIL: elaboracija u Xcelium-u pala -- vidi $BUILD/xrun_elab.log"
+  echo "FAIL: elaboracija u Xcelium-u pala -- vidi result/build_xrun/xrun_elab.log"
   exit 1
 fi
-echo "=== snimak spreman u $BUILD ==="
+echo "=== snimak spreman u result/build_xrun ==="

@@ -4,8 +4,9 @@
 #   ./sim/coverage.sh [text|html]
 set -u
 
-VERIF="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-XILINX_BIN="${XILINX_BIN:-/c/AMDDesignTools/2025.2/Vivado/bin}"
+source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+
+XCRG="$(nadji_vivado_alat xcrg)" || exit 1
 FORMAT="${1:-text}"
 
 COV="$VERIF/result/cov"
@@ -32,7 +33,7 @@ echo "=== baze u spajanju ($BROJ) ==="
 sed 's|^\./xsim.covdb/|  |' baze.txt
 
 rm -rf izvestaj
-"$XILINX_BIN/xcrg.bat" -file baze.txt -report_format "$FORMAT" \
+pokreni_alat "$XCRG" -file baze.txt -report_format "$FORMAT" \
   -report_dir ./izvestaj > xcrg_run.log 2>&1
 
 IZV="./izvestaj/functionalCoverageReport/xcrg_func_cov_report.txt"

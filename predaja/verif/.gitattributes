@@ -1,0 +1,8 @@
+# Izvori i skripte uvek sa LF prelomima -- .sh sa CRLF na Linuxu daje
+# "bad interpreter", a filelist sa CRLF daje imena fajlova sa \r na kraju.
+*.sh   text eol=lf
+*.tcl  text eol=lf
+*.f    text eol=lf
+*.sv   text eol=lf
+*.vhd  text eol=lf
+*.md   text eol=lf

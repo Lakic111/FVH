@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
-# Pogodnost za jedan test: elaboracija pa pokretanje (omotac oko build.sh/run_one.sh).
+# Pogodnost za jedan test u XSim-u: elaboracija pa pokretanje.
 #
-#   ./sim/run_xsim.sh [top_modul] [ime_testa] [seed]
+#   ./sim/run_xsim.sh [ime_testa] [seed]     (podrazumevano: ncc_smoke_test 1)
 #
 # Za vise od jednog testa koristi ./sim/regress.sh.
 set -u
-
 SIM="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-TOP="${1:-tb_top}"
-UVM_TEST="${2:-ncc_smoke_test}"
-SEED="${3:-1}"
+UVM_TEST="${1:-ncc_smoke_test}"
+SEED="${2:-1}"
 
-"$SIM/build.sh" "$TOP" || exit 1
+bash "$SIM/build.sh" || exit 1
 
-IZLAZ="$("$SIM/run_one.sh" "$UVM_TEST" "$SEED" "$TOP")"
+IZLAZ="$(bash "$SIM/run_one.sh" "$UVM_TEST" "$SEED")"
 KOD=$?
 echo "$IZLAZ"
 

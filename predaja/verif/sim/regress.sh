@@ -10,15 +10,14 @@
 set -u
 
 VERIF="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$VERIF"
 
 REZIM="${1:-sve}"
 SEEDS="${SEEDS:-20}"
 SIM="${SIM:-xsim}"
 
 case "$SIM" in
-  xsim) BUILD_SH="./sim/build.sh";      RUN_SH="./sim/run_one.sh" ;;
-  xrun) BUILD_SH="./sim/build_xrun.sh"; RUN_SH="./sim/run_one_xrun.sh" ;;
+  xsim) BUILD_SH="$VERIF/sim/build.sh";      RUN_SH="$VERIF/sim/run_one.sh" ;;
+  xrun) BUILD_SH="$VERIF/sim/build_xrun.sh"; RUN_SH="$VERIF/sim/run_one_xrun.sh" ;;
   *)    echo "FAIL: nepoznat simulator '$SIM' (ocekivano xsim ili xrun)"; exit 1 ;;
 esac
 
@@ -31,10 +30,12 @@ echo "# FVH regresija -- simulator: $SIM, rezim: $REZIM, seed-ova: $SEEDS"
 echo "# $(date '+%Y-%m-%d %H:%M:%S')"
 echo "############################################################"
 
-rm -rf result/cov result/run
+rm -rf "$VERIF/result/cov" "$VERIF/result/run" "$VERIF/result/run_xrun"
+mkdir -p "$VERIF/result"
 
-"$BUILD_SH" > result_build.tmp 2>&1 || { cat result_build.tmp; rm -f result_build.tmp; exit 1; }
-rm -f result_build.tmp
+bash "$BUILD_SH" > "$VERIF/result/build_izlaz.log" 2>&1 \
+  || { cat "$VERIF/result/build_izlaz.log"; exit 1; }
+grep -m1 '^=== Vivado:' "$VERIF/result/build_izlaz.log" || true
 echo "elaboracija: gotova"
 echo
 
@@ -44,7 +45,7 @@ POCETAK=$SECONDS
 pusti() {
   local test="$1" seed="$2" t0=$SECONDS
   local izlaz
-  izlaz="$("$RUN_SH" "$test" "$seed")"
+  izlaz="$(bash "$RUN_SH" "$test" "$seed")"
   local kod=$?
   printf "  %-28s seed %-3s %5ds  %s\n" "$test" "$seed" "$((SECONDS - t0))" \
          "$(echo "$izlaz" | awk '{print $1}')"
@@ -82,7 +83,7 @@ echo "############################################################"
 echo
 
 if [ "$SIM" = "xsim" ]; then
-  ./sim/coverage.sh text
+  bash "$VERIF/sim/coverage.sh" text
 else
   echo "=== pokrivenost (Xcelium) ==="
   echo "  Baze su u result/build_xrun/cov_work/.  Izvestaj:"
