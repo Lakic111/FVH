@@ -1,0 +1,10 @@
+rtl/ncc_pkg.vhd
+rtl/dp_bram.vhd
+rtl/mem_subsystem.vhd
+rtl/ncc_core.vhd
+rtl/ncc_accel_slave_lite_v1_0_S00_AXI.vhd
+rtl/ncc_accel_slave_full_v1_0_S01_AXI.vhd
+rtl/ncc_accel.vhd
+sv/ncc_if.sv
+sv/ncc_pkg.sv
+sv/ncc_top.sv
