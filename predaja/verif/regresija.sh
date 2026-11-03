@@ -95,9 +95,13 @@ else
       'report -summary -metrics covergroup -out izvestaj/pokrivenost_ukupno.txt' \
       'report -detail -metrics covergroup -all -out izvestaj/pokrivenost_detalji.txt' \
       'exit' > imc.tcl
-   imc -exec imc.tcl > log/imc.log 2>&1
    echo "=== pokrivenost ==="
-   echo "  result/izvestaj/pokrivenost_ukupno.txt i pokrivenost_detalji.txt (log: result/log/imc.log)"
+   if which imc > /dev/null 2>&1; then
+      imc -exec imc.tcl > log/imc.log 2>&1
+      cat izvestaj/pokrivenost_ukupno.txt
+   else
+      echo "  imc nije instaliran; baze su u result/cov_work/scope/"
+   fi
 fi
 
 [ $PALO -eq 0 ]
