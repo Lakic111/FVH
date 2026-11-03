@@ -1,6 +1,7 @@
 import os, re, glob, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gen_common import Svg, Dokument
+SNIMCI = os.path.join(os.path.dirname(os.path.abspath(__file__)), "snimci")
 
 IZLAZ = "C:/Users/pc/Desktop/FVH/Dokumentacija/v2_uprosceno"
 LOGOVI = "C:/Users/pc/Desktop/FVH/predaja/verif/result/log"
@@ -421,6 +422,16 @@ d.tabela("pokrivenost_tacke", "Pokrivenost po tačkama (spojeno preko cele regre
           ["", C("cp_len"), "5 / 5", "100"],
           ["", C("cp_strb"), "4 / 4", "100"]],
          ["", "", "c", "n"])
+d.p(f"Izveštaj se pravi kao u vežbi 11: {C('xcrg -report_format html -dir cov -report_dir izvestaj')}. Alat učitava "
+    f"baze svih 22 pokretanja iz direktorijuma {C('cov')} (svaki test upisuje svoju bazu pod imenom "
+    f"{C('&lt;test&gt;_s&lt;seed&gt;')}) i od njih pravi jedan spojeni izveštaj, zato na početnoj strani piše „Number of Tests: 1”. "
+    f"Početna strana izveštaja ({C('dashboard.html')}) prikazana je na slici {d.sledeca_slika()}, a spisak covergroup-a "
+    f"na slici {d.sledeca_slika() + 1}. Klikom na ime covergroup-e otvara se stanje svake tačke i svakog bin-a.")
+n_cov_sl = d.sledeca_slika()
+d.slika_fajl(os.path.join(SNIMCI, "xcrg_dashboard.png"), "xcrg_dashboard",
+             f"Početna strana izveštaja {C('xcrg')} posle cele regresije (Vivado XSim 2025.2).", "85%")
+d.slika_fajl(os.path.join(SNIMCI, "xcrg_groups.png"), "xcrg_groups",
+             "Pokrivenost po covergroup-ama: sve tri na 100%.")
 d.p(f"Tabela {d.sledeca_tabela()} pokazuje koliko pokrivenosti daje svaka grupa testova sama. Usmereni test "
     f"{C('test_cov')} sam zatvara ceo plan. Slučajni test pokriva manje, jer su dimenzije namerno ograničene na male "
     "vrednosti da simulacija bude brza; njegova uloga je da sa različitim podacima i redosledima proveri da se DUT i "
@@ -501,9 +512,21 @@ d.tabela("dva_simulatora", "Pokretanje na dva simulatora",
          ["", "Vivado XSim 2025.2", "Cadence Xcelium 19.03"],
          [["Prevođenje", f"{C('xvhdl -2008')}, {C('xvlog -sv -L uvm')}, {C('xelab')}", f"{C('xrun -elaborate -v200x -relax -uvm')}"],
           ["Pokretanje testa", f"{C('xsim -R')} sa {C('-testplusarg UVM_TESTNAME=…')} i {C('-sv_seed')}", f"{C('xrun -R +UVM_TESTNAME=…')} sa {C('-svseed')}"],
-          ["Pokrivenost", f"{C('-cov_db_name')}, spajanje alatom {C('xcrg')}", f"{C('-coverage functional')}, {C('-covtest')}"],
+          ["Pokrivenost", f"{C('-cov_db_name')}, izveštaj alatom {C('xcrg')} (vežba 11)", f"{C('-coverage functional')}, {C('-covtest')}; baze u {C('cov_work/')}"],
           ["Komanda", C("./regresija.sh"), C("SIM=xrun ./regresija.sh")],
-          ["Rezultat nove verzije", '<span class="stanje-ok">22 / 22 PASS, 100%</span>', '<span class="stanje-ceka">čeka pokretanje na fakultetskoj mašini</span>']])
+          ["Rezultat nove verzije", '<span class="stanje-ok">22 / 22 PASS</span>', '<span class="stanje-ok">22 / 22 PASS</span>'],
+          ["Trajanje regresije", "oko 113 s", "55 s"],
+          ["Poređenja rezultata", str(ukupno_por), "3925"],
+          ["Izveštaj pokrivenosti", f"100% (slike {n_cov_sl} i {n_cov_sl + 1})", f"nije napravljen: alat {C('imc')} nije instaliran na mašini"]])
+d.p(f"Ishod je isti na oba simulatora: svih 22 pokretanja prolazi, bez ijedne greške scoreboard-a (slika "
+    f"{d.sledeca_slika()}). Broj poređenja nije isti jer {C('test_random')} sa istim seed-om ne dobija iste slučajne "
+    "vrednosti na dva simulatora: svaki simulator ima svoj generator slučajnih brojeva, pa isti seed daje druge "
+    f"dimenzije slike i šablona. Testovi {C('test_smoke')} i {C('test_cov')} ne zavise od seed-a. Pokrivenost se u "
+    f"Xcelium-u prikuplja ({C('-coverage functional')}, baze su u {C('cov_work/scope/')}), ali se izveštaj od njih "
+    f"pravi Cadence alatom {C('imc')}, koji na fakultetskoj mašini nije instaliran; zato je izveštaj pokrivenosti "
+    "napravljen u Vivado-u.")
+d.slika_fajl(os.path.join(SNIMCI, "xcelium_regresija.png"), "xcelium_regresija",
+             f"Ispis regresije na Cadence Xcelium 19.03 ({C('SIM=xrun ./regresija.sh')}).", "70%")
 d.p("Na Windows-u su Vivado alati .bat fajlovi, koji argument oblika ime=vrednost dele na dva argumenta. Zato skripta "
     f"opcije za {C('xsim')} upisuje u fajl i prosleđuje ih sa {C('-f')}.")
 d.p(f"Prva verzija okruženja prošla je na oba simulatora sa istim ishodom. Tada su pronađene tri razlike između alata, "
@@ -545,7 +568,8 @@ d.p(f"Verifikacija {C('ncc_accel')} zatvorena je na IP nivou. Okruženje ima jed
     "poređenja rezultata bez ijedne razlike. Namerno uneta greška u DUT otkrivena je u tri od pet pokretanja, sa "
     "stotinama prijavljenih neslaganja, čime je pokazano da okruženje zaista proverava rezultat.", noind=True)
 d.p("Verifikacija je dala i pet nalaza o ponašanju interfejsa i alata (poglavlje 10), od kojih je jedan (N2) uticao na "
-    "dizajn Linux drajvera. Regresija nove verzije na Cadence Xcelium-u pokreće se istom skriptom.")
+    "dizajn Linux drajvera. Ista regresija na Cadence Xcelium-u 19.03 daje isti ishod: 22 od 22 prolaza, bez "
+    "ijedne greške scoreboard-a.")
 
 # ====================================================================== prilog
 d.h1("Prilog A. Pokretanje")
@@ -558,8 +582,9 @@ d.p("Ispis skripte za XSim:", noind=True)
 d.pre("=== prevodjenje (xsim) ===\n=== testovi ===\n  PASS  test_smoke  seed 1\n  PASS  test_cov  seed 1\n"
       "  PASS  test_random  seed 1\n  ...\n  PASS  test_random  seed 20\n"
       "=== ukupno: 22 proslo, 0 palo, 113 s ===\n=== pokrivenost ===\n   Coverage Score            :, 100\n"
-      "  ncc_pkg::ncc_monitor::cg_dimenzije   100%\n  ncc_pkg::ncc_monitor::cg_kontrola    100%\n"
-      "  ncc_pkg::ncc_monitor::cg_axi         100%")
+      "  izvestaj: result/izvestaj/functionalCoverageReport/dashboard.html")
+d.p(f"Ispis skripte za Xcelium ({C('SIM=xrun ./regresija.sh')}) prikazan je na slici {d.n_sl}; deo za pokrivenost "
+    "se tada ne ispisuje.", noind=True)
 
 d.napravi("Verifikacija NCC akceleratora - druga verzija", naslovna)
 print("FVH gotovo:", d.n_sl, "slika,", d.n_tab, "tabela")

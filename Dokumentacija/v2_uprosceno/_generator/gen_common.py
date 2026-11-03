@@ -171,6 +171,17 @@ class Dokument:
         self.delovi.append(f"<figure>{svg}{cap}</figure>")
         return n
 
+    def slika_fajl(self, putanja, ime, opis, sirina="100%"):
+        """Gotova slika ekrana (PNG): kopira se u slike/ i ubacuje u dokument."""
+        import shutil
+        self.n_sl += 1
+        n = self.n_sl
+        naziv = f"slika_{n:02d}_{ime}.png"
+        shutil.copyfile(putanja, os.path.join(self.izlaz, "slike", naziv))
+        cap = f"<figcaption><b>Slika {n}.</b> {opis}</figcaption>"
+        self.delovi.append(f'<figure><img src="slike/{naziv}" style="width:{sirina};border:1px solid #999">{cap}</figure>')
+        return n
+
     def tabela(self, ime, naslov, zaglavlje, redovi, poravnanje=None):
         self.n_tab += 1
         n = self.n_tab
