@@ -7,8 +7,7 @@
 #
 # Vivado se trazi u VIVADO (direktorijum bin/), npr.
 #   VIVADO=/tools/Xilinx/Vivado/2025.2/bin ./regresija.sh
-# Rezultati: result/log/ (log svakog testa), result/izvestaj/ (pokrivenost,
-# XSim preko xcrg, Xcelium preko imc).
+# Rezultati: result/log/ (log svakog testa), result/izvestaj/ (pokrivenost).
 
 cd "$(dirname "$0")"
 SIM=${SIM:-xsim}
@@ -79,29 +78,15 @@ done
 echo "=== ukupno: $PROSLO proslo, $PALO palo, $((SECONDS - POCETAK)) s ==="
 
 # ---------------------------------------------------------------- pokrivenost
+# Kao u vezbi 11: xcrg spaja baze svih pokretanja i pravi izvestaj,
+# html (otvara se dashboard.html) i text (ispis ukupnog procenta ovde).
+# Xcelium baze ostaju u result/cov_work/ (alat imc nije na masini).
 if [ "$SIM" = "xsim" ]; then
-   "$VIVADO/xcrg$EXT" -dir cov -report_format text -report_dir izvestaj > log/xcrg.log 2>&1
+   "$VIVADO/xcrg$EXT" -report_format html -dir cov -report_dir izvestaj >  log/xcrg.log 2>&1
+   "$VIVADO/xcrg$EXT" -report_format text -dir cov -report_dir izvestaj >> log/xcrg.log 2>&1
    echo "=== pokrivenost ==="
    grep -m1 "Coverage Score" izvestaj/functionalCoverageReport/xcrg_func_cov_report.txt
-   grep -E "^ +ncc_pkg::ncc_monitor::cg_" izvestaj/functionalCoverageReport/xcrg_func_cov_report.txt \
-      | awk -F',' '{ gsub(/ /, "", $1); gsub(/ /, "", $2); printf "  %-36s %s%%\n", $1, $2 }'
-else
-   # Xcelium: baze svih pokretanja su u cov_work/scope/<test>_s<seed>,
-   # imc ih spaja u jednu (sve) i pise tekstualni izvestaj.
-   mkdir -p izvestaj
-   printf '%s\n' \
-      'merge cov_work/scope/* -overwrite -out sve' \
-      'load -run sve' \
-      'report -summary -metrics covergroup -out izvestaj/pokrivenost_ukupno.txt' \
-      'report -detail -metrics covergroup -all -out izvestaj/pokrivenost_detalji.txt' \
-      'exit' > imc.tcl
-   echo "=== pokrivenost ==="
-   if which imc > /dev/null 2>&1; then
-      imc -exec imc.tcl > log/imc.log 2>&1
-      cat izvestaj/pokrivenost_ukupno.txt
-   else
-      echo "  imc nije instaliran; baze su u result/cov_work/scope/"
-   fi
+   echo "  izvestaj: result/izvestaj/functionalCoverageReport/dashboard.html"
 fi
 
 [ $PALO -eq 0 ]
