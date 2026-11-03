@@ -1,8 +1,8 @@
-// Sekvence. Sve rade nad istim sekvencerom: transakcija sama nosi
-// informaciju da li ide na S00 (registri) ili na S01 (memorije).
+// Sequences. All of them run on the same sequencer: the transaction itself
+// says whether it goes to S00 (registers) or to S01 (memories).
 
 // =========================================================================
-// Osnovna sekvenca -- pomocni taskovi koje koriste ostale sekvence
+// Base sequence -- helper tasks used by the other sequences
 // =========================================================================
 class ncc_base_seq extends uvm_sequence #(ncc_item);
 
@@ -12,126 +12,126 @@ class ncc_base_seq extends uvm_sequence #(ncc_item);
       super.new(name);
    endfunction
 
-   // Upis jednog registra na S00.
-   task reg_upisi(bit [5 : 0] adresa, bit [31 : 0] podatak, order_e redosled = ORDER_AW_FIRST);
+   // Write one S00 register.
+   task reg_write(bit [5 : 0] addr, bit [31 : 0] data, order_e ord = ORDER_AW_FIRST);
       ncc_item it;
       it = ncc_item::type_id::create("it");
       start_item(it);
       it.bus     = BUS_S00;
-      it.rw      = UPIS;
-      it.addr    = adresa;
+      it.rw      = WRITE;
+      it.addr    = addr;
       it.len     = 1;
       it.data    = new[1];
-      it.data[0] = podatak;
+      it.data[0] = data;
       it.strb    = 4'hF;
-      if (!it.randomize() with { order == redosled; })
-         `uvm_fatal("SEQ", "randomizacija nije uspela")
+      if (!it.randomize() with { order == ord; })
+         `uvm_fatal("SEQ", "randomization failed")
       finish_item(it);
-   endtask : reg_upisi
+   endtask : reg_write
 
-   // Citanje jednog registra sa S00.
-   task reg_procitaj(bit [5 : 0] adresa, output bit [31 : 0] podatak);
+   // Read one S00 register.
+   task reg_read(bit [5 : 0] addr, output bit [31 : 0] data);
       ncc_item it;
       it = ncc_item::type_id::create("it");
       start_item(it);
       it.bus  = BUS_S00;
-      it.rw   = CITANJE;
-      it.addr = adresa;
+      it.rw   = READ;
+      it.addr = addr;
       it.len  = 1;
       if (!it.randomize())
-         `uvm_fatal("SEQ", "randomizacija nije uspela")
+         `uvm_fatal("SEQ", "randomization failed")
       finish_item(it);
-      podatak = it.data[0];
-   endtask : reg_procitaj
+      data = it.data[0];
+   endtask : reg_read
 
-   // Koliko reci sme da ide u jedan burst od reci 'rec': najvise 256 beat-ova
-   // i bez prelaska granice od 4 KB (1024 reci).
-   function int unsigned duzina_bursta(int unsigned rec, int unsigned ostalo);
+   // How many words may go into one burst starting at word 'word': at most 256 beats
+   // and without crossing a 4 KB boundary (1024 words).
+   function int unsigned burst_len(int unsigned word, int unsigned remaining);
       int unsigned k;
-      k = ostalo;
+      k = remaining;
       if (k > 256) k = 256;
-      if (k > 1024 - (rec % 1024)) k = 1024 - (rec % 1024);
+      if (k > 1024 - (word % 1024)) k = 1024 - (word % 1024);
       return k;
    endfunction
 
-   // Upis niza reci u oblast S01, pocev od reci 'rec'. Veci niz se deli na vise burst-ova.
-   task mem_upisi(int oblast, int unsigned rec, bit [31 : 0] d[],
-                  order_e redosled = ORDER_AW_FIRST, bit [3 : 0] strb = 4'hF);
+   // Write an array of words to an S01 region, starting at word 'word'. A larger array is split into bursts.
+   task mem_write(int region, int unsigned word, bit [31 : 0] d[],
+                  order_e ord = ORDER_AW_FIRST, bit [3 : 0] strb = 4'hF);
       ncc_item it;
-      int unsigned poz = 0;
+      int unsigned pos = 0;
       int unsigned k;
-      while (poz < d.size()) begin
-         k  = duzina_bursta(rec + poz, d.size() - poz);
+      while (pos < d.size()) begin
+         k  = burst_len(word + pos, d.size() - pos);
          it = ncc_item::type_id::create("it");
          start_item(it);
          it.bus  = BUS_S01;
-         it.rw   = UPIS;
-         it.addr = oblast * 32768 + (rec + poz) * 4;
+         it.rw   = WRITE;
+         it.addr = region * 32768 + (word + pos) * 4;
          it.len  = k;
          it.data = new[k];
-         for (int i = 0; i < k; i++) it.data[i] = d[poz + i];
+         for (int i = 0; i < k; i++) it.data[i] = d[pos + i];
          it.strb = strb;
-         if (!it.randomize() with { order == redosled; })
-            `uvm_fatal("SEQ", "randomizacija nije uspela")
+         if (!it.randomize() with { order == ord; })
+            `uvm_fatal("SEQ", "randomization failed")
          finish_item(it);
-         poz = poz + k;
+         pos = pos + k;
       end
-   endtask : mem_upisi
+   endtask : mem_write
 
-   // Citanje n reci iz oblasti S01, pocev od reci 'rec'.
-   task mem_procitaj(int oblast, int unsigned rec, int unsigned n, output bit [31 : 0] d[]);
+   // Read n words from an S01 region, starting at word 'word'.
+   task mem_read(int region, int unsigned word, int unsigned n, output bit [31 : 0] d[]);
       ncc_item it;
-      int unsigned poz = 0;
+      int unsigned pos = 0;
       int unsigned k;
       d = new[n];
-      while (poz < n) begin
-         k  = duzina_bursta(rec + poz, n - poz);
+      while (pos < n) begin
+         k  = burst_len(word + pos, n - pos);
          it = ncc_item::type_id::create("it");
          start_item(it);
          it.bus  = BUS_S01;
-         it.rw   = CITANJE;
-         it.addr = oblast * 32768 + (rec + poz) * 4;
+         it.rw   = READ;
+         it.addr = region * 32768 + (word + pos) * 4;
          it.len  = k;
          if (!it.randomize())
-            `uvm_fatal("SEQ", "randomizacija nije uspela")
+            `uvm_fatal("SEQ", "randomization failed")
          finish_item(it);
-         for (int i = 0; i < k; i++) d[poz + i] = it.data[i];
-         poz = poz + k;
+         for (int i = 0; i < k; i++) d[pos + i] = it.data[i];
+         pos = pos + k;
       end
-   endtask : mem_procitaj
+   endtask : mem_read
 
-   // Cita STATUS dok jezgro ne zavrsi (done = 1 i busy = 0).
-   task cekaj_done(output bit gotovo);
+   // Read STATUS until the core finishes (done = 1 and busy = 0).
+   task wait_done(output bit ok);
       bit [31 : 0] status;
-      gotovo = 0;
+      ok = 0;
       for (int i = 0; i < 200000; i++) begin
-         reg_procitaj(REG_STATUS, status);
+         reg_read(REG_STATUS, status);
          if (status[0] == 1 && status[1] == 0) begin
-            gotovo = 1;
+            ok = 1;
             return;
          end
       end
-      `uvm_error("SEQ", "jezgro nije zavrsilo -- done nije stigao")
-   endtask : cekaj_done
+      `uvm_error("SEQ", "the core did not finish -- done never arrived")
+   endtask : wait_done
 
-   // Upis dimenzija, start, cekanje i citanje cele mape rezultata
-   // (scoreboard je poredi sa referentnim modelom).
-   task pokreni(int unsigned iw, int unsigned ih, int unsigned tw, int unsigned th);
-      bit          gotovo;
-      bit [31 : 0] rezultat[];
-      reg_upisi(REG_IMG_W, iw, ORDER_AW_FIRST);
-      reg_upisi(REG_IMG_H, ih, ORDER_W_FIRST);
-      reg_upisi(REG_TMP_W, tw, ORDER_SIMUL);
-      reg_upisi(REG_TMP_H, th, ORDER_AW_FIRST);
-      reg_upisi(REG_CTRL, 1, ORDER_W_FIRST);
-      cekaj_done(gotovo);
-      if (gotovo)
-         mem_procitaj(OBL_REZULTAT, 0, (iw - tw + 1) * (ih - th + 1), rezultat);
-      `uvm_info("SEQ", $sformatf("skup %0dx%0d / %0dx%0d zavrsen", iw, ih, tw, th), UVM_LOW)
-   endtask : pokreni
+   // Write the dimensions, start, wait and read the whole result map
+   // (the scoreboard compares it with the reference model).
+   task run_job(int unsigned iw, int unsigned ih, int unsigned tw, int unsigned th);
+      bit          ok;
+      bit [31 : 0] res[];
+      reg_write(REG_IMG_W, iw, ORDER_AW_FIRST);
+      reg_write(REG_IMG_H, ih, ORDER_W_FIRST);
+      reg_write(REG_TMP_W, tw, ORDER_SIMUL);
+      reg_write(REG_TMP_H, th, ORDER_AW_FIRST);
+      reg_write(REG_CTRL, 1, ORDER_W_FIRST);
+      wait_done(ok);
+      if (ok)
+         mem_read(REGION_RESULT, 0, (iw - tw + 1) * (ih - th + 1), res);
+      `uvm_info("SEQ", $sformatf("job %0dx%0d / %0dx%0d done", iw, ih, tw, th), UVM_LOW)
+   endtask : run_job
 
-   // Slucajan redosled AW/W (za slucajni test).
-   function order_e slucajan_redosled();
+   // Random AW/W order (for the random test).
+   function order_e random_order();
       case ($urandom_range(0, 2))
          0: return ORDER_AW_FIRST;
          1: return ORDER_W_FIRST;
@@ -142,8 +142,8 @@ class ncc_base_seq extends uvm_sequence #(ncc_item);
 endclass : ncc_base_seq
 
 // =========================================================================
-// Smoke: mala slika 4x4 i sablon 2x2 sa jednim poznatim pikom.
-// Sablon je jednak prozoru slike na (u=1, v=1), pa tu mora biti 0x80000000.
+// Smoke: a small 4x4 image and a 2x2 template with one known peak.
+// The template equals the image window at (u=1, v=1), so the result there must be 0x80000000.
 // =========================================================================
 class ncc_smoke_seq extends ncc_base_seq;
 
@@ -154,47 +154,47 @@ class ncc_smoke_seq extends ncc_base_seq;
    endfunction
 
    task body();
-      bit [31 : 0] slika[], sablon[], rezultat[];
-      bit          gotovo;
+      bit [31 : 0] img[], tmp[], res[];
+      bit          ok;
 
-      slika = new[16];
-      slika[0]  =  10; slika[1]  = 200; slika[2]  =  30; slika[3]  =  90;
-      slika[4]  = 250; slika[5]  =  20; slika[6]  = 140; slika[7]  =  60;
-      slika[8]  =  70; slika[9]  = 180; slika[10] =  25; slika[11] = 210;
-      slika[12] = 120; slika[13] =  40; slika[14] = 160; slika[15] =  80;
-      mem_upisi(OBL_SLIKA, 0, slika, ORDER_AW_FIRST);
+      img = new[16];
+      img[0]  =  10; img[1]  = 200; img[2]  =  30; img[3]  =  90;
+      img[4]  = 250; img[5]  =  20; img[6]  = 140; img[7]  =  60;
+      img[8]  =  70; img[9]  = 180; img[10] =  25; img[11] = 210;
+      img[12] = 120; img[13] =  40; img[14] = 160; img[15] =  80;
+      mem_write(REGION_IMAGE, 0, img, ORDER_AW_FIRST);
 
-      sablon = new[4];
-      sablon[0] =  20; sablon[1] = 140;
-      sablon[2] = 180; sablon[3] =  25;
-      mem_upisi(OBL_SABLON, 0, sablon, ORDER_W_FIRST);
+      tmp = new[4];
+      tmp[0] =  20; tmp[1] = 140;
+      tmp[2] = 180; tmp[3] =  25;
+      mem_write(REGION_TEMPLATE, 0, tmp, ORDER_W_FIRST);
 
-      reg_upisi(REG_IMG_W, 4, ORDER_AW_FIRST);
-      reg_upisi(REG_IMG_H, 4, ORDER_W_FIRST);
-      reg_upisi(REG_TMP_W, 2, ORDER_SIMUL);
-      reg_upisi(REG_TMP_H, 2, ORDER_AW_FIRST);
-      reg_upisi(REG_CTRL, 1, ORDER_W_FIRST);
+      reg_write(REG_IMG_W, 4, ORDER_AW_FIRST);
+      reg_write(REG_IMG_H, 4, ORDER_W_FIRST);
+      reg_write(REG_TMP_W, 2, ORDER_SIMUL);
+      reg_write(REG_TMP_H, 2, ORDER_AW_FIRST);
+      reg_write(REG_CTRL, 1, ORDER_W_FIRST);
 
-      cekaj_done(gotovo);
-      if (!gotovo) return;
+      wait_done(ok);
+      if (!ok) return;
 
-      mem_procitaj(OBL_REZULTAT, 0, 9, rezultat);
-      foreach (rezultat[i])
-         `uvm_info("SMOKE", $sformatf("rezultat[%0d] = 0x%08x", i, rezultat[i]), UVM_LOW)
+      mem_read(REGION_RESULT, 0, 9, res);
+      foreach (res[i])
+         `uvm_info("SMOKE", $sformatf("result[%0d] = 0x%08x", i, res[i]), UVM_LOW)
 
-      // pik na (1,1) = indeks 4; sve ostale vrednosti moraju biti manje
-      if (rezultat[4] !== 32'h8000_0000)
-         `uvm_error("SMOKE", $sformatf("na (1,1) ocekivano 0x80000000, dobijeno 0x%08x", rezultat[4]))
-      foreach (rezultat[i])
-         if (i != 4 && rezultat[i] >= rezultat[4])
-            `uvm_error("SMOKE", $sformatf("rezultat[%0d] = 0x%08x nije manji od pika", i, rezultat[i]))
+      // peak at (1,1) = index 4; all other values must be smaller
+      if (res[4] !== 32'h8000_0000)
+         `uvm_error("SMOKE", $sformatf("at (1,1) expected 0x80000000, got 0x%08x", res[4]))
+      foreach (res[i])
+         if (i != 4 && res[i] >= res[4])
+            `uvm_error("SMOKE", $sformatf("result[%0d] = 0x%08x is not smaller than the peak", i, res[i]))
    endtask : body
 
 endclass : ncc_smoke_seq
 
 // =========================================================================
-// Pokrivenost: usmereni slucajevi koji zatvaraju sve covergroup-e
-// i proveravaju ponasanje memorija i kontrolnog registra.
+// Coverage: directed cases that close all covergroups and check
+// the behaviour of the memories and of the control register.
 // =========================================================================
 class ncc_cov_seq extends ncc_base_seq;
 
@@ -205,160 +205,160 @@ class ncc_cov_seq extends ncc_base_seq;
    endfunction
 
    task body();
-      bit [31 : 0] slika[], sablon[], b[], procitano[], pre[], posle[];
+      bit [31 : 0] img[], tmp[], b[], rd[], old_val[], new_val[];
       bit [31 : 0] status;
-      bit          gotovo;
+      bit          ok;
       int unsigned iw[19], tw[19];
 
-      // --- upis 0 u CTRL ne sme da pokrene jezgro ---
-      reg_upisi(REG_CTRL, 0, ORDER_SIMUL);
-      reg_procitaj(REG_STATUS, status);
+      // --- writing 0 to CTRL must not start the core ---
+      reg_write(REG_CTRL, 0, ORDER_SIMUL);
+      reg_read(REG_STATUS, status);
       if (status[1] == 1)
-         `uvm_error("COV", "upis 0 u CTRL je pokrenuo jezgro")
+         `uvm_error("COV", "writing 0 to CTRL started the core")
 
-      // --- slika (400 reci = burst od 256 + burst od 144) i sablon ---
-      slika = new[400];
-      foreach (slika[i]) slika[i] = (i * 37 + 11) % 256;
-      mem_upisi(OBL_SLIKA, 0, slika, ORDER_W_FIRST);
+      // --- image (400 words = burst of 256 + burst of 144) and template ---
+      img = new[400];
+      foreach (img[i]) img[i] = (i * 37 + 11) % 256;
+      mem_write(REGION_IMAGE, 0, img, ORDER_W_FIRST);
 
-      sablon = new[64];
-      foreach (sablon[i]) sablon[i] = (i * 53 + 7) % 256;
-      mem_upisi(OBL_SABLON, 0, sablon, ORDER_W_FIRST);
-      mem_upisi(OBL_SABLON, 0, sablon, ORDER_SIMUL);
-      mem_upisi(OBL_SABLON, 0, sablon, ORDER_AW_FIRST);
+      tmp = new[64];
+      foreach (tmp[i]) tmp[i] = (i * 53 + 7) % 256;
+      mem_write(REGION_TEMPLATE, 0, tmp, ORDER_W_FIRST);
+      mem_write(REGION_TEMPLATE, 0, tmp, ORDER_SIMUL);
+      mem_write(REGION_TEMPLATE, 0, tmp, ORDER_AW_FIRST);
 
-      // --- sablon se ponavlja na 1024 reci: rec 1024 je isto sto i rec 0 ---
-      mem_procitaj(OBL_SABLON, TMP_RECI, 4, procitano);
-      foreach (procitano[i])
-         if (procitano[i] !== sablon[i])
-            `uvm_error("COV", $sformatf("sablon rec %0d: ocekivano 0x%08x, dobijeno 0x%08x",
-                                        TMP_RECI + i, sablon[i], procitano[i]))
+      // --- the template repeats every 1024 words: word 1024 is the same as word 0 ---
+      mem_read(REGION_TEMPLATE, TMP_WORDS, 4, rd);
+      foreach (rd[i])
+         if (rd[i] !== tmp[i])
+            `uvm_error("COV", $sformatf("template word %0d: expected 0x%08x, got 0x%08x",
+                                        TMP_WORDS + i, tmp[i], rd[i]))
 
-      // --- slika pamti samo donjih 8 bita ---
+      // --- the image keeps only the lower 8 bits ---
       b = new[1];
       b[0] = 32'hABCD_EF5A;
-      mem_upisi(OBL_SLIKA, 350, b, ORDER_AW_FIRST);
-      mem_procitaj(OBL_SLIKA, 350, 1, procitano);
-      if (procitano[0] !== 32'h0000_005A)
-         `uvm_error("COV", $sformatf("slika: ocekivano 0x0000005a, dobijeno 0x%08x", procitano[0]))
+      mem_write(REGION_IMAGE, 350, b, ORDER_AW_FIRST);
+      mem_read(REGION_IMAGE, 350, 1, rd);
+      if (rd[0] !== 32'h0000_005A)
+         `uvm_error("COV", $sformatf("image: expected 0x0000005a, got 0x%08x", rd[0]))
 
-      // --- duzine burst-a 1, 2, 3 i 16 ---
-      b = new[1];  b[0] = 8'h11;                  mem_upisi(OBL_SLIKA, 300, b, ORDER_W_FIRST);
-      b = new[2];  foreach (b[i]) b[i] = i + 1;   mem_upisi(OBL_SLIKA, 310, b, ORDER_SIMUL);
-      b = new[3];  foreach (b[i]) b[i] = i + 1;   mem_upisi(OBL_SLIKA, 320, b, ORDER_AW_FIRST);
-      b = new[16]; foreach (b[i]) b[i] = i + 1;   mem_upisi(OBL_SLIKA, 330, b, ORDER_W_FIRST);
+      // --- burst lengths 1, 2, 3 and 16 ---
+      b = new[1];  b[0] = 8'h11;                  mem_write(REGION_IMAGE, 300, b, ORDER_W_FIRST);
+      b = new[2];  foreach (b[i]) b[i] = i + 1;   mem_write(REGION_IMAGE, 310, b, ORDER_SIMUL);
+      b = new[3];  foreach (b[i]) b[i] = i + 1;   mem_write(REGION_IMAGE, 320, b, ORDER_AW_FIRST);
+      b = new[16]; foreach (b[i]) b[i] = i + 1;   mem_write(REGION_IMAGE, 330, b, ORDER_W_FIRST);
 
-      // --- WSTRB: upis se desava samo ako je bit 0 postavljen ---
+      // --- WSTRB: the write happens only when bit 0 is set ---
       b = new[1];
-      b[0] = 8'h5A; mem_upisi(OBL_SLIKA, 340, b, ORDER_AW_FIRST, 4'h1);
-      b[0] = 8'h5B; mem_upisi(OBL_SLIKA, 341, b, ORDER_W_FIRST,  4'h3);
-      b[0] = 8'h5C; mem_upisi(OBL_SLIKA, 342, b, ORDER_SIMUL,    4'h9);
-      mem_procitaj(OBL_SLIKA, 343, 1, pre);
-      b[0] = 8'hA5; mem_upisi(OBL_SLIKA, 343, b, ORDER_AW_FIRST, 4'hE);
-      mem_procitaj(OBL_SLIKA, 343, 1, posle);
-      if (posle[0] !== pre[0])
-         `uvm_error("COV", "WSTRB = 0xE je promenio memoriju")
+      b[0] = 8'h5A; mem_write(REGION_IMAGE, 340, b, ORDER_AW_FIRST, 4'h1);
+      b[0] = 8'h5B; mem_write(REGION_IMAGE, 341, b, ORDER_W_FIRST,  4'h3);
+      b[0] = 8'h5C; mem_write(REGION_IMAGE, 342, b, ORDER_SIMUL,    4'h9);
+      mem_read(REGION_IMAGE, 343, 1, old_val);
+      b[0] = 8'hA5; mem_write(REGION_IMAGE, 343, b, ORDER_AW_FIRST, 4'hE);
+      mem_read(REGION_IMAGE, 343, 1, new_val);
+      if (new_val[0] !== old_val[0])
+         `uvm_error("COV", "WSTRB = 0xE changed the memory")
 
-      // --- dimenzije: sve dozvoljene kombinacije bin-ova sirine ---
+      // --- dimensions: all allowed combinations of the width bins ---
       iw = '{ 1, 20, 20, 20, 45, 45, 45, 45, 45, 60, 60, 60, 60, 60, 90, 90, 90, 90, 90 };
       tw = '{ 1,  1,  5, 15,  1,  5, 15, 20, 30,  1,  5, 15, 20, 30,  1,  5, 15, 20, 30 };
-      foreach (iw[k]) pokreni(iw[k], 1, tw[k], 1);
+      foreach (iw[k]) run_job(iw[k], 1, tw[k], 1);
 
-      // --- i visine ---
-      pokreni( 1, 45,  1, 15);
-      pokreni( 1, 90,  1, 30);
-      pokreni( 2, 60,  2, 20);
-      pokreni(60,  2, 20,  2);
+      // --- and the heights ---
+      run_job( 1, 45,  1, 15);
+      run_job( 1, 90,  1, 30);
+      run_job( 2, 60,  2, 20);
+      run_job(60,  2, 20,  2);
 
-      // --- upis u CTRL dok jezgro radi (test T7) ---
-      reg_upisi(REG_IMG_W, 20, ORDER_AW_FIRST);
-      reg_upisi(REG_IMG_H, 20, ORDER_W_FIRST);
-      reg_upisi(REG_TMP_W, 5, ORDER_SIMUL);
-      reg_upisi(REG_TMP_H, 5, ORDER_AW_FIRST);
-      reg_upisi(REG_CTRL, 1, ORDER_W_FIRST);
-      reg_procitaj(REG_STATUS, status);
-      if (status[1] == 0) `uvm_warning("COV", "jezgro vise nije zauzeto -- T7 nije pogodjen")
-      reg_upisi(REG_CTRL, 0, ORDER_AW_FIRST);   // upis 0 dok radi
-      reg_procitaj(REG_STATUS, status);
-      if (status[1] == 0) `uvm_warning("COV", "jezgro vise nije zauzeto -- T7 nije pogodjen")
-      reg_upisi(REG_CTRL, 1, ORDER_SIMUL);      // ponovni start dok radi -- jezgro ga ignorise
-      cekaj_done(gotovo);
+      // --- CTRL write while the core is running (test T7) ---
+      reg_write(REG_IMG_W, 20, ORDER_AW_FIRST);
+      reg_write(REG_IMG_H, 20, ORDER_W_FIRST);
+      reg_write(REG_TMP_W, 5, ORDER_SIMUL);
+      reg_write(REG_TMP_H, 5, ORDER_AW_FIRST);
+      reg_write(REG_CTRL, 1, ORDER_W_FIRST);
+      reg_read(REG_STATUS, status);
+      if (status[1] == 0) `uvm_warning("COV", "the core is no longer busy -- T7 was missed")
+      reg_write(REG_CTRL, 0, ORDER_AW_FIRST);   // write 0 while running
+      reg_read(REG_STATUS, status);
+      if (status[1] == 0) `uvm_warning("COV", "the core is no longer busy -- T7 was missed")
+      reg_write(REG_CTRL, 1, ORDER_SIMUL);      // start again while running -- the core ignores it
+      wait_done(ok);
 
-      // --- upis 0 u CTRL posle zavrsetka ne sme da obrise done ---
-      reg_upisi(REG_CTRL, 0, ORDER_W_FIRST);
-      reg_procitaj(REG_STATUS, status);
+      // --- writing 0 to CTRL after the job must not clear done ---
+      reg_write(REG_CTRL, 0, ORDER_W_FIRST);
+      reg_read(REG_STATUS, status);
       if (status[0] == 0)
-         `uvm_error("COV", "upis 0 u CTRL je obrisao done")
+         `uvm_error("COV", "writing 0 to CTRL cleared done")
 
-      // --- upis u oblast rezultata se zanemaruje, nemapirana oblast vraca nule ---
+      // --- a write to the result region is ignored, the unmapped region returns zeros ---
       b = new[2]; b[0] = 32'hDEAD; b[1] = 32'hBEEF;
-      mem_upisi(OBL_REZULTAT, 0, b, ORDER_AW_FIRST);
-      mem_upisi(OBL_REZULTAT, 2, b, ORDER_W_FIRST);
-      mem_upisi(OBL_REZULTAT, 4, b, ORDER_SIMUL);
-      mem_upisi(OBL_NEMAPIRANO, 0, b, ORDER_AW_FIRST);
-      mem_upisi(OBL_NEMAPIRANO, 2, b, ORDER_W_FIRST);
-      mem_upisi(OBL_NEMAPIRANO, 4, b, ORDER_SIMUL);
-      mem_procitaj(OBL_NEMAPIRANO, 0, 2, procitano);
-      foreach (procitano[i])
-         if (procitano[i] !== 0)
-            `uvm_error("COV", $sformatf("nemapirana oblast: ocekivano 0, dobijeno 0x%08x", procitano[i]))
+      mem_write(REGION_RESULT, 0, b, ORDER_AW_FIRST);
+      mem_write(REGION_RESULT, 2, b, ORDER_W_FIRST);
+      mem_write(REGION_RESULT, 4, b, ORDER_SIMUL);
+      mem_write(REGION_UNMAPPED, 0, b, ORDER_AW_FIRST);
+      mem_write(REGION_UNMAPPED, 2, b, ORDER_W_FIRST);
+      mem_write(REGION_UNMAPPED, 4, b, ORDER_SIMUL);
+      mem_read(REGION_UNMAPPED, 0, 2, rd);
+      foreach (rd[i])
+         if (rd[i] !== 0)
+            `uvm_error("COV", $sformatf("unmapped region: expected 0, got 0x%08x", rd[i]))
 
-      // mapa poslednjeg posla mora ostati ista (scoreboard poredi)
-      mem_procitaj(OBL_REZULTAT, 0, 256, procitano);
+      // the map of the last job must stay the same (the scoreboard compares it)
+      mem_read(REGION_RESULT, 0, 256, rd);
    endtask : body
 
 endclass : ncc_cov_seq
 
 // =========================================================================
-// Slucajna sekvenca: dimenzije, podaci i redosled kanala zavise od seed-a.
+// Random sequence: dimensions, data and channel order depend on the seed.
 // =========================================================================
 class ncc_random_seq extends ncc_base_seq;
 
    `uvm_object_utils(ncc_random_seq)
 
    rand int unsigned iw, ih, tw, th;
-   rand int unsigned br_citanja;
+   rand int unsigned num_reads;
 
-   constraint c_dim     { iw inside {[2:24]}; ih inside {[2:24]};
-                          tw inside {[1:6]};  th inside {[1:6]};
-                          tw <= iw; th <= ih; }
-   constraint c_citanja { br_citanja inside {[3:8]}; }
+   constraint c_dim   { iw inside {[2:24]}; ih inside {[2:24]};
+                        tw inside {[1:6]};  th inside {[1:6]};
+                        tw <= iw; th <= ih; }
+   constraint c_reads { num_reads inside {[3:8]}; }
 
    function new(string name = "ncc_random_seq");
       super.new(name);
    endfunction
 
    task body();
-      bit [31 : 0] slika[], sablon[], procitano[];
-      int          oblast;
+      bit [31 : 0] img[], tmp[], rd[];
+      int          region;
 
       if (!this.randomize())
-         `uvm_fatal("RND", "randomizacija nije uspela")
-      `uvm_info("RND", $sformatf("slika %0dx%0d, sablon %0dx%0d", iw, ih, tw, th), UVM_LOW)
+         `uvm_fatal("RND", "randomization failed")
+      `uvm_info("RND", $sformatf("image %0dx%0d, template %0dx%0d", iw, ih, tw, th), UVM_LOW)
 
-      slika = new[iw * ih];
-      foreach (slika[i]) slika[i] = $urandom_range(0, 255);
-      mem_upisi(OBL_SLIKA, 0, slika, slucajan_redosled());
+      img = new[iw * ih];
+      foreach (img[i]) img[i] = $urandom_range(0, 255);
+      mem_write(REGION_IMAGE, 0, img, random_order());
 
-      sablon = new[tw * th];
-      foreach (sablon[i]) sablon[i] = $urandom_range(0, 255);
-      mem_upisi(OBL_SABLON, 0, sablon, slucajan_redosled());
+      tmp = new[tw * th];
+      foreach (tmp[i]) tmp[i] = $urandom_range(0, 255);
+      mem_write(REGION_TEMPLATE, 0, tmp, random_order());
 
-      // slucajna citanja iz slike, sablona i nemapirane oblasti
-      for (int i = 0; i < br_citanja; i++) begin
+      // random reads from the image, the template and the unmapped region
+      for (int i = 0; i < num_reads; i++) begin
          case ($urandom_range(0, 2))
-            0: oblast = OBL_SLIKA;
-            1: oblast = OBL_SABLON;
-            default: oblast = OBL_NEMAPIRANO;
+            0: region = REGION_IMAGE;
+            1: region = REGION_TEMPLATE;
+            default: region = REGION_UNMAPPED;
          endcase
-         mem_procitaj(oblast, $urandom_range(0, 1023), $urandom_range(1, 32), procitano);
+         mem_read(region, $urandom_range(0, 1023), $urandom_range(1, 32), rd);
       end
 
-      // upisi u registre 0x10-0x2C koje jezgro ne koristi
+      // writes to registers 0x10-0x2C that the core does not use
       for (int i = 0; i < 4; i++)
-         reg_upisi(16 + 4 * $urandom_range(0, 7), $urandom(), slucajan_redosled());
+         reg_write(16 + 4 * $urandom_range(0, 7), $urandom(), random_order());
 
-      pokreni(iw, ih, tw, th);
+      run_job(iw, ih, tw, th);
    endtask : body
 
 endclass : ncc_random_seq

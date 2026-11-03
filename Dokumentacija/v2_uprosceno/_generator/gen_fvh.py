@@ -12,10 +12,10 @@ C = lambda s: f"<code>{s}</code>"
 def iz_loga(f):
     s = open(f, encoding="utf-8", errors="replace").read()
     t = re.search(r"\$finish called at time : ([0-9.]+) ns", s)
-    p = re.search(r"(\d+) poredjenja, (\d+) gresaka", s)
-    dm = re.search(r"slika (\d+)x(\d+), sablon (\d+)x(\d+)", s)
+    p = re.search(r"(\d+) compared, (\d+) errors", s)
+    dm = re.search(r"image (\d+)x(\d+), template (\d+)x(\d+)", s)
     ok = ("UVM_ERROR :    0" in s) and ("UVM_FATAL :    0" in s)
-    pokretanja = len(re.findall(r"\[SB\] predikcija:", s))
+    pokretanja = len(re.findall(r"\[SB\] prediction:", s))
     return dict(t=float(t.group(1)) / 1000 if t else 0, por=int(p.group(1)) if p else 0,
                 gr=int(p.group(2)) if p else -1, dim=dm.groups() if dm else None, ok=ok, pok=pokretanja)
 
@@ -56,7 +56,7 @@ d.tabela("platforma", "Platforma i alati",
           ["Simulator 1", "Vivado XSim 2025.2 (UVM 1.2 uz Vivado)"],
           ["Simulator 2", "Cadence Xcelium 19.03 (UVM uz Xcelium)"],
           ["Takt u simulaciji", "100 MHz (perioda 10 ns)"],
-          ["Pokretanje", f"{C('./regresija.sh')}, za oba simulatora"]])
+          ["Pokretanje", f"{C('./regression.sh')}, za oba simulatora"]])
 
 # ====================================================================== 2. DUT
 d.h1("2. Uređaj koji se verifikuje")
@@ -114,7 +114,7 @@ s.text(66, 166, "agent : ncc_agent", bold=True, size=10.5)
 s.text(322, 166, "cfg : ncc_config", size=10.5, anchor="end")
 s.box(84, 178, 220, 44, ["seqr : ncc_sequencer"])
 s.box(84, 262, 220, 44, ["drv : ncc_driver"])
-s.box(84, 342, 220, 62, ["mon : ncc_monitor", "cg_dimenzije, cg_kontrola, cg_axi"], bold_first=True)
+s.box(84, 342, 220, 62, ["mon : ncc_monitor", "cg_dims, cg_ctrl, cg_axi"], bold_first=True)
 s.box(350, 342, 136, 62, ["scbd : ncc_scoreboard", "referentni model", "ncc_model()"], bold_first=True, size=10.5)
 s.line([(194, 106), (194, 178)]); s.text(200, 132, "start()", size=10)
 s.line([(194, 222), (194, 262)]); s.text(200, 246, "seq_item_port", size=10)
@@ -152,7 +152,7 @@ d.tabela("fajlovi", "Fajlovi okruženja",
           [C("sv/ncc_tests.sv"), "test_base i tri testa", "92"],
           [C("sv/ncc_top.sv"), "takt, reset, DUT, pokretanje testa", "101"],
           [C("run.f"), "spisak izvornih fajlova za oba simulatora", "10"],
-          [C("regresija.sh"), "prevođenje, svi testovi, izveštaj pokrivenosti", "89"]],
+          [C("regression.sh"), "prevođenje, svi testovi, izveštaj pokrivenosti", "92"]],
          ["", "", "n"])
 d.p(f"Tabela {d.sledeca_tabela()} pokazuje odakle potiče svaka konstrukcija koja se koristi u okruženju. Nijedna "
     "konstrukcija nije van gradiva vežbi.")
@@ -169,8 +169,8 @@ d.tabela("konstrukcije_vezbe", "Konstrukcije u okruženju i vežbe u kojima su o
           [f"{C('fork')} / {C('join')}", "drajver: kanali AW i W upisa", "3"],
           [f"dinamički nizovi, redovi {C('[$]')}, asocijativni nizovi", "monitor, scoreboard, sekvence", "2"],
           [f"{C('start_item')}/{C('finish_item')}, {C('raise_objection')}", "sekvence, testovi", "6"],
-          [f"{C('$urandom_range')}, {C('-sv_seed')}/{C('-svseed')}, regresija", "random sekvenca, regresija.sh", "12"],
-          [f"{C('xcrg')} izveštaj pokrivenosti", "regresija.sh", "11"]],
+          [f"{C('$urandom_range')}, {C('-sv_seed')}/{C('-svseed')}, regresija", "random sekvenca, regression.sh", "12"],
+          [f"{C('xcrg')} izveštaj pokrivenosti", "regression.sh", "11"]],
          ["", "", "c"])
 
 # ====================================================================== 4. komponente
@@ -186,7 +186,7 @@ d.p(f"{C('ncc_item')} opisuje jedan prenos (Tabela {d.sledeca_tabela()}). Polja 
 d.tabela("polja_transakcije", f"Polja transakcije {C('ncc_item')}",
          ["Polje", "Tip", "Značenje"],
          [[C("bus"), C("bus_e"), f"{C('BUS_S00')} ili {C('BUS_S01')}"],
-          [C("rw"), C("rw_e"), f"{C('UPIS')} ili {C('CITANJE')}"],
+          [C("rw"), C("rw_e"), f"{C('WRITE')} ili {C('READ')}"],
           [C("addr"), C("bit [16:0]"), "S00: adresa registra; S01: bajtska adresa (oblast·0x8000 + reč·4)"],
           [C("len"), C("int unsigned"), "broj reči (beat-ova); za S00 uvek 1"],
           [C("data"), C("bit [31:0] data[]"), "podaci: za upis ih zadaje sekvenca, za čitanje ih popunjava drajver"],
@@ -247,12 +247,12 @@ d.p("Čitanje je jednostavnije: postavlja se ARVALID, posle rukovanja RREADY, i 
     f"{C('len')} reči (S01). Na S01 se uvek koristi INCR burst sa 4 bajta po beat-u; ostala polja kanala (ID, "
     "CACHE, PROT, QOS) su nule.")
 d.h2("4.5. Monitor i pokrivenost")
-d.p(f"Monitor na svaku uzlaznu ivicu takta poziva dve funkcije, {C('prati_s00()')} i {C('prati_s01()')}, koje "
+d.p(f"Monitor na svaku uzlaznu ivicu takta poziva dve funkcije, {C('collect_s00()')} i {C('collect_s01()')}, koje "
     "gledaju signale interfejsa i sklapaju transakcije:", noind=True)
 d.ul([f"upis je završen kada se vidi rukovanje na kanalu odgovora (B): tada su adresa i podatak već primljeni; na "
       "S01 podaci svih beat-ova skupljaju se u red i porede sa dužinom iz AWLEN;",
       f"čitanje sa S00 je završeno rukovanjem na kanalu R, a na S01 beat-om sa RLAST;",
-      f"redosled AW/W meri se po taktu u kome je VALID prvi put postavljen (brojač {C('ciklus')});",
+      f"redosled AW/W meri se po taktu u kome je VALID prvi put postavljen (brojač {C('cycle')});",
       f"svaka sklopljena transakcija šalje se kroz {C('item_collected_port')} scoreboard-u."])
 d.p(f"Monitor proverava i jedno pravilo protokola: popravljeni DUT nikada ne podiže AWREADY i WREADY u istom taktu. "
     f"Ako se to desi, prijavljuje {C('uvm_error')} sa porukom da se vratio AW/W bug. Ova provera je napisana kao "
@@ -261,31 +261,31 @@ n_pok = d.sledeca_tabela()
 d.p(f"Pokrivenost se prikuplja u samom monitoru, kao u APB monitoru iz vežbe 13. Tri covergroup-e opisane su u "
     f"tabeli {n_pok}. Uzorkuju se pozivom {C('sample()')} u trenutku kada je odgovarajuća transakcija sklopljena:")
 d.ul([f"{C('cg_axi')} — na svaki završen upis (S00 i S01);",
-      f"{C('cg_kontrola')} — na svaki upis u {C('CTRL')}, sa vrednostima busy i done iz poslednjeg pročitanog STATUS-a;",
-      f"{C('cg_dimenzije')} — na svaki upis 1 u {C('CTRL')}, sa poslednjim upisanim dimenzijama."])
+      f"{C('cg_ctrl')} — na svaki upis u {C('CTRL')}, sa vrednostima busy i done iz poslednjeg pročitanog STATUS-a;",
+      f"{C('cg_dims')} — na svaki upis 1 u {C('CTRL')}, sa poslednjim upisanim dimenzijama."])
 d.tabela("plan_pokrivenosti", "Plan pokrivenosti",
          ["Covergroup", "Tačka / ukrštanje", "Bin-ovi", "Šta se proverava"],
-         [[C("cg_dimenzije"), C("cp_img_w"), "1 | 2–44 | 45 | 46–89 | 90", "širina slike, uz granice i vrednost 45 (umanjena slika polja)"],
+         [[C("cg_dims"), C("cp_img_w"), "1 | 2–44 | 45 | 46–89 | 90", "širina slike, uz granice i vrednost 45 (umanjena slika polja)"],
           ["", C("cp_img_h"), "isto kao širina", "visina slike"],
           ["", C("cp_tmp_w"), "1 | 2–14 | 15 | 16–29 | 30", "širina šablona"],
           ["", C("cp_tmp_h"), "isto kao širina", "visina šablona"],
           ["", C("x_img_tmp"), "19 (od 25; 6 nemogućih isključeno)", "kombinacije širine slike i šablona; šablon ≤ slika"],
-          ([C("cg_kontrola"), C("cp_start"), "0 | 1", "upis 0 ili 1 u CTRL"], "sep"),
+          ([C("cg_ctrl"), C("cp_start"), "0 | 1", "upis 0 ili 1 u CTRL"], "sep"),
           ["", C("cp_busy"), "0 | 1", "jezgro zauzeto u trenutku upisa"],
           ["", C("cp_done"), "0 | 1", "done postavljen u trenutku upisa"],
           ["", C("x_start_busy"), "4", "uključujući start dok jezgro radi (test T7)"],
           ["", C("x_start_done"), "4", "uključujući upis 0 posle završenog posla"],
           ([C("cg_axi"), C("cp_order"), "AW_FIRST | W_FIRST | SIMUL", "redosled kanala"], "sep"),
-          ["", C("cp_oblast"), "S00 | slika | šablon | rezultat | nemapirano", "odredište upisa"],
-          ["", C("x_order_oblast"), "15", "<b>sva tri redosleda u svakoj oblasti</b> — centralni cilj plana"],
+          ["", C("cp_region"), "s00 | image | template | result | unmapped", "odredište upisa"],
+          ["", C("x_order_region"), "15", "<b>sva tri redosleda u svakoj oblasti</b> — centralni cilj plana"],
           ["", C("cp_len"), "1 | 2 | 3–15 | 16–255 | 256", "dužina burst-a, uz najduži dozvoljeni (256)"],
-          ["", C("cp_strb"), "F | 1 | 3 | 9 | ostalo", "WSTRB, uključujući upis bez bita 0"]])
+          ["", C("cp_strb"), "full (F) | 1 | 3 | 9 | other", "WSTRB, uključujući upis bez bita 0"]])
 d.p(f"Ukrštanje {C('x_img_tmp')} isključuje kombinacije koje ne mogu da se pojave jer šablon ne sme biti veći od "
     f"slike, pomoću {C('ignore_bins')} i {C('binsof')} (vežba 11):")
 d.pre("x_img_tmp : cross cp_img_w, cp_tmp_w {\n"
-      "   ignore_bins nemoguce_min   = binsof(cp_img_w.min) && !binsof(cp_tmp_w.min);\n"
-      "   ignore_bins nemoguce_ispod = binsof(cp_img_w.ispod) &&\n"
-      "                                (binsof(cp_tmp_w.iznad) || binsof(cp_tmp_w.max));\n"
+      "   ignore_bins impossible_min   = binsof(cp_img_w.min) && !binsof(cp_tmp_w.min);\n"
+      "   ignore_bins impossible_below = binsof(cp_img_w.below) &&\n"
+      "                                  (binsof(cp_tmp_w.above) || binsof(cp_tmp_w.max));\n"
       "}")
 d.h2("4.6. Agent i okruženje")
 d.p(f"{C('ncc_agent')} pravi monitor uvek, a drajver i sekvencer samo u aktivnom režimu, i povezuje "
@@ -305,12 +305,12 @@ s.line([(300, 81), (170, 81), (170, 110)]); s.text(230, 75, "S00", size=10, anch
 s.line([(420, 81), (550, 81), (550, 110)]); s.text(490, 75, "S01", size=10, anchor="middle")
 s.box(40, 110, 260, 44, ["upis u IMG_W, IMG_H, TMP_W, TMP_H", "→ zapamti dimenzije"])
 s.box(40, 166, 260, 44, ["čitanje STATUS", "→ zapamti busy i done"])
-s.box(40, 222, 260, 56, ["upis 1 u CTRL", "jezgro zauzeto → zanemari (jezgro ignoriše)", "inače → pokreni()"])
-s.box(40, 300, 260, 56, ["pokreni(): ncc_model(senka, dimenzije)", "→ očekivana mapa rezultata"], fill="#f2f2f2")
+s.box(40, 222, 260, 56, ["upis 1 u CTRL", "jezgro zauzeto → zanemari (jezgro ignoriše)", "inače → predict()"])
+s.box(40, 300, 260, 56, ["predict(): ncc_model(senka, dimenzije)", "→ očekivana mapa rezultata"], fill="#f2f2f2")
 s.line([(170, 278), (170, 300)])
 s.box(420, 110, 260, 56, ["upis u sliku ili šablon", "(samo ako je WSTRB[0] = 1)", "→ senka memorije"])
 s.box(420, 190, 260, 44, ["upis u oblast rezultata", "→ zanemaruje se (samo čitanje)"])
-s.box(420, 258, 260, 56, ["čitanje oblasti rezultata", "→ uporedi svaku reč sa očekivanom"])
+s.box(420, 258, 260, 56, ["čitanje oblasti rezultata", "→ compare(): svaka reč sa očekivanom"])
 s.box(470, 334, 160, 30, ["greška ili poklapanje"], fill="#f2f2f2")
 s.line([(550, 314), (550, 334)])
 s.line([(420, 138), (360, 138), (360, 328), (300, 328)], dash=True)
@@ -348,14 +348,14 @@ d.p(f"{C('ncc_base_seq')} sadrži pomoćne taskove koje koriste ostale sekvence 
     noind=True)
 d.tabela("osnovna_sekvenca", f"Pomoćni taskovi osnovne sekvence {C('ncc_base_seq')}",
          ["Task / funkcija", "Šta radi"],
-         [[C("reg_upisi(adresa, podatak, redosled)"), "upis jednog registra na S00, sa zadatim redosledom AW/W"],
-          [C("reg_procitaj(adresa, podatak)"), "čitanje jednog registra sa S00"],
-          [C("mem_upisi(oblast, rec, d[], redosled, strb)"), "upis niza reči na S01; veći niz deli na burst-ove"],
-          [C("mem_procitaj(oblast, rec, n, d[])"), "čitanje n reči sa S01, takođe podeljeno na burst-ove"],
-          [C("duzina_bursta(rec, ostalo)"), "najviše 256 beat-ova i bez prelaska granice od 4 KB (1024 reči)"],
-          [C("cekaj_done(gotovo)"), "čita STATUS dok nije done = 1 i busy = 0; posle 200 000 čitanja javlja grešku"],
-          [C("pokreni(iw, ih, tw, th)"), "upis dimenzija, start, čekanje i čitanje cele mape rezultata"],
-          [C("slucajan_redosled()"), "slučajan redosled AW/W za random sekvencu"]])
+         [[C("reg_write(addr, data, ord)"), "upis jednog registra na S00, sa zadatim redosledom AW/W"],
+          [C("reg_read(addr, data)"), "čitanje jednog registra sa S00"],
+          [C("mem_write(region, word, d[], ord, strb)"), "upis niza reči na S01; veći niz deli na burst-ove"],
+          [C("mem_read(region, word, n, d[])"), "čitanje n reči sa S01, takođe podeljeno na burst-ove"],
+          [C("burst_len(word, remaining)"), "najviše 256 beat-ova i bez prelaska granice od 4 KB (1024 reči)"],
+          [C("wait_done(ok)"), "čita STATUS dok nije done = 1 i busy = 0; posle 200 000 čitanja javlja grešku"],
+          [C("run_job(iw, ih, tw, th)"), "upis dimenzija, start, čekanje i čitanje cele mape rezultata"],
+          [C("random_order()"), "slučajan redosled AW/W za random sekvencu"]])
 d.p(f"Deljenje na burst-ove je posledica pravila AXI4: burst ima najviše 256 beat-ova i ne sme preći granicu od 4 KB. "
     "Slika od 400 piksela tako ide kao jedan burst od 256 i jedan od 144 reči.")
 n_tok = d.sledeca_slika()
@@ -411,18 +411,18 @@ d.p(f"Posle pune regresije, baze pokrivenosti svih 22 pokretanja spajaju se alat
     "najmanje 90% ukupno.", noind=True)
 d.tabela("pokrivenost_tacke", "Pokrivenost po tačkama (spojeno preko cele regresije)",
          ["Covergroup", "Tačka / ukrštanje", "Pokriveno bin-ova", "%"],
-         [[C("cg_dimenzije"), C("cp_img_w") + ", " + C("cp_img_h"), "5 / 5, 5 / 5", "100"],
+         [[C("cg_dims"), C("cp_img_w") + ", " + C("cp_img_h"), "5 / 5, 5 / 5", "100"],
           ["", C("cp_tmp_w") + ", " + C("cp_tmp_h"), "5 / 5, 5 / 5", "100"],
           ["", C("x_img_tmp"), "19 / 19", "100"],
-          ([C("cg_kontrola"), C("cp_start") + ", " + C("cp_busy") + ", " + C("cp_done"), "2 / 2 svaka", "100"], "sep"),
+          ([C("cg_ctrl"), C("cp_start") + ", " + C("cp_busy") + ", " + C("cp_done"), "2 / 2 svaka", "100"], "sep"),
           ["", C("x_start_busy") + ", " + C("x_start_done"), "4 / 4, 4 / 4", "100"],
           ([C("cg_axi"), C("cp_order"), "3 / 3", "100"], "sep"),
-          ["", C("cp_oblast"), "5 / 5", "100"],
-          ["", C("x_order_oblast"), "15 / 15", "100"],
+          ["", C("cp_region"), "5 / 5", "100"],
+          ["", C("x_order_region"), "15 / 15", "100"],
           ["", C("cp_len"), "5 / 5", "100"],
           ["", C("cp_strb"), "4 / 4", "100"]],
          ["", "", "c", "n"])
-d.p(f"Izveštaj se pravi kao u vežbi 11: {C('xcrg -report_format html -dir cov -report_dir izvestaj')}. Alat učitava "
+d.p(f"Izveštaj se pravi kao u vežbi 11: {C('xcrg -report_format html -dir cov -report_dir report')}. Alat učitava "
     f"baze svih 22 pokretanja iz direktorijuma {C('cov')} (svaki test upisuje svoju bazu pod imenom "
     f"{C('&lt;test&gt;_s&lt;seed&gt;')}) i od njih pravi jedan spojeni izveštaj, zato na početnoj strani piše „Number of Tests: 1”. "
     f"Početna strana izveštaja ({C('dashboard.html')}) prikazana je na slici {d.sledeca_slika()}, a spisak covergroup-a "
@@ -437,7 +437,7 @@ d.p(f"Tabela {d.sledeca_tabela()} pokazuje koliko pokrivenosti daje svaka grupa 
     "vrednosti da simulacija bude brza; njegova uloga je da sa različitim podacima i redosledima proveri da se DUT i "
     "referentni model slažu.")
 d.tabela("pokrivenost_po_testu", "Pokrivenost po grupi testova",
-         ["Grupa", "Pokretanja", "cg_dimenzije", "cg_kontrola", "cg_axi", "Ukupno"],
+         ["Grupa", "Pokretanja", "cg_dims", "cg_ctrl", "cg_axi", "Ukupno"],
          [[C("test_smoke"), "1", "17,1%", "40,0%", "55,7%", "37,6%"],
           [C("test_random"), "20", "26,1%", "40,0%", "69,0%", "45,0%"],
           [C("test_cov"), "1", "100%", "100%", "100%", "100%"],
@@ -447,7 +447,7 @@ d.tabela("pokrivenost_po_testu", "Pokrivenost po grupi testova",
 # ====================================================================== 7. regresija
 d.h1("7. Regresija")
 n_reg = d.sledeca_slika()
-d.p(f"Regresija se pokreće jednom komandom, {C('./regresija.sh')} (slika {n_reg}). Skripta prevodi DUT i okruženje "
+d.p(f"Regresija se pokreće jednom komandom, {C('./regression.sh')} (slika {n_reg}). Skripta prevodi DUT i okruženje "
     "jednom, pokreće test_smoke i test_cov sa seed-om 1 i test_random sa seed-ovima 1–N (podrazumevano 20), za svaki "
     "test proverava log i na kraju spaja pokrivenost. Test je prošao ako u izveštaju UVM-a nema nijedne greške "
     f"({C('UVM_ERROR')}) ni fatalne greške ({C('UVM_FATAL')}) i ako VHDL nije prekinuo simulaciju.", noind=True)
@@ -464,8 +464,8 @@ s.box(380, 92, 180, 40, ["provera loga", "UVM_ERROR = 0, UVM_FATAL = 0"], bold_f
 s.line([(380, 112), (330, 112)])
 s.box(150, 92, 180, 40, ["xcrg", "spajanje baza pokrivenosti"], bold_first=True, size=10.5)
 s.line([(150, 112), (118, 112), (118, 150)])
-s.box(40, 150, 300, 40, ["result/log/  —  log svakog testa", "result/izvestaj/  —  izveštaj pokrivenosti"], size=10.5)
-d.slika(s, "tok_regresije", f"Tok skripte {C('regresija.sh')}.")
+s.box(40, 150, 300, 40, ["result/log/  —  log svakog testa", "result/report/  —  izveštaj pokrivenosti"], size=10.5)
+d.slika(s, "tok_regresije", f"Tok skripte {C('regression.sh')}.")
 d.p(f"Rezultati regresije na Vivado XSim-u dati su u tabeli {d.sledeca_tabela()}. Prošlo je <b>22 od 22</b> "
     f"pokretanja, sa ukupno {ukupno_por} poređenja rezultata i nijednom greškom. Cela regresija, sa prevođenjem i "
     "izveštajem pokrivenosti, traje oko 113 s.")
@@ -513,7 +513,7 @@ d.tabela("dva_simulatora", "Pokretanje na dva simulatora",
          [["Prevođenje", f"{C('xvhdl -2008')}, {C('xvlog -sv -L uvm')}, {C('xelab')}", f"{C('xrun -elaborate -v200x -relax -uvm')}"],
           ["Pokretanje testa", f"{C('xsim -R')} sa {C('-testplusarg UVM_TESTNAME=…')} i {C('-sv_seed')}", f"{C('xrun -R +UVM_TESTNAME=…')} sa {C('-svseed')}"],
           ["Pokrivenost", f"{C('-cov_db_name')}, izveštaj alatom {C('xcrg')} (vežba 11)", f"{C('-coverage functional')}, {C('-covtest')}; baze u {C('cov_work/')}"],
-          ["Komanda", C("./regresija.sh"), C("SIM=xrun ./regresija.sh")],
+          ["Komanda", C("./regression.sh"), C("SIM=xrun ./regression.sh")],
           ["Rezultat nove verzije", '<span class="stanje-ok">22 / 22 PASS</span>', '<span class="stanje-ok">22 / 22 PASS</span>'],
           ["Trajanje regresije", "oko 113 s", "55 s"],
           ["Poređenja rezultata", str(ukupno_por), "3925"],
@@ -526,12 +526,12 @@ d.p(f"Ishod je isti na oba simulatora: svih 22 pokretanja prolazi, bez ijedne gr
     f"pravi Cadence alatom {C('imc')}, koji na fakultetskoj mašini nije instaliran; zato je izveštaj pokrivenosti "
     "napravljen u Vivado-u.")
 d.slika_fajl(os.path.join(SNIMCI, "xcelium_regresija.png"), "xcelium_regresija",
-             f"Ispis regresije na Cadence Xcelium 19.03 ({C('SIM=xrun ./regresija.sh')}).", "70%")
+             f"Ispis regresije na Cadence Xcelium 19.03 ({C('SIM=xrun ./regression.sh')}).", "70%")
 d.p("Na Windows-u su Vivado alati .bat fajlovi, koji argument oblika ime=vrednost dele na dva argumenta. Zato skripta "
     f"opcije za {C('xsim')} upisuje u fajl i prosleđuje ih sa {C('-f')}.")
 d.p(f"Prva verzija okruženja prošla je na oba simulatora sa istim ishodom. Tada su pronađene tri razlike između alata, "
     f"sve u VHDL-u DUT-a ({C('ncc_accel_slave_lite_v1_0_S00_AXI.vhd')} i S01 šablon), ne u SystemVerilog kodu "
-    f"(Tabela {d.sledeca_tabela()}). Rešenja su ugrađena u {C('regresija.sh')} i u kopiju RTL-a, pa važe i za novu verziju.")
+    f"(Tabela {d.sledeca_tabela()}). Rešenja su ugrađena u {C('regression.sh')} i u kopiju RTL-a, pa važe i za novu verziju.")
 d.tabela("razlike_simulatora", "Razlike između XSim-a i Xcelium-a (nalaz N5)",
          ["Greška u Xcelium-u", "Uzrok", "Rešenje", "Dira DUT?"],
          [[C("*E,AGNLSC"), f"agregat {C('(0 => …, others => \"0\")')} nad opsegom izračunatim iz generika", C("xrun -relax"), "ne"],
@@ -574,16 +574,16 @@ d.p("Verifikacija je dala i pet nalaza o ponašanju interfejsa i alata (poglavlj
 # ====================================================================== prilog
 d.h1("Prilog A. Pokretanje")
 d.pre("cd verif\n"
-      "./regresija.sh                 # XSim: test_smoke, test_cov, test_random x 20\n"
-      "./regresija.sh 5               # 5 seed-ova za test_random\n"
-      "SIM=xrun ./regresija.sh        # Cadence Xcelium (xrun u PATH-u)\n"
-      "VIVADO=/tools/Xilinx/Vivado/2025.2/bin ./regresija.sh   # druga putanja do Vivada")
+      "./regression.sh                 # XSim: test_smoke, test_cov, test_random x 20\n"
+      "./regression.sh 5               # 5 seed-ova za test_random\n"
+      "SIM=xrun ./regression.sh        # Cadence Xcelium (xrun u PATH-u)\n"
+      "VIVADO=/tools/Xilinx/Vivado/2025.2/bin ./regression.sh   # druga putanja do Vivada")
 d.p("Ispis skripte za XSim:", noind=True)
-d.pre("=== prevodjenje (xsim) ===\n=== testovi ===\n  PASS  test_smoke  seed 1\n  PASS  test_cov  seed 1\n"
+d.pre("=== build (xsim) ===\n=== tests ===\n  PASS  test_smoke  seed 1\n  PASS  test_cov  seed 1\n"
       "  PASS  test_random  seed 1\n  ...\n  PASS  test_random  seed 20\n"
-      "=== ukupno: 22 proslo, 0 palo, 113 s ===\n=== pokrivenost ===\n   Coverage Score            :, 100\n"
-      "  izvestaj: result/izvestaj/functionalCoverageReport/dashboard.html")
-d.p(f"Ispis skripte za Xcelium ({C('SIM=xrun ./regresija.sh')}) prikazan je na slici {d.n_sl}; deo za pokrivenost "
+      "=== total: 22 passed, 0 failed, 114 s ===\n=== coverage ===\n   Coverage Score            :, 100\n"
+      "  report: result/report/functionalCoverageReport/dashboard.html")
+d.p(f"Ispis skripte za Xcelium ({C('SIM=xrun ./regression.sh')}) prikazan je na slici {d.n_sl}; deo za pokrivenost "
     "se tada ne ispisuje.", noind=True)
 
 d.napravi("Verifikacija NCC akceleratora - druga verzija", naslovna)

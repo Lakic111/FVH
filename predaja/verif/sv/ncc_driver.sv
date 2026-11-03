@@ -1,6 +1,6 @@
-// Drajver -- vozi obe magistrale, jednu transakciju po jednu.
-// Kod upisa adresni (AW) i podatkovni (W) kanal rade u dve niti, pa se bira
-// koji kanal krece prvi (order) i koliko taktova kasnije krece drugi (gap).
+// Driver -- drives both buses, one transaction at a time.
+// On a write the address (AW) and data (W) channels run in two threads, so the
+// item selects which channel starts first (order) and how many cycles later the other one starts (gap).
 class ncc_driver extends uvm_driver #(ncc_item);
 
    `uvm_component_utils(ncc_driver)
@@ -18,20 +18,20 @@ class ncc_driver extends uvm_driver #(ncc_item);
    endfunction
 
    task run_phase(uvm_phase phase);
-      pocetne_vrednosti();
+      reset_signals();
       @(posedge vif.rstn);
       @(posedge vif.clk);
       forever begin
          seq_item_port.get_next_item(req);
-         if (req.bus == BUS_S00 && req.rw == UPIS)    s00_upis(req);
-         if (req.bus == BUS_S00 && req.rw == CITANJE) s00_citanje(req);
-         if (req.bus == BUS_S01 && req.rw == UPIS)    s01_upis(req);
-         if (req.bus == BUS_S01 && req.rw == CITANJE) s01_citanje(req);
+         if (req.bus == BUS_S00 && req.rw == WRITE)    s00_write(req);
+         if (req.bus == BUS_S00 && req.rw == READ) s00_read(req);
+         if (req.bus == BUS_S01 && req.rw == WRITE)    s01_write(req);
+         if (req.bus == BUS_S01 && req.rw == READ) s01_read(req);
          seq_item_port.item_done();
       end
    endtask : run_phase
 
-   task pocetne_vrednosti();
+   task reset_signals();
       vif.s00_awvalid <= 0;
       vif.s00_wvalid  <= 0;
       vif.s00_bready  <= 0;
@@ -46,7 +46,7 @@ class ncc_driver extends uvm_driver #(ncc_item);
       vif.s01_bready   <= 0;
       vif.s01_arvalid  <= 0;
       vif.s01_rready   <= 0;
-      // stalna polja: ID 0, 4 bajta po beat-u, INCR burst
+      // fixed fields: ID 0, 4 bytes per beat, INCR burst
       vif.s01_awid     <= 0;
       vif.s01_awsize   <= 3'b010;
       vif.s01_awburst  <= 2'b01;
@@ -63,25 +63,25 @@ class ncc_driver extends uvm_driver #(ncc_item);
       vif.s01_arprot   <= 0;
       vif.s01_arqos    <= 0;
       vif.s01_arregion <= 0;
-   endtask : pocetne_vrednosti
+   endtask : reset_signals
 
-   // --- S00, upis registra ---
-   task s00_upis(ncc_item it);
-      int unsigned aw_kasni = 0;
-      int unsigned w_kasni  = 0;
-      if (it.order == ORDER_AW_FIRST) w_kasni  = it.gap;
-      if (it.order == ORDER_W_FIRST)  aw_kasni = it.gap;
+   // --- S00, register write ---
+   task s00_write(ncc_item it);
+      int unsigned aw_delay = 0;
+      int unsigned w_delay  = 0;
+      if (it.order == ORDER_AW_FIRST) w_delay  = it.gap;
+      if (it.order == ORDER_W_FIRST)  aw_delay = it.gap;
 
       fork
          begin
-            repeat (aw_kasni) @(posedge vif.clk);
+            repeat (aw_delay) @(posedge vif.clk);
             vif.s00_awaddr  <= it.addr[5 : 0];
             vif.s00_awvalid <= 1;
             @(posedge vif.clk iff vif.s00_awready === 1'b1);
             vif.s00_awvalid <= 0;
          end
          begin
-            repeat (w_kasni) @(posedge vif.clk);
+            repeat (w_delay) @(posedge vif.clk);
             vif.s00_wdata  <= it.data[0];
             vif.s00_wstrb  <= it.strb;
             vif.s00_wvalid <= 1;
@@ -94,10 +94,10 @@ class ncc_driver extends uvm_driver #(ncc_item);
       @(posedge vif.clk iff vif.s00_bvalid === 1'b1);
       it.resp = vif.s00_bresp;
       vif.s00_bready <= 0;
-   endtask : s00_upis
+   endtask : s00_write
 
-   // --- S00, citanje registra ---
-   task s00_citanje(ncc_item it);
+   // --- S00, register read ---
+   task s00_read(ncc_item it);
       vif.s00_araddr  <= it.addr[5 : 0];
       vif.s00_arvalid <= 1;
       @(posedge vif.clk iff vif.s00_arready === 1'b1);
@@ -109,18 +109,18 @@ class ncc_driver extends uvm_driver #(ncc_item);
       it.data[0] = vif.s00_rdata;
       it.resp    = vif.s00_rresp;
       vif.s00_rready <= 0;
-   endtask : s00_citanje
+   endtask : s00_read
 
-   // --- S01, upis jednog burst-a (len reci) ---
-   task s01_upis(ncc_item it);
-      int unsigned aw_kasni = 0;
-      int unsigned w_kasni  = 0;
-      if (it.order == ORDER_AW_FIRST) w_kasni  = it.gap;
-      if (it.order == ORDER_W_FIRST)  aw_kasni = it.gap;
+   // --- S01, write of one burst (len words) ---
+   task s01_write(ncc_item it);
+      int unsigned aw_delay = 0;
+      int unsigned w_delay  = 0;
+      if (it.order == ORDER_AW_FIRST) w_delay  = it.gap;
+      if (it.order == ORDER_W_FIRST)  aw_delay = it.gap;
 
       fork
          begin
-            repeat (aw_kasni) @(posedge vif.clk);
+            repeat (aw_delay) @(posedge vif.clk);
             vif.s01_awaddr  <= it.addr;
             vif.s01_awlen   <= it.len - 1;
             vif.s01_awvalid <= 1;
@@ -128,7 +128,7 @@ class ncc_driver extends uvm_driver #(ncc_item);
             vif.s01_awvalid <= 0;
          end
          begin
-            repeat (w_kasni) @(posedge vif.clk);
+            repeat (w_delay) @(posedge vif.clk);
             for (int i = 0; i < it.len; i++) begin
                vif.s01_wdata  <= it.data[i];
                vif.s01_wstrb  <= it.strb;
@@ -145,10 +145,10 @@ class ncc_driver extends uvm_driver #(ncc_item);
       @(posedge vif.clk iff vif.s01_bvalid === 1'b1);
       it.resp = vif.s01_bresp;
       vif.s01_bready <= 0;
-   endtask : s01_upis
+   endtask : s01_write
 
-   // --- S01, citanje jednog burst-a ---
-   task s01_citanje(ncc_item it);
+   // --- S01, read of one burst ---
+   task s01_read(ncc_item it);
       vif.s01_araddr  <= it.addr;
       vif.s01_arlen   <= it.len - 1;
       vif.s01_arvalid <= 1;
@@ -163,6 +163,6 @@ class ncc_driver extends uvm_driver #(ncc_item);
          it.resp    = vif.s01_rresp;
       end
       vif.s01_rready <= 0;
-   endtask : s01_citanje
+   endtask : s01_read
 
 endclass : ncc_driver

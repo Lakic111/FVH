@@ -1,4 +1,4 @@
-// Agent -- monitor uvek, drajver i sekvencer samo u aktivnom rezimu.
+// Agent -- the monitor is always built, the driver and sequencer only in active mode.
 class ncc_agent extends uvm_agent;
 
    ncc_driver    drv;

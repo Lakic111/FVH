@@ -1,4 +1,4 @@
-// Okruzenje: agent i scoreboard, monitor je vezan na scoreboard.
+// Environment: agent and scoreboard, the monitor is connected to the scoreboard.
 class ncc_env extends uvm_env;
 
    ncc_agent      agent;

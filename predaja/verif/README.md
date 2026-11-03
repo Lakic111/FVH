@@ -23,7 +23,7 @@ verif/
 │   ├── ncc_tests.sv       test_base, test_smoke, test_cov, test_random
 │   └── ncc_top.sv         takt, reset, DUT, run_test()
 ├── run.f                spisak izvornih fajlova
-└── regresija.sh         prevođenje, svi testovi i izveštaj pokrivenosti
+└── regression.sh         prevođenje, svi testovi i izveštaj pokrivenosti
 ```
 
 Jedan agent vozi obe magistrale: polje `bus` u transakciji kaže da li ide na S00 ili S01,
@@ -42,13 +42,13 @@ Scoreboard poredi svaki pročitani rezultat sa referentnim modelom.
 ## Pokretanje
 
 ```bash
-./regresija.sh             # Vivado XSim: test_smoke, test_cov, test_random x 20 seed-ova
-./regresija.sh 5           # 5 seed-ova
-SIM=xrun ./regresija.sh    # Cadence Xcelium (xrun mora biti u PATH-u)
+./regression.sh             # Vivado XSim: test_smoke, test_cov, test_random x 20 seed-ova
+./regression.sh 5           # 5 seed-ova
+SIM=xrun ./regression.sh    # Cadence Xcelium (xrun mora biti u PATH-u)
 ```
 
 Putanja do Vivada se zadaje sa `VIVADO=<Vivado>/bin`; ako nije zadata, koristi se
 `C:/AMDDesignTools/2025.2/Vivado/bin`. Logovi idu u `result/log/`, izveštaj
-pokrivenosti u `result/izvestaj/`.
+pokrivenosti u `result/report/`.
 
 Rezultat na XSim-u: 22 prošla, 0 palo, pokrivenost 100%.

@@ -1,7 +1,7 @@
-// Testovi. test_base pravi okruzenje i konfiguraciju, ostali samo pokrecu sekvencu.
-//   test_smoke  -- ceo put kroz DUT na malom primeru sa poznatim rezultatom
-//   test_cov    -- usmereni slucajevi za pokrivenost i ponasanje memorija
-//   test_random -- slucajne dimenzije i podaci (pokrece se sa vise seed-ova)
+// Tests. test_base builds the environment and the configuration, the others only start a sequence.
+//   test_smoke  -- the whole path through the DUT on a small example with a known result
+//   test_cov    -- directed cases for coverage and memory behaviour
+//   test_random -- random dimensions and data (run with many seeds)
 
 class test_base extends uvm_test;
 

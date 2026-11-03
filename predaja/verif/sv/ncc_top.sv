@@ -1,4 +1,4 @@
-// Vrh: takt 100 MHz, reset, interfejs, DUT i pokretanje testa.
+// Top: 100 MHz clock, reset, interface, DUT and test start.
 `timescale 1ns/1ps
 
 module ncc_top;
@@ -83,7 +83,7 @@ module ncc_top;
       run_test();
    end
 
-   // takt i reset (reset traje 10 taktova)
+   // clock and reset (reset lasts 10 clock cycles)
    initial begin
       clk  <= 0;
       rstn <= 0;
@@ -92,10 +92,10 @@ module ncc_top;
 
    always #5 clk = ~clk;
 
-   // zastita ako se simulacija zaglavi
+   // watchdog in case the simulation hangs
    initial begin
       #50ms;
-      `uvm_fatal("TOP", "simulacija nije zavrsila na vreme")
+      `uvm_fatal("TOP", "simulation did not finish in time")
    end
 
 endmodule : ncc_top

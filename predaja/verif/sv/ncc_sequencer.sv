@@ -1,4 +1,4 @@
-// Sekvencer -- prosledjuje transakcije iz sekvenci drajveru.
+// Sequencer -- passes transactions from the sequences to the driver.
 class ncc_sequencer extends uvm_sequencer #(ncc_item);
 
    `uvm_component_utils(ncc_sequencer)

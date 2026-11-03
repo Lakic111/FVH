@@ -1,6 +1,6 @@
-// Jedna transakcija na S00 ili S01: upis ili citanje.
-//   S00: addr = adresa registra, data ima jednu rec
-//   S01: addr = bajtska adresa, data ima len reci (jedan burst)
+// One transaction on S00 or S01: a write or a read.
+//   S00: addr = register address, data holds one word
+//   S01: addr = byte address, data holds len words (one burst)
 class ncc_item extends uvm_sequence_item;
 
    bus_e        bus;
@@ -12,7 +12,7 @@ class ncc_item extends uvm_sequence_item;
    bit [1 : 0]  resp;
 
    rand order_e      order;
-   rand int unsigned gap;     // koliko taktova kasni drugi kanal
+   rand int unsigned gap;     // how many clock cycles the second channel is delayed
 
    constraint c_order { order dist {ORDER_AW_FIRST := 2, ORDER_W_FIRST := 2, ORDER_SIMUL := 1}; }
    constraint c_gap   { order == ORDER_SIMUL -> gap == 0;

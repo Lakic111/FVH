@@ -1,6 +1,6 @@
-// Interfejs ka DUT-u: obe magistrale akceleratora.
-//   S00 - AXI4-Lite, kontrolni registri (6-bitna adresa)
-//   S01 - AXI4-Full, memorije slike, sablona i rezultata (17-bitna adresa)
+// Interface to the DUT: both accelerator buses.
+//   S00 - AXI4-Lite, control registers (6-bit address)
+//   S01 - AXI4-Full, image, template and result memories (17-bit address)
 `timescale 1ns/1ps
 
 interface ncc_if (input logic clk, input logic rstn);
