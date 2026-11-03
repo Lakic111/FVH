@@ -249,7 +249,7 @@ s.text(160, 274, "akcelerator", size=10, anchor="end", italic=True)
 s.text(160, 418, "akcelerator", size=10, anchor="end", italic=True)
 d.slika(s, "algoritam_polja", "Prepoznavanje figure na jednom polju table.")
 n_tok = d.sledeca_slika()
-d.p(f"Svaki par šablona obrađuje se funkcijom {C('par()')}, čiji je tok prikazan na slici {n_tok}: šablon se "
+d.p(f"Svaki par šablona obrađuje se funkcijom {C('run_pair()')}, čiji je tok prikazan na slici {n_tok}: šablon se "
     f"upisuje u mapiranu memoriju, dimenzije i start šalju se drajveru, aplikacija čeka kraj obrade i čita najveći "
     "rezultat iz mapirane memorije.")
 s = Svg(740, 430)
@@ -278,18 +278,18 @@ d.p(f"Oba akceleratora se pokreću pre čekanja, pa rade istovremeno. Aplikacija
     f"tabeli {d.sledeca_tabela()}.")
 d.tabela("funkcije_aplikacije", f"Funkcije u {C('app/main.c')}",
          ["Funkcija", "Šta radi"],
-         [[C("ncc_otvori()"), f"otvara {C('/dev/nccN')} i mapira 128 KB memorije S01"],
-          [C("ncc_komanda()"), f"šalje tekstualnu komandu drajveru ({C('write')})"],
-          [C("ncc_dimenzije()"), f"pravi komandu {C('dims IW IH TW TH')}"],
-          [C("ncc_cekaj()"), f"čita status ({C('fopen')} + {C('fscanf')}) dok nije done = 1 i busy = 0; najviše oko 2 s"],
-          [C("upisi()"), "upisuje piksele (8 bita) kao 32-bitne reči u mapiranu memoriju"],
-          [C("najbolji_skor()"), "najveći rezultat u mapi, poređenje kao neoznačeni broj"],
-          [C("par()"), "jedan ili dva šablona na ncc0 i ncc1 nad već upisanom slikom"],
-          [C("umanji()"), "umanjenje slike 2× (prosek 2×2 piksela, sa zaokruživanjem)"],
-          [C("srednja_centra()"), "srednja vrednost centralnih 31×31 piksela polja"],
-          [C("prazno()"), "da li je polje prazno"],
-          [C("skeniraj_polje()"), f"ceo algoritam sa slike {n_alg} za jedno polje"],
-          [C("napravi_fen()"), "tabla 8×8 u FEN zapis"],
+         [[C("ncc_open()"), f"otvara {C('/dev/nccN')} i mapira 128 KB memorije S01"],
+          [C("ncc_command()"), f"šalje tekstualnu komandu drajveru ({C('write')})"],
+          [C("ncc_dims()"), f"pravi komandu {C('dims IW IH TW TH')}"],
+          [C("ncc_wait()"), f"čita status ({C('fopen')} + {C('fscanf')}) dok nije done = 1 i busy = 0; najviše oko 2 s"],
+          [C("write_pixels()"), "upisuje piksele (8 bita) kao 32-bitne reči u mapiranu memoriju"],
+          [C("best_score()"), "najveći rezultat u mapi, poređenje kao neoznačeni broj"],
+          [C("run_pair()"), "jedan ili dva šablona na ncc0 i ncc1 nad već upisanom slikom"],
+          [C("downscale()"), "umanjenje slike 2× (prosek 2×2 piksela, sa zaokruživanjem)"],
+          [C("center_mean()"), "srednja vrednost centralnih 31×31 piksela polja"],
+          [C("is_empty()"), "da li je polje prazno"],
+          [C("scan_square()"), f"ceo algoritam sa slike {n_alg} za jedno polje"],
+          [C("make_fen()"), "tabla 8×8 u FEN zapis"],
           [C("main()"), "otvaranje uređaja, skeniranje 64 polja, ispis i poređenje FEN-a; vraća 1 ako se FEN ne poklapa"]])
 
 # ====================================================================== 6. prevodjenje i pokretanje
@@ -333,7 +333,8 @@ d.h1("7. Rezultati")
 d.p(f"Ispravnost aplikacije proverena je na računaru, pre prenosa na ploču: {C('main.c')} je preveden zajedno sa "
     f"softverskim modelom akceleratora umesto drajvera. Model prima iste komande ({C('dims')}, {C('start')}), "
     "računa NCC² istom aritmetikom kao hardver (isti model je u FVH okruženju bit-tačan prema RTL-u) i vraća status "
-    f"{C('done=1 busy=0')}. Rezultat (Tabela {d.sledeca_tabela()}): svih 32 zauzetih polja prepoznato je tačno.",
+    f"{C('done=1 busy=0')}. Rezultat (Tabela {d.sledeca_tabela()}): svih 32 zauzetih polja prepoznato je tačno. "
+    "Ispis je snimljen pre nego što su poruke u kodu prevedene na engleski; logika programa nije menjana, pa nova verzija ispisuje iste vrednosti, samo engleskim rečima.",
     noind=True)
 d.pre("zauzetih polja: 32\nFEN:       rnbqkbnr/pp5p/4ppp1/2pp4/5P2/1P1BPN2/P1PPQ1PP/RNB1K2R\n"
       "ocekivano: rnbqkbnr/pp5p/4ppp1/2pp4/5P2/1P1BPN2/P1PPQ1PP/RNB1K2R\nRezultat se poklapa sa ocekivanom pozicijom.")
@@ -344,7 +345,7 @@ d.tabela("rezultati", "Rezultati provere",
           ["probe na ploči", '<span class="stanje-ok">obe instance, /dev/ncc0 i /dev/ncc1</span>'],
           [f"provera iz shell-a na ploči (Tabela {n_shell})", '<span class="stanje-ok">sve kako je očekivano</span>'],
           [f"{C('ncc-scan')} na ploči", '<span class="stanje-ok">FEN tačan, 32 / 32 polja, 1,803 s</span>']])
-d.p("Ispis provere iz shell-a na ploči:", noind=True)
+d.p("Ispis provere iz shell-a na ploči. Ispis je snimljen pre nego što su poruke u kodu prevedene na engleski; logika programa nije menjana, pa nova verzija ispisuje iste vrednosti, samo engleskim rečima.", noind=True)
 d.pre("$ dmesg | grep ncc_probe\n"
       "ncc_probe: ncc0, S00 50000000, S01 50020000\n"
       "ncc_probe: ncc1, S00 51000000, S01 51020000\n"

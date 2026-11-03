@@ -526,7 +526,8 @@ d.p(f"Ishod je isti na oba simulatora: svih 22 pokretanja prolazi, bez ijedne gr
     f"pravi Cadence alatom {C('imc')}, koji na fakultetskoj mašini nije instaliran; zato je izveštaj pokrivenosti "
     "napravljen u Vivado-u.")
 d.slika_fajl(os.path.join(SNIMCI, "xcelium_regresija.png"), "xcelium_regresija",
-             f"Ispis regresije na Cadence Xcelium 19.03 ({C('SIM=xrun ./regression.sh')}).", "70%")
+             f"Ispis regresije na Cadence Xcelium 19.03. Snimljen je pre nego što su imena i poruke u kodu "
+             "prevedeni na engleski (tada se skripta zvala regresija.sh); logika okruženja nije menjana.", "70%")
 d.p("Na Windows-u su Vivado alati .bat fajlovi, koji argument oblika ime=vrednost dele na dva argumenta. Zato skripta "
     f"opcije za {C('xsim')} upisuje u fajl i prosleđuje ih sa {C('-f')}.")
 d.p(f"Prva verzija okruženja prošla je na oba simulatora sa istim ishodom. Tada su pronađene tri razlike između alata, "
