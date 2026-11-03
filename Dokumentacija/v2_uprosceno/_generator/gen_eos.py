@@ -303,24 +303,30 @@ d.pre('ncc_accel@50000000 {\n    compatible = "xlnx,ncc-accel-1.0";\n'
       '    reg = <0x51000000 0x1000>, <0x51020000 0x20000>;\n};')
 d.h2("6.2. Drajver")
 d.p(f"Modul se prevodi protiv istog kernela koji radi na ploči. U PetaLinux projektu to radi recept modula "
-    f"({C('project-spec/meta-user/recipes-modules/')}); ime recepta mora imati crticu, a izvorni fajl u receptu "
-    f"zamenjuje se sa {C('ncc_driver.c')}. Van PetaLinux-a:", noind=True)
+    f"{C('project-spec/meta-user/recipes-modules/ncc-accel/')}. PetaLinux ne dozvoljava donju crtu u imenu recepta, "
+    f"pa se recept zove {C('ncc-accel')}, a {C('ncc_driver.c')} je u njemu sačuvan kao {C('ncc-accel.c')}; modul na "
+    f"ploči se zato zove {C('ncc-accel.ko')}. Recept ga ugrađuje u rootfs, a kernel ga sam učitava pri pokretanju, jer "
+    f"se {C('compatible')} iz drajvera poklapa sa čvorovima device tree-a. Aplikacija ide kroz recept "
+    f"{C('recipes-apps/ncc-scan/')} sa fajlovima {C('main.c')}, {C('data.c')}, {C('data.h')} i {C('Makefile')}. "
+    f"Posle {C('petalinux-build')} na SD karticu idu {C('BOOT.BIN')}, {C('boot.scr')} i {C('image.ub')}. Van "
+    "PetaLinux-a:", noind=True)
 d.pre("cd driver\nmake ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- KERNELDIR=<kernel build dir>")
 d.h2("6.3. Aplikacija")
 d.pre("cd app\nmake CROSS_COMPILE=arm-linux-gnueabihf-")
 d.h2("6.4. Provera na ploči")
 d.p(f"Pošto su komande tekstualne, drajver se proverava iz shell-a, pre pokretanja aplikacije (Tabela "
-    f"{d.sledeca_tabela()}).", noind=True)
+    f"{d.sledeca_tabela()}). Čvorovi uređaja pripadaju korisniku root (prava {C('crw-------')}), pa se komande "
+    f"pokreću sa {C('sudo')}; za upis kroz preusmeravanje to je {C('sudo sh -c')}.", noind=True)
 n_shell = d.tabela("provera_na_ploci", "Provera drajvera iz shell-a",
          ["Komanda", "Očekivano"],
-         [[C("insmod ncc_driver.ko"), f"u {C('dmesg')}: {C('ncc_probe: ncc0 …')} i {C('ncc_probe: ncc1 …')}"],
-          [C("ls /dev/ncc*"), f"{C('/dev/ncc0')} i {C('/dev/ncc1')}"],
-          [C("cat /dev/ncc0"), f"{C('done=0 busy=0')} posle uključenja"],
-          [C('echo "dims 4 4 2 2" > /dev/ncc0'), "bez greške"],
-          [C('echo "dims 100 4 2 2" > /dev/ncc0'), f"greška {C('Invalid argument')}"],
-          [C('echo "start" > /dev/ncc0'), "bez greške"],
-          [C("cat /dev/ncc0"), C("done=1 busy=0")],
-          [C("./ncc-scan"), "FEN se poklapa sa očekivanim, izlazni kod 0"]])
+         [[C("dmesg | grep ncc_probe"), f"{C('ncc_probe: ncc0, S00 50000000, S01 50020000')} i isto za ncc1"],
+          [C("ls -l /dev/ncc*"), f"{C('/dev/ncc0')} i {C('/dev/ncc1')}, major 244, minor 0 i 1"],
+          [C("sudo cat /dev/ncc0"), C("done=X busy=0")],
+          [C("sudo sh -c 'echo \"dims 90 90 25 15\" > /dev/ncc0'"), "bez greške"],
+          [C("sudo sh -c 'echo \"start\" > /dev/ncc0'"), "bez greške"],
+          [C("sudo cat /dev/ncc0"), C("done=1 busy=0")],
+          [C("sudo sh -c 'echo \"dims 200 1 1 1\" > /dev/ncc0'"), f"greška {C('Invalid argument')}"],
+          [C("sudo ncc-scan"), "FEN se poklapa sa očekivanim, izlazni kod 0"]])
 
 # ====================================================================== 7. rezultati
 d.h1("7. Rezultati")
@@ -334,19 +340,41 @@ d.pre("zauzetih polja: 32\nFEN:       rnbqkbnr/pp5p/4ppp1/2pp4/5P2/1P1BPN2/P1PPQ
 d.tabela("rezultati", "Rezultati provere",
          ["Provera", "Rezultat"],
          [["aplikacija sa softverskim modelom (računar, gcc -Wall)", '<span class="stanje-ok">FEN tačan, 32 / 32 polja</span>'],
-          ["prevođenje drajvera (PetaLinux, kernel 6.12)", '<span class="stanje-ceka">čeka</span>'],
-          [f"provera iz shell-a na ploči (Tabela {n_shell})", '<span class="stanje-ceka">čeka</span>'],
-          [f"{C('ncc-scan')} na ploči", '<span class="stanje-ceka">čeka</span>']])
-d.p(f"Za poređenje, prva verzija (sa {C('ioctl')}) dala je na ploči isti tačan FEN za 1,906 s, prema 1,782 s "
-    "bare-metal rešenja (Tabela " + str(d.sledeca_tabela()) + "). Skoro cela razlika bila je u čekanju na "
-    "akcelerator: drajver je između provera statusa spavao 0,5–1,5 ms, a aplikacija čeka oko 128 puta po tabli. "
-    "Nova verzija proziva status iz aplikacije svakih 100 µs, pa se očekuje vreme bliže bare-metal rešenju; tačna "
-    "vrednost upisuje se posle merenja na ploči.")
-d.tabela("vreme_prethodne_verzije", "Vreme prepoznavanja cele table (prethodna merenja)",
+          ["prevođenje drajvera i aplikacije (PetaLinux 2025.2, kernel 6.12)", '<span class="stanje-ok">bez greške</span>'],
+          ["probe na ploči", '<span class="stanje-ok">obe instance, /dev/ncc0 i /dev/ncc1</span>'],
+          [f"provera iz shell-a na ploči (Tabela {n_shell})", '<span class="stanje-ok">sve kako je očekivano</span>'],
+          [f"{C('ncc-scan')} na ploči", '<span class="stanje-ok">FEN tačan, 32 / 32 polja, 1,803 s</span>']])
+d.p("Ispis provere iz shell-a na ploči:", noind=True)
+d.pre("$ dmesg | grep ncc_probe\n"
+      "ncc_probe: ncc0, S00 50000000, S01 50020000\n"
+      "ncc_probe: ncc1, S00 51000000, S01 51020000\n"
+      "$ sudo sh -c 'echo \"dims 90 90 25 15\" > /dev/ncc0'\n"
+      "$ sudo sh -c 'echo \"start\" > /dev/ncc0'\n"
+      "$ sudo cat /dev/ncc0\n"
+      "done=1 busy=0\n"
+      "$ sudo sh -c 'echo \"dims 200 1 1 1\" > /dev/ncc0'\n"
+      "ncc0: dimenzije van opsega\n"
+      "sh: line 1: echo: write error: Invalid argument")
+d.p("Kraj ispisa aplikacije na ploči:", noind=True)
+d.pre("$ sudo ncc-scan\n=== NCC akcelerator -- prepoznavanje pozicije ===\n"
+      "(0,0) crna  r   NCC2 = 1.0000\n(0,1) crna  n   NCC2 = 0.7200\n...\n(7,7) bela  R   NCC2 = 0.7662\n\n"
+      "zauzetih polja: 32\n"
+      "FEN:       rnbqkbnr/pp5p/4ppp1/2pp4/5P2/1P1BPN2/P1PPQ1PP/RNB1K2R\n"
+      "ocekivano: rnbqkbnr/pp5p/4ppp1/2pp4/5P2/1P1BPN2/P1PPQ1PP/RNB1K2R\n"
+      "vreme: 1803.183 ms, od toga cekanje akceleratora 1607.496 ms\n"
+      "Rezultat se poklapa sa ocekivanom pozicijom.")
+d.p(f"Nova verzija prepoznaje celu tablu za 1,803 s, od čega 1,607 s (89%) aplikacija čeka akcelerator "
+    f"(Tabela {d.sledeca_tabela()}). To je 103 ms (5,4%) brže od prve verzije sa {C('ioctl')} i samo 21 ms (1,2%) "
+    "sporije od bare-metal rešenja. Razlika prema prvoj verziji je skoro cela u čekanju na akcelerator: tamo je "
+    "drajver između dve provere statusa spavao 0,5–1,5 ms, a aplikacija čeka oko 128 puta po tabli, dok sada "
+    "aplikacija čita status svakih 100 µs, pa kraj posla primeti ranije. Ostatak vremena (oko 0,2 s: upis slike i "
+    "šablona u memoriju i čitanje rezultata kroz mmap) sličan je u sve tri verzije.")
+d.tabela("vreme", "Vreme prepoznavanja cele table na ploči",
          ["", "Bare-metal (Vitis)", "Linux, prva verzija (ioctl)", "Linux, druga verzija"],
-         [["Ukupno vreme", "1,782 s", "1,906 s", '<span class="stanje-ceka">meri se</span>'],
-          ["Čekanje na akcelerator", "1,555 s", "1,677 s", '<span class="stanje-ceka">meri se</span>'],
-          ["Prepoznata polja", "32 / 32", "32 / 32", '<span class="stanje-ceka">meri se</span>']],
+         [["Ukupno vreme", "1,782 s", "1,906 s", "<b>1,803 s</b>"],
+          ["Čekanje na akcelerator", "1,555 s", "1,677 s", "<b>1,607 s</b>"],
+          ["Ostalo (upis, čitanje, logika)", "0,227 s", "0,230 s", "<b>0,196 s</b>"],
+          ["Prepoznata polja", "32 / 32", "32 / 32", "<b>32 / 32</b>"]],
          ["", "c", "c", "c"])
 
 # ====================================================================== 8. zakljucak
@@ -357,8 +385,9 @@ d.p(f"Isti hardver koji je u PSDS-u radio kao bare-metal sistem, a u FVH-u verif
     f"semafor za sinhronizaciju i {C('kmalloc')} / {C('request_mem_region')} / {C('ioremap')} za resurse. Rešenje "
     "ima šest fajlova. Drajver odbija komande dok jezgro radi, što direktno sprečava grešku otkrivenu verifikacijom "
     "(nalaz N2).", noind=True)
-d.p("Aplikacija je na računaru, sa softverskim modelom akceleratora, prepoznala svih 32 figure. Preostaje provera "
-    "drajvera i aplikacije na ploči i novo merenje vremena.")
+d.p("Na Zybo ploči drajver prepoznaje obe instance akceleratora, komande iz shell-a rade kako je opisano, a "
+    "aplikacija prepoznaje svih 32 figure i daje tačan FEN za 1,803 s, što je samo 1,2% sporije od bare-metal "
+    "rešenja i 5,4% brže od prve Linux verzije.")
 
 d.napravi("Linux drajver za NCC akcelerator - druga verzija", naslovna)
 print("EOS gotovo:", d.n_sl, "slika,", d.n_tab, "tabela")
