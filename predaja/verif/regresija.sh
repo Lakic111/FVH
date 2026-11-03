@@ -7,7 +7,8 @@
 #
 # Vivado se trazi u VIVADO (direktorijum bin/), npr.
 #   VIVADO=/tools/Xilinx/Vivado/2025.2/bin ./regresija.sh
-# Rezultati: result/log/ (log svakog testa), result/izvestaj/ (pokrivenost).
+# Rezultati: result/log/ (log svakog testa), result/izvestaj/ (pokrivenost,
+# XSim preko xcrg, Xcelium preko imc).
 
 cd "$(dirname "$0")"
 SIM=${SIM:-xsim}
@@ -84,6 +85,19 @@ if [ "$SIM" = "xsim" ]; then
    grep -m1 "Coverage Score" izvestaj/functionalCoverageReport/xcrg_func_cov_report.txt
    grep -E "^ +ncc_pkg::ncc_monitor::cg_" izvestaj/functionalCoverageReport/xcrg_func_cov_report.txt \
       | awk -F',' '{ gsub(/ /, "", $1); gsub(/ /, "", $2); printf "  %-36s %s%%\n", $1, $2 }'
+else
+   # Xcelium: baze svih pokretanja su u cov_work/scope/<test>_s<seed>,
+   # imc ih spaja u jednu (sve) i pise tekstualni izvestaj.
+   mkdir -p izvestaj
+   printf '%s\n' \
+      'merge cov_work/scope/* -overwrite -out sve' \
+      'load -run sve' \
+      'report -summary -metrics covergroup -out izvestaj/pokrivenost_ukupno.txt' \
+      'report -detail -metrics covergroup -all -out izvestaj/pokrivenost_detalji.txt' \
+      'exit' > imc.tcl
+   imc -exec imc.tcl > log/imc.log 2>&1
+   echo "=== pokrivenost ==="
+   echo "  result/izvestaj/pokrivenost_ukupno.txt i pokrivenost_detalji.txt (log: result/log/imc.log)"
 fi
 
 [ $PALO -eq 0 ]
