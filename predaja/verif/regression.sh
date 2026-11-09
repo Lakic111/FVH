@@ -24,19 +24,27 @@ cd result
 VHD=$(grep '\.vhd$' ../run.f | sed 's|^|../|')
 SV=$(grep '\.sv$' ../run.f | sed 's|^|../|')
 
+# Directories in which the packages look for their `include files.
+XSIM_INC=""
+XRUN_INC=""
+for d in verif verif/Configurations verif/Axil_agent verif/Axif_agent verif/Sequences; do
+   XSIM_INC="$XSIM_INC -i ../$d"
+   XRUN_INC="$XRUN_INC -incdir ../$d"
+done
+
 # ---------------------------------------------------------------- build
 echo "=== build ($SIM) ==="
 if [ "$SIM" = "xsim" ]; then
    "$VIVADO/xvhdl$EXT" -2008 $VHD                > log/build.log 2>&1 &&
-   "$VIVADO/xvlog$EXT" -sv -L uvm -i ../sv $SV   >> log/build.log 2>&1 &&
-   "$VIVADO/xelab$EXT" -L uvm -timescale 1ns/1ps -debug off ncc_top -s ncc_top >> log/build.log 2>&1
+   "$VIVADO/xvlog$EXT" -sv -L uvm $XSIM_INC $SV  >> log/build.log 2>&1 &&
+   "$VIVADO/xelab$EXT" -L uvm -timescale 1ns/1ps -debug off ncc_verif_top -s ncc_verif_top >> log/build.log 2>&1
 else
    # At time zero the Xilinx S01 template computes an out-of-range integer; Cadence
    # reports it as an error, XSim does not. It is lowered to a warning.
    printf 'set rangecnst_severity_level warning\nrun\nexit\n' > xrun.tcl
    # -v200x: VHDL-2008, -relax: S00 uses an aggregate over a range computed from a generic
    xrun -64bit -elaborate -v200x -relax -uvm -timescale 1ns/1ps \
-        -coverage functional -covoverwrite -top ncc_top -incdir ../sv \
+        -coverage functional -covoverwrite -top ncc_verif_top $XRUN_INC \
         $VHD $SV -l log/build.log > /dev/null 2>&1
 fi
 if [ $? -ne 0 ]; then
@@ -53,7 +61,7 @@ run_test() {
    if [ "$SIM" = "xsim" ]; then
       # options go through a file because a .bat on Windows splits an argument containing '='
       echo "-testplusarg UVM_TESTNAME=$test -sv_seed $seed -cov_db_dir cov -cov_db_name ${test}_s${seed}" > options.txt
-      "$VIVADO/xsim$EXT" ncc_top -R -f options.txt > "$log" 2>&1
+      "$VIVADO/xsim$EXT" ncc_verif_top -R -f options.txt > "$log" 2>&1
    else
       xrun -R +UVM_TESTNAME=$test -svseed $seed -input xrun.tcl \
            -covtest ${test}_s${seed} -l "$log" > /dev/null 2>&1

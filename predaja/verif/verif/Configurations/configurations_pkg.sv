@@ -1,5 +1,5 @@
-// Verification environment package: constants, types and all classes.
-package ncc_pkg;
+// Constants and types shared by the whole environment, and the agent configuration.
+package configurations_pkg;
 
    import uvm_pkg::*;
    `include "uvm_macros.svh"
@@ -21,20 +21,10 @@ package ncc_pkg;
    // The template decoder uses only 10 address bits, so the template repeats every 1024 words.
    parameter int TMP_WORDS = 1024;
 
-   typedef enum {BUS_S00, BUS_S01} bus_e;
    typedef enum {WRITE, READ} rw_e;
    // Order in which the driver raises AWVALID and WVALID on a write.
    typedef enum {ORDER_AW_FIRST, ORDER_W_FIRST, ORDER_SIMUL} order_e;
 
-   `include "ncc_item.sv"
    `include "ncc_config.sv"
-   `include "ncc_sequencer.sv"
-   `include "ncc_driver.sv"
-   `include "ncc_monitor.sv"
-   `include "ncc_agent.sv"
-   `include "ncc_scoreboard.sv"
-   `include "ncc_env.sv"
-   `include "ncc_sequences.sv"
-   `include "ncc_tests.sv"
 
-endpackage : ncc_pkg
+endpackage : configurations_pkg

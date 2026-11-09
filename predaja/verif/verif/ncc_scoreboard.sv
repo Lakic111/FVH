@@ -1,11 +1,15 @@
-// Scoreboard -- receives only what the monitor saw on the buses.
+// Scoreboard -- receives only what the two monitors saw on the buses.
 //   1. writes to the image and template regions fill a copy of the memory (shadow)
 //   2. writes to the dimension registers store the configuration
 //   3. writing 1 to CTRL computes the expected result map (reference model)
 //   4. every read of the result region is compared with the expected map
+`uvm_analysis_imp_decl(_axil)
+`uvm_analysis_imp_decl(_axif)
+
 class ncc_scoreboard extends uvm_scoreboard;
 
-   uvm_analysis_imp #(ncc_item, ncc_scoreboard) item_collected_imp;
+   uvm_analysis_imp_axil #(axil_item, ncc_scoreboard) port_axil;
+   uvm_analysis_imp_axif #(axif_item, ncc_scoreboard) port_axif;
 
    bit [7 : 0]  shadow_img[int];
    bit [7 : 0]  shadow_tmp[int];
@@ -23,34 +27,35 @@ class ncc_scoreboard extends uvm_scoreboard;
 
    function new(string name = "ncc_scoreboard", uvm_component parent = null);
       super.new(name, parent);
-      item_collected_imp = new("item_collected_imp", this);
+      port_axil = new("port_axil", this);
+      port_axif = new("port_axif", this);
    endfunction
 
-   function void write(ncc_item t);
+   // Transaction from the S00 monitor.
+   function void write_axil(axil_item t);
+      if (t.rw == WRITE) begin
+         if (t.addr == REG_IMG_W) img_w = t.data[7 : 0];
+         if (t.addr == REG_IMG_H) img_h = t.data[7 : 0];
+         if (t.addr == REG_TMP_W) tmp_w = t.data[7 : 0];
+         if (t.addr == REG_TMP_H) tmp_h = t.data[7 : 0];
+         if (t.addr == REG_CTRL && t.data[0] == 1) begin
+            // the core ignores start while it is running (finding N2), so there is no new prediction
+            if (last_busy)
+               `uvm_info("SB", "start while the core is busy -- the core ignores it", UVM_LOW)
+            else
+               predict();
+         end
+      end
+      else if (t.addr == REG_STATUS) begin
+         last_busy = t.data[1];
+         if (t.data[0] == 1) seen_done = 1;
+      end
+   endfunction : write_axil
+
+   // Transaction from the S01 monitor.
+   function void write_axif(axif_item t);
       int region, word;
 
-      if (t.bus == BUS_S00) begin
-         if (t.rw == WRITE) begin
-            if (t.addr == REG_IMG_W) img_w = t.data[0][7 : 0];
-            if (t.addr == REG_IMG_H) img_h = t.data[0][7 : 0];
-            if (t.addr == REG_TMP_W) tmp_w = t.data[0][7 : 0];
-            if (t.addr == REG_TMP_H) tmp_h = t.data[0][7 : 0];
-            if (t.addr == REG_CTRL && t.data[0][0] == 1) begin
-               // the core ignores start while it is running (finding N2), so there is no new prediction
-               if (last_busy)
-                  `uvm_info("SB", "start while the core is busy -- the core ignores it", UVM_LOW)
-               else
-                  predict();
-            end
-         end
-         else if (t.addr == REG_STATUS) begin
-            last_busy = t.data[0][1];
-            if (t.data[0][0] == 1) seen_done = 1;
-         end
-         return;
-      end
-
-      // S01
       region = t.addr[16 : 15];
       word   = t.addr[14 : 2];
       if (t.rw == WRITE) begin
@@ -65,7 +70,7 @@ class ncc_scoreboard extends uvm_scoreboard;
       else if (region == REGION_RESULT) begin
          compare(t, word);
       end
-   endfunction : write
+   endfunction : write_axif
 
    // Core start: expected map from the shadow memory and the current dimensions.
    function void predict();
@@ -155,7 +160,7 @@ class ncc_scoreboard extends uvm_scoreboard;
       end
    endfunction : ncc_model
 
-   function void compare(ncc_item t, int word);
+   function void compare(axif_item t, int word);
       if (!has_prediction) begin
          `uvm_warning("SB", "result read before the core was started")
          return;

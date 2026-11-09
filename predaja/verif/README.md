@@ -6,28 +6,25 @@ DUT je VHDL IP `ncc_accel`: AXI4-Lite S00 (kontrolni registri) i AXI4-Full S01
 ## Fajlovi
 
 ```
-verif/
-├── rtl/                 VHDL izvori DUT-a (ne menjaju se)
-├── sv/
-│   ├── ncc_if.sv          interfejs sa signalima obe magistrale
-│   ├── ncc_pkg.sv         konstante, tipovi i `include svih klasa
-│   ├── ncc_item.sv        transakcija (S00 ili S01, upis ili čitanje)
-│   ├── ncc_config.sv      konfiguracija agenta (is_active)
-│   ├── ncc_sequencer.sv   sekvencer
-│   ├── ncc_driver.sv      drajver za obe magistrale
-│   ├── ncc_monitor.sv     monitor + pokrivenost (3 covergroup-e)
-│   ├── ncc_agent.sv       agent
-│   ├── ncc_scoreboard.sv  scoreboard + referentni model NCC²
-│   ├── ncc_env.sv         okruženje (agent + scoreboard)
-│   ├── ncc_sequences.sv   osnovna, smoke, cov i random sekvenca
-│   ├── ncc_tests.sv       test_base, test_smoke, test_cov, test_random
-│   └── ncc_top.sv         takt, reset, DUT, run_test()
-├── run.f                spisak izvornih fajlova
-└── regression.sh         prevođenje, svi testovi i izveštaj pokrivenosti
+├── dut/                       VHDL izvori DUT-a (ne menjaju se)
+├── verif/
+│   ├── axil_if.sv, axif_if.sv   po jedan interfejs za S00 i S01
+│   ├── Configurations/          ncc_config (is_active), konstante i tipovi
+│   ├── Axil_agent/              S00: item, sequencer, driver, monitor, agent
+│   ├── Axif_agent/              S01: item, sequencer, driver, monitor, agent
+│   ├── Sequences/               write/read sekvence za svaki agent; smoke, cov, random
+│   ├── ncc_scoreboard.sv        dva ulaza (port_axil, port_axif) + referentni model NCC²
+│   ├── ncc_env.sv               oba agenta i scoreboard
+│   ├── test_base.sv, test_smoke.sv, test_cov.sv, test_random.sv
+│   ├── ncc_test_pkg.sv
+│   └── ncc_verif_top.sv         takt, reset, interfejsi, DUT, run_test()
+├── run.f                      spisak izvornih fajlova
+└── regression.sh              prevođenje, svi testovi i izveštaj pokrivenosti
 ```
 
-Jedan agent vozi obe magistrale: polje `bus` u transakciji kaže da li ide na S00 ili S01,
-pa sekvenca na istom sekvenceru meša upise u registre i memoriju.
+Svaka magistrala ima svoj agent. Pošto jedan posao prelazi preko obe magistrale,
+`ncc_base_seq` dobija oba sekvencera i redom pokreće korake (upis, start, čekanje,
+čitanje) na sekvenceru magistrale kojoj pripadaju.
 
 ## Testovi
 
@@ -36,8 +33,6 @@ pa sekvenca na istom sekvenceru meša upise u registre i memoriju.
 | `test_smoke` | slika 4×4, šablon 2×2, pik `0x80000000` mora biti na (1,1) |
 | `test_cov` | usmereni slučajevi: sve dimenzije, dužine burst-a, WSTRB, sve oblasti S01 u sva tri redosleda AW/W, upis u CTRL dok jezgro radi |
 | `test_random` | slučajne dimenzije i podaci, menja se sa seed-om |
-
-Scoreboard poredi svaki pročitani rezultat sa referentnim modelom.
 
 ## Pokretanje
 
@@ -51,4 +46,4 @@ Putanja do Vivada se zadaje sa `VIVADO=<Vivado>/bin`; ako nije zadata, koristi s
 `C:/AMDDesignTools/2025.2/Vivado/bin`. Logovi idu u `result/log/`, izveštaj
 pokrivenosti u `result/report/`.
 
-Rezultat na XSim-u: 22 prošla, 0 palo, pokrivenost 100%.
+Rezultat: 22 prošla, 0 palo, u XSim-u i u Xcelium-u; funkcionalna pokrivenost 100%.

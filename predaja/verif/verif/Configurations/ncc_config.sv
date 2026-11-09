@@ -1,4 +1,4 @@
-// Agent configuration.
+// Agent configuration. Each agent gets its own object.
 class ncc_config extends uvm_object;
 
    uvm_active_passive_enum is_active = UVM_ACTIVE;

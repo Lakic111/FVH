@@ -1,13 +1,9 @@
-// One transaction on S00 or S01: a write or a read.
-//   S00: addr = register address, data holds one word
-//   S01: addr = byte address, data holds len words (one burst)
-class ncc_item extends uvm_sequence_item;
+// One S00 transaction: a write or a read of one register.
+class axil_item extends uvm_sequence_item;
 
-   bus_e        bus;
    rw_e         rw;
-   bit [16 : 0] addr;
-   int unsigned len;
-   bit [31 : 0] data[];
+   bit [5 : 0]  addr;
+   bit [31 : 0] data;
    bit [3 : 0]  strb;
    bit [1 : 0]  resp;
 
@@ -18,19 +14,17 @@ class ncc_item extends uvm_sequence_item;
    constraint c_gap   { order == ORDER_SIMUL -> gap == 0;
                         order != ORDER_SIMUL -> gap inside {[1:4]}; }
 
-   `uvm_object_utils_begin(ncc_item)
-      `uvm_field_enum(bus_e, bus, UVM_DEFAULT)
+   `uvm_object_utils_begin(axil_item)
       `uvm_field_enum(rw_e, rw, UVM_DEFAULT)
       `uvm_field_int(addr, UVM_DEFAULT)
-      `uvm_field_int(len, UVM_DEFAULT)
-      `uvm_field_array_int(data, UVM_DEFAULT)
+      `uvm_field_int(data, UVM_DEFAULT)
       `uvm_field_int(strb, UVM_DEFAULT)
       `uvm_field_enum(order_e, order, UVM_DEFAULT)
       `uvm_field_int(gap, UVM_DEFAULT)
    `uvm_object_utils_end
 
-   function new (string name = "ncc_item");
+   function new (string name = "axil_item");
       super.new(name);
    endfunction
 
-endclass : ncc_item
+endclass : axil_item
