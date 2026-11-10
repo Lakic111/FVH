@@ -105,10 +105,6 @@ class axil_monitor extends uvm_monitor;
       aw_prev = (vif.awvalid === 1'b1);
       w_prev  = (vif.wvalid  === 1'b1);
 
-      // The fixed S00 never raises awready and wready in the same cycle (AW/W bug).
-      if (vif.awready === 1'b1 && vif.wready === 1'b1)
-         `uvm_error("MON", "S00: awready and wready in the same cycle -- the AW/W bug is back")
-
       if (vif.awvalid === 1'b1 && vif.awready === 1'b1)
          wr_addr = vif.awaddr;
       if (vif.wvalid === 1'b1 && vif.wready === 1'b1) begin

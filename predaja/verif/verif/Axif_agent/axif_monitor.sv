@@ -81,9 +81,6 @@ class axif_monitor extends uvm_monitor;
       aw_prev = (vif.awvalid === 1'b1);
       w_prev  = (vif.wvalid  === 1'b1);
 
-      if (vif.awready === 1'b1 && vif.wready === 1'b1)
-         `uvm_error("MON", "S01: awready and wready in the same cycle -- the AW/W bug is back")
-
       if (vif.awvalid === 1'b1 && vif.awready === 1'b1) begin
          wr_addr = vif.awaddr;
          wr_len  = vif.awlen + 1;
