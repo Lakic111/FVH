@@ -22,8 +22,6 @@ class axif_read_seq extends axif_base_seq;
          it.rw   = READ;
          it.addr = region * 32768 + (word + pos) * 4;
          it.len  = k;
-         if (!it.randomize())
-            `uvm_fatal("SEQ", "randomization failed")
          finish_item(it);
          for (int i = 0; i < k; i++) d[pos + i] = it.data[i];
          pos = pos + k;

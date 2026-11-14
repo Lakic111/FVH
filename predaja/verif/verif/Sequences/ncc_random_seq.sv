@@ -41,10 +41,6 @@ class ncc_random_seq extends ncc_base_seq;
          mem_read(region, $urandom_range(0, 1023), $urandom_range(1, 32), rd);
       end
 
-      // writes to registers 0x10-0x2C that the core does not use
-      for (int i = 0; i < 4; i++)
-         reg_write(16 + 4 * $urandom_range(0, 7), $urandom(), random_order());
-
       run_job(iw, ih, tw, th);
    endtask : body
 

@@ -16,8 +16,6 @@ class axil_read_seq extends uvm_sequence #(axil_item);
       start_item(it);
       it.rw   = READ;
       it.addr = addr;
-      if (!it.randomize())
-         `uvm_fatal("SEQ", "randomization failed")
       finish_item(it);
       data = it.data;
    endtask : body
